@@ -52,6 +52,7 @@ export const getBuiltinThemes = () => Promise.all(
 		'l-u0',
 
 		'd-dark',
+		'd-qdon',
 		'd-persimmon',
 		'd-astro',
 		'd-future',
