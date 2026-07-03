@@ -215,13 +215,6 @@ const props = withDefaults(defineProps<{
 	disableNotes: false,
 });
 
-type ProfileRole = Misskey.entities.UserDetailed['roles'][number] & {
-	isPublicDisplayRequired?: boolean;
-};
-type MeDetailedWithRoleDisplay = Misskey.entities.MeDetailed & {
-	hiddenRoleIds?: string[];
-};
-
 const emit = defineEmits<{
 	(ev: 'showMoreFiles'): void;
 }>();
@@ -230,10 +223,10 @@ const router = useRouter();
 
 const user = ref(props.user);
 const visibleProfileRoles = computed(() => {
-	const roles = user.value.roles as ProfileRole[];
+	const roles = user.value.roles;
 	if ($i == null || $i.id !== user.value.id) return roles;
 
-	const hiddenRoleIds = new Set((($i as MeDetailedWithRoleDisplay).hiddenRoleIds) ?? []);
+	const hiddenRoleIds = new Set($i.hiddenRoleIds ?? []);
 	return roles.filter(role => role.isPublicDisplayRequired === true || !hiddenRoleIds.has(role.id));
 });
 const narrow = ref<null | boolean>(null);
