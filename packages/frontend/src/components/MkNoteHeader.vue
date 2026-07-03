@@ -37,6 +37,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { computed, inject } from 'vue';
 import * as Misskey from 'misskey-js';
+import { $i } from '@/i.js';
 import { i18n } from '@/i18n.js';
 import { notePage } from '@/filters/note.js';
 import { userPage } from '@/filters/user.js';
@@ -46,11 +47,13 @@ const props = defineProps<{
 	note: Misskey.entities.Note;
 }>();
 
-type BadgeRoleWithId = NonNullable<Misskey.entities.Note['user']['badgeRoles']>[number] & {
-	id: string;
-};
+const badgeRoles = computed(() => {
+	const roles = props.note.user.badgeRoles;
+	if (roles == null || $i == null || $i.id !== props.note.userId) return roles;
 
-const badgeRoles = computed(() => props.note.user.badgeRoles as BadgeRoleWithId[] | undefined);
+	const hiddenRoleIds = new Set(($i.hiddenRoleIds) ?? []);
+	return roles.filter(role => !hiddenRoleIds.has(role.id));
+});
 const mock = inject(DI.mock, false);
 </script>
 

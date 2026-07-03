@@ -69,8 +69,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<div :class="$style.noteHeaderUsername">
 							<MkAcct :user="appearNote.user"/>
 						</div>
-						<div v-if="appearNote.user.badgeRoles" :class="$style.noteHeaderBadgeRoles">
-							<img v-for="(role, i) in appearNote.user.badgeRoles" :key="i" v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
+						<div v-if="badgeRoles" :class="$style.noteHeaderBadgeRoles">
+							<img v-for="(role, i) in badgeRoles" :key="i" v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
 						</div>
 					</div>
 					<MkInstanceTicker v-if="showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
@@ -344,6 +344,13 @@ const showTicker = (prefer.s.instanceTicker === 'always') || (prefer.s.instanceT
 const conversation = ref<Misskey.entities.Note[]>([]);
 const replies = ref<Misskey.entities.Note[]>([]);
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.visibility) || appearNote.userId === $i?.id);
+const badgeRoles = computed(() => {
+	const roles = appearNote.user.badgeRoles;
+	if (roles == null || $i == null || $i.id !== props.note.userId) return roles;
+
+	const hiddenRoleIds = new Set(($i.hiddenRoleIds) ?? []);
+	return roles.filter(role => !hiddenRoleIds.has(role.id));
+});
 
 useGlobalEvent('noteDeleted', (noteId) => {
 	if (noteId === note.id || noteId === appearNote.id) {
