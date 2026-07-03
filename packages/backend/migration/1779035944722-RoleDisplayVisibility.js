@@ -6,17 +6,14 @@
 export class RoleDisplayVisibility1779035944722 {
     name = 'RoleDisplayVisibility1779035944722';
 
-    /**
-     * @param {QueryRunner} queryRunner
-     */
     async up(queryRunner) {
         await queryRunner.query(`ALTER TABLE "user" ADD "hiddenRoleIds" character varying(32) array NOT NULL DEFAULT '{}'`);
         await queryRunner.query(`ALTER TABLE "role" ADD "isPublicDisplayRequired" boolean NOT NULL DEFAULT false`);
+
+        // 既存のロールについてはすべて強制表示とする（新規作成分についてはfalse）
+        await queryRunner.query(`UPDATE "role" SET "isPublicDisplayRequired" = true`);
     }
 
-    /**
-     * @param {QueryRunner} queryRunner
-     */
     async down(queryRunner) {
         await queryRunner.query(`ALTER TABLE "role" DROP COLUMN "isPublicDisplayRequired"`);
         await queryRunner.query(`ALTER TABLE "user" DROP COLUMN "hiddenRoleIds"`);
