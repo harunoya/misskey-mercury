@@ -407,9 +407,9 @@ export class UserEntityService implements OnModuleInit {
 	}
 
 	@bindThis
-	private prepareRoles<T extends Pick<MiRole, 'id' | 'isPublic' | 'displayOrder' | 'isPublicDisplayRequired'>>(roles: T[], user: MiUser, iAmModerator: boolean): T[] {
+	private prepareRoles<T extends Pick<MiRole, 'id' | 'isPublic' | 'displayOrder' | 'isPublicDisplayRequired'>>(roles: T[], user: MiUser, iAmModerator: boolean, hideByUserPreference = true): T[] {
 		const hiddenRoleIds = new Set(user.hiddenRoleIds);
-		return roles.filter(role => (role.isPublic || iAmModerator) && (role.isPublicDisplayRequired || !hiddenRoleIds.has(role.id))).sort((a, b) => b.displayOrder - a.displayOrder);
+		return roles.filter(role => (role.isPublic || iAmModerator) && (role.isPublicDisplayRequired || !hideByUserPreference || !hiddenRoleIds.has(role.id))).sort((a, b) => b.displayOrder - a.displayOrder);
 	}
 
 	@bindThis
@@ -588,7 +588,7 @@ export class UserEntityService implements OnModuleInit {
 				followingVisibility: profile!.followingVisibility,
 				chatScope: user.chatScope,
 				canChat: this.roleService.getUserPolicies(user.id).then(r => r.chatAvailability === 'available'),
-				roles: userRoles!.then(roles => this.roleEntityService.packLiteMany(this.prepareRoles(roles, user, iAmModerator))),
+				roles: userRoles!.then(roles => this.roleEntityService.packLiteMany(this.prepareRoles(roles, user, iAmModerator, !isMe))),
 				memo: memo,
 				moderationNote: iAmModerator ? (profile!.moderationNote ?? '') : undefined,
 			} : {}),
