@@ -30,6 +30,7 @@ import { PageEntityService } from '@/core/entities/PageEntityService.js';
 import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 import { AnnouncementService } from '@/core/AnnouncementService.js';
 import { RoleService } from '@/core/RoleService.js';
+import { RoleEntityService } from '@/core/entities/RoleEntityService.js';
 import { FederatedInstanceService } from '@/core/FederatedInstanceService.js';
 import { IdService } from '@/core/IdService.js';
 import { UtilityService } from '@/core/UtilityService.js';
@@ -182,6 +183,7 @@ describe('UserEntityService', () => {
 				ApPersonService,
 				NoteEntityService,
 				PageEntityService,
+				RoleEntityService,
 				CustomEmojiService,
 				AnnouncementService,
 				RoleService,
