@@ -12189,7 +12189,7 @@ export interface Locale extends ILocale {
          */
         "displayToggle": string;
         /**
-         * 管理者により常に表示するよう設定されています。
+         * 管理者の設定により非表示にすることはできません。
          */
         "alwaysShownByAdmin": string;
     };

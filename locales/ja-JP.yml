@@ -3248,7 +3248,7 @@ _gridComponent:
 _roleDisplay:
   description: "自分のプロフィールやノートに表示するロールを選択します。"
   displayToggle: "ロール/ロールバッジを表示する"
-  alwaysShownByAdmin: "管理者により常に表示するよう設定されています。"
+  alwaysShownByAdmin: "管理者の設定により非表示にすることはできません。"
 
 _roleSelectDialog:
   notSelected: "選択されていません"
