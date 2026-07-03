@@ -409,7 +409,7 @@ export class UserEntityService implements OnModuleInit {
 	@bindThis
 	private prepareRoles<T extends Pick<MiRole, 'id' | 'isPublic' | 'displayOrder' | 'isPublicDisplayRequired'>>(roles: T[], user: MiUser, iAmModerator: boolean, hideByUserPreference = true): T[] {
 		const hiddenRoleIds = new Set(user.hiddenRoleIds);
-		return roles.filter(role => (role.isPublic || iAmModerator) && (role.isPublicDisplayRequired || !hideByUserPreference || !hiddenRoleIds.has(role.id))).sort((a, b) => b.displayOrder - a.displayOrder);
+		return roles.filter(role => (role.isPublic || iAmModerator) && (role.isPublicDisplayRequired || iAmModerator || !hideByUserPreference || !hiddenRoleIds.has(role.id))).sort((a, b) => b.displayOrder - a.displayOrder);
 	}
 
 	@bindThis
