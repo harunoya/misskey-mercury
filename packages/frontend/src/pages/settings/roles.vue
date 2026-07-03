@@ -4,19 +4,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<SearchMarker path="/settings/roles" :label="i18n.ts.roleSettings" :keywords="['role', 'badge']" icon="ti ti-badges">
+<SearchMarker path="/settings/roles" :label="i18n.ts.roles" :keywords="['role', 'badge']" icon="ti ti-badges">
 	<div class="_gaps_m">
+		<MkFeatureBanner icon="/client-assets/label_3d.png" color="#ffbf00">
+			<SearchText>{{ i18n.ts._roleDisplay.description }}</SearchText>
+		</MkFeatureBanner>
 		<SearchMarker :keywords="['roles']">
 			<div class="_gaps_s">
-				<MkInfo v-if="roleDisplayRoles.length === 0">{{ i18n.ts._roleDisplay.noRoles }}</MkInfo>
-				<div v-for="role in roleDisplayRoles" :key="role.id" :class="$style.roleItem">
+				<MkResult v-if="roleDisplayRoles.length === 0" type="empty"/>
+				<div v-for="role in roleDisplayRoles" :key="role.id" class="_panel _gaps_s" :class="$style.roleItem">
 					<MkRolePreview :role="role" :forModeration="false"/>
 					<MkSwitch
 						:modelValue="isRoleDisplayShown(role)"
 						:disabled="role.isPublicDisplayRequired"
 						@update:modelValue="value => updateRoleDisplay(role, value)"
 					>
-						<template #label>{{ i18n.ts._roleDisplay.title }}</template>
+						<template #label>{{ i18n.ts._roleDisplay.displayToggle }}</template>
 						<template v-if="role.isPublicDisplayRequired" #caption>{{ i18n.ts._roleDisplay.alwaysShownByAdmin }}</template>
 					</MkSwitch>
 				</div>
@@ -30,7 +33,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { ref, computed } from 'vue';
 import type * as Misskey from 'misskey-js';
 import MkSwitch from '@/components/MkSwitch.vue';
-import MkInfo from '@/components/MkInfo.vue';
+import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
 import MkRolePreview from '@/components/MkRolePreview.vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
@@ -40,31 +43,18 @@ import { updateCurrentAccount } from '@/accounts.js';
 
 const $i = ensureSignin();
 
-type RoleDisplayRole = Misskey.entities.IResponse['roles'][number] & {
-	isPublicDisplayRequired?: boolean;
-};
-type MeDetailedWithRoleDisplay = Misskey.entities.MeDetailed & {
-	hiddenRoleIds?: string[];
-	roles: RoleDisplayRole[];
-};
-type IUpdateWithHiddenRoleIdsRequest = Misskey.Endpoints['i/update']['req'] & {
-	hiddenRoleIds: string[];
-};
-
-const me = $i as MeDetailedWithRoleDisplay;
-
-const hiddenRoleIds = ref([...getHiddenRoleIds(me)]);
-const roleDisplayRoles = computed(() => me.roles);
+const hiddenRoleIds = ref([...getHiddenRoleIds($i)]);
+const roleDisplayRoles = computed(() => $i.roles);
 
 function getHiddenRoleIds(user: { hiddenRoleIds?: string[] }): string[] {
 	return user.hiddenRoleIds ?? [];
 }
 
-function isRoleDisplayShown(role: RoleDisplayRole): boolean {
+function isRoleDisplayShown(role: Misskey.entities.RoleLite): boolean {
 	return role.isPublicDisplayRequired === true || !hiddenRoleIds.value.includes(role.id);
 }
 
-async function updateRoleDisplay(role: RoleDisplayRole, visible: boolean) {
+async function updateRoleDisplay(role: Misskey.entities.RoleLite, visible: boolean) {
 	if (role.isPublicDisplayRequired === true) return;
 
 	const nextHiddenRoleIds = new Set(hiddenRoleIds.value);
@@ -77,7 +67,8 @@ async function updateRoleDisplay(role: RoleDisplayRole, visible: boolean) {
 	const nextIds = roleDisplayRoles.value
 		.filter(role => role.isPublicDisplayRequired !== true && nextHiddenRoleIds.has(role.id))
 		.map(role => role.id);
-	const updated = await misskeyApi<MeDetailedWithRoleDisplay, 'i/update', IUpdateWithHiddenRoleIdsRequest>('i/update', {
+
+	const updated = await misskeyApi('i/update', {
 		hiddenRoleIds: nextIds,
 	});
 
@@ -86,15 +77,13 @@ async function updateRoleDisplay(role: RoleDisplayRole, visible: boolean) {
 }
 
 definePage(() => ({
-	title: i18n.ts.roleSettings,
+	title: i18n.ts.roles,
 	icon: 'ti ti-badges',
 }));
 </script>
 
 <style lang="scss" module>
 .roleItem {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
+	padding: 16px;
 }
 </style>

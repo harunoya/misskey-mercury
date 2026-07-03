@@ -4405,10 +4405,6 @@ export interface Locale extends ILocale {
      */
     "rolesAssignedToMe": string;
     /**
-     * ロール設定
-     */
-    "roleSettings": string;
-    /**
      * パスワードリセットしますか？
      */
     "resetPasswordConfirm": string;
@@ -12185,21 +12181,17 @@ export interface Locale extends ILocale {
     };
     "_roleDisplay": {
         /**
-         * 表示するロール/ロールバッジ
-         */
-        "title": string;
-        /**
-         * 自分のプロフィールやノートに表示する公開ロールを選択します。
+         * 自分のプロフィールやノートに表示するロールを選択します。
          */
         "description": string;
+        /**
+         * ロール/ロールバッジを表示する
+         */
+        "displayToggle": string;
         /**
          * 管理者により常に表示するよう設定されています。
          */
         "alwaysShownByAdmin": string;
-        /**
-         * 表示できる公開ロールはありません。
-         */
-        "noRoles": string;
     };
     "_roleSelectDialog": {
         /**
