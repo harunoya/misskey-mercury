@@ -28,6 +28,7 @@ export function registerBabylonRuntime(): void {
 	BABYLON.RegisterAnimation();
 	BABYLON.RegisterAnimatable();
 	BABYLON.RegisterCollisionCoordinator();
+	BABYLON.RegisterInstancedMesh();
 	BABYLON.RegisterPostProcessRenderPipelineManagerSceneComponent(
 		BABYLON.PostProcessRenderPipelineManager,
 	);
