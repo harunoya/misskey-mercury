@@ -739,7 +739,7 @@ importers:
         version: 10.4.6(@types/react@19.2.14)(react@19.2.7)(storybook@10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6))
       '@storybook/addon-mdx-gfm':
         specifier: 8.6.18
-        version: 8.6.18(storybook@10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6))
+        version: 8.6.18(storybook@10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6))(supports-color@8.1.1)
       '@storybook/addon-storysource':
         specifier: 8.6.18
         version: 8.6.18(storybook@10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6))
@@ -1103,17 +1103,17 @@ importers:
   packages/frontend-misskey-world-engine:
     dependencies:
       '@babylonjs/core':
-        specifier: 9.12.0
-        version: 9.12.0
+        specifier: 9.15.0
+        version: 9.15.0
       '@babylonjs/inspector':
-        specifier: 9.12.0
-        version: 9.12.0(327d04ebdacb46c9d71c82cae275d028)
+        specifier: 9.15.0
+        version: 9.15.0(89f48dec5b93bd46d73f16742cdf43d9)
       '@babylonjs/loaders':
-        specifier: 9.12.0
-        version: 9.12.0(@babylonjs/core@9.12.0)(babylonjs-gltf2interface@9.6.0)
+        specifier: 9.15.0
+        version: 9.15.0(@babylonjs/core@9.15.0)(babylonjs-gltf2interface@9.6.0)
       '@babylonjs/materials':
-        specifier: 9.12.0
-        version: 9.12.0(@babylonjs/core@9.12.0)
+        specifier: 9.15.0
+        version: 9.15.0(@babylonjs/core@9.15.0)
       '@types/throttle-debounce':
         specifier: 5.0.2
         version: 5.0.2
@@ -1640,8 +1640,8 @@ packages:
     peerDependencies:
       '@babylonjs/core': ^9.0.0
 
-  '@babylonjs/core@9.12.0':
-    resolution: {integrity: sha512-00g7FhRkfBRw3Qvj/L86Gam8u3YTp/Op3SLoN4BNIUGM79nJVsE+ahQIDvxTTCOnt2eb4LmXzslTF2QfdChm7g==}
+  '@babylonjs/core@9.15.0':
+    resolution: {integrity: sha512-HoLq2evNXQNqJFDIC3gngDGlEgQd/mmpbwwaKMJ0zW13tMc5jSf4Qxc4oUaBKdKMGHrJ8ylTObr36mdUFvLhfw==}
 
   '@babylonjs/gui-editor@9.7.0':
     resolution: {integrity: sha512-5LGB5SqxBbgB+V7k85rGNOD1aJUybT78yvRyUzR8dCJP6XkgRDMsNqcqqEWLCg7+1Z0XVRWvJLwu8QAA0XxbcA==}
@@ -1656,8 +1656,8 @@ packages:
     peerDependencies:
       '@babylonjs/core': ^9.0.0
 
-  '@babylonjs/inspector@9.12.0':
-    resolution: {integrity: sha512-/KcaF19U/+F2fEdlujHpIkkY7R8/IWPcLwzTqA9sW+sEXWHzgKjOpjtwqPscbw0QEcnL2vq0VrqYAsKrti3FnA==}
+  '@babylonjs/inspector@9.15.0':
+    resolution: {integrity: sha512-lWoSHngmRKV3mMpaL/LzMhPsKaeaDqIlWv7J8PVrAw07Wj2AvsGZkqQFeVC4shuGE3s7VfiOOXAvlzdwZ5jKiA==}
     hasBin: true
     peerDependencies:
       '@babylonjs/addons': ^9.0.0
@@ -1675,14 +1675,14 @@ packages:
       react-dom: '>=16.14.0 <20.0.0'
       usehooks-ts: ^3.1.1
 
-  '@babylonjs/loaders@9.12.0':
-    resolution: {integrity: sha512-R15m3+hXgSBhb/FiNibFpcNjyS+LfXD16V/EaAsi1WAccvGsVais6KxrGICxzMlzzTjDgXjOIRs2LAYEVAmSTg==}
+  '@babylonjs/loaders@9.15.0':
+    resolution: {integrity: sha512-h6VyrkEzt9BRIjwzvADAHKaW7CAgNgkvaf52wEWqeaSMBRTtgVgVYBM96wB4TTl5inhxwkuWZD9U5FRRYPVfww==}
     peerDependencies:
       '@babylonjs/core': ^9.0.0
       babylonjs-gltf2interface: ^9.0.0
 
-  '@babylonjs/materials@9.12.0':
-    resolution: {integrity: sha512-uGC1lrp2D8ji2XKOMmsz2igaRYYb5Erg2SOEsDhjJhWs8NRmhwL+2aoduX2kaHx3Q57N0QAnf6wZBWzwQ0FJqQ==}
+  '@babylonjs/materials@9.15.0':
+    resolution: {integrity: sha512-6duHJUVqZXATkNJlOAG7XELdyZlrhBSiVJ9C7NjbMP+BchrweB+OYBnNe2u9tAgwDM3PwJoYbplPxCJmxbDE2g==}
     peerDependencies:
       '@babylonjs/core': ^9.0.0
 
@@ -10835,32 +10835,32 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@babylonjs/addons@9.7.0(@babylonjs/core@9.12.0)':
+  '@babylonjs/addons@9.7.0(@babylonjs/core@9.15.0)':
     dependencies:
-      '@babylonjs/core': 9.12.0
+      '@babylonjs/core': 9.15.0
 
-  '@babylonjs/core@9.12.0': {}
+  '@babylonjs/core@9.15.0': {}
 
-  '@babylonjs/gui-editor@9.7.0(@babylonjs/core@9.12.0)(@babylonjs/gui@9.7.0(@babylonjs/core@9.12.0))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)':
+  '@babylonjs/gui-editor@9.7.0(@babylonjs/core@9.15.0)(@babylonjs/gui@9.7.0(@babylonjs/core@9.15.0))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)':
     dependencies:
-      '@babylonjs/core': 9.12.0
-      '@babylonjs/gui': 9.7.0(@babylonjs/core@9.12.0)
+      '@babylonjs/core': 9.15.0
+      '@babylonjs/gui': 9.7.0(@babylonjs/core@9.15.0)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
-  '@babylonjs/gui@9.7.0(@babylonjs/core@9.12.0)':
+  '@babylonjs/gui@9.7.0(@babylonjs/core@9.15.0)':
     dependencies:
-      '@babylonjs/core': 9.12.0
+      '@babylonjs/core': 9.15.0
 
-  '@babylonjs/inspector@9.12.0(327d04ebdacb46c9d71c82cae275d028)':
+  '@babylonjs/inspector@9.15.0(89f48dec5b93bd46d73f16742cdf43d9)':
     dependencies:
-      '@babylonjs/addons': 9.7.0(@babylonjs/core@9.12.0)
-      '@babylonjs/core': 9.12.0
-      '@babylonjs/gui': 9.7.0(@babylonjs/core@9.12.0)
-      '@babylonjs/gui-editor': 9.7.0(@babylonjs/core@9.12.0)(@babylonjs/gui@9.7.0(@babylonjs/core@9.12.0))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)
-      '@babylonjs/loaders': 9.12.0(@babylonjs/core@9.12.0)(babylonjs-gltf2interface@9.6.0)
-      '@babylonjs/materials': 9.12.0(@babylonjs/core@9.12.0)
-      '@babylonjs/serializers': 9.7.0(@babylonjs/core@9.12.0)(babylonjs-gltf2interface@9.6.0)
+      '@babylonjs/addons': 9.7.0(@babylonjs/core@9.15.0)
+      '@babylonjs/core': 9.15.0
+      '@babylonjs/gui': 9.7.0(@babylonjs/core@9.15.0)
+      '@babylonjs/gui-editor': 9.7.0(@babylonjs/core@9.15.0)(@babylonjs/gui@9.7.0(@babylonjs/core@9.15.0))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)
+      '@babylonjs/loaders': 9.15.0(@babylonjs/core@9.15.0)(babylonjs-gltf2interface@9.6.0)
+      '@babylonjs/materials': 9.15.0(@babylonjs/core@9.15.0)
+      '@babylonjs/serializers': 9.7.0(@babylonjs/core@9.15.0)(babylonjs-gltf2interface@9.6.0)
       '@fluentui-contrib/react-resize-handle': 0.8.4(@fluentui/react-components@9.73.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@fluentui-contrib/react-virtualizer': 1.0.0(@fluentui/react-shared-contexts@9.26.2(@types/react@19.2.14)(react@19.2.7))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@fluentui/react-components': 9.73.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)
@@ -10869,18 +10869,18 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       usehooks-ts: 3.1.1(react@19.2.7)
 
-  '@babylonjs/loaders@9.12.0(@babylonjs/core@9.12.0)(babylonjs-gltf2interface@9.6.0)':
+  '@babylonjs/loaders@9.15.0(@babylonjs/core@9.15.0)(babylonjs-gltf2interface@9.6.0)':
     dependencies:
-      '@babylonjs/core': 9.12.0
+      '@babylonjs/core': 9.15.0
       babylonjs-gltf2interface: 9.6.0
 
-  '@babylonjs/materials@9.12.0(@babylonjs/core@9.12.0)':
+  '@babylonjs/materials@9.15.0(@babylonjs/core@9.15.0)':
     dependencies:
-      '@babylonjs/core': 9.12.0
+      '@babylonjs/core': 9.15.0
 
-  '@babylonjs/serializers@9.7.0(@babylonjs/core@9.12.0)(babylonjs-gltf2interface@9.6.0)':
+  '@babylonjs/serializers@9.7.0(@babylonjs/core@9.15.0)(babylonjs-gltf2interface@9.6.0)':
     dependencies:
-      '@babylonjs/core': 9.12.0
+      '@babylonjs/core': 9.15.0
       babylonjs-gltf2interface: 9.6.0
 
   '@bcoe/v8-coverage@1.0.2': {}
@@ -14037,9 +14037,9 @@ snapshots:
       '@types/react': 19.2.14
       react: 19.2.7
 
-  '@storybook/addon-mdx-gfm@8.6.18(storybook@10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6))':
+  '@storybook/addon-mdx-gfm@8.6.18(storybook@10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6))(supports-color@8.1.1)':
     dependencies:
-      remark-gfm: 4.0.1
+      remark-gfm: 4.0.1(supports-color@8.1.1)
       storybook: 10.4.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(utf-8-validate@6.0.6)
       ts-dedent: 2.2.0
     transitivePeerDependencies:
@@ -17894,14 +17894,14 @@ snapshots:
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.0.2
 
-  mdast-util-from-markdown@2.0.3:
+  mdast-util-from-markdown@2.0.3(supports-color@8.1.1):
     dependencies:
       '@types/mdast': 4.0.4
       '@types/unist': 3.0.3
       decode-named-character-reference: 1.3.0
       devlop: 1.1.0
       mdast-util-to-string: 4.0.0
-      micromark: 4.0.2
+      micromark: 4.0.2(supports-color@8.1.1)
       micromark-util-decode-numeric-character-reference: 2.0.2
       micromark-util-decode-string: 2.0.1
       micromark-util-normalize-identifier: 2.0.1
@@ -17923,7 +17923,7 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.3
+      mdast-util-from-markdown: 2.0.3(supports-color@8.1.1)
       mdast-util-to-markdown: 2.1.2
       micromark-util-normalize-identifier: 2.0.1
     transitivePeerDependencies:
@@ -17932,7 +17932,7 @@ snapshots:
   mdast-util-gfm-strikethrough@2.0.0:
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.0.3
+      mdast-util-from-markdown: 2.0.3(supports-color@8.1.1)
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -17942,7 +17942,7 @@ snapshots:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       markdown-table: 3.0.4
-      mdast-util-from-markdown: 2.0.3
+      mdast-util-from-markdown: 2.0.3(supports-color@8.1.1)
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -17951,14 +17951,14 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.3
+      mdast-util-from-markdown: 2.0.3(supports-color@8.1.1)
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm@3.1.0:
+  mdast-util-gfm@3.1.0(supports-color@8.1.1):
     dependencies:
-      mdast-util-from-markdown: 2.0.3
+      mdast-util-from-markdown: 2.0.3(supports-color@8.1.1)
       mdast-util-gfm-autolink-literal: 2.0.1
       mdast-util-gfm-footnote: 2.1.0
       mdast-util-gfm-strikethrough: 2.0.0
@@ -18214,7 +18214,7 @@ snapshots:
 
   micromark-util-types@2.0.2: {}
 
-  micromark@4.0.2:
+  micromark@4.0.2(supports-color@8.1.1):
     dependencies:
       '@types/debug': 4.1.13
       debug: 4.4.3(supports-color@8.1.1)
@@ -19265,10 +19265,10 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  remark-gfm@4.0.1:
+  remark-gfm@4.0.1(supports-color@8.1.1):
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-gfm: 3.1.0
+      mdast-util-gfm: 3.1.0(supports-color@8.1.1)
       micromark-extension-gfm: 3.0.0
       remark-parse: 11.0.0
       remark-stringify: 11.0.0
@@ -19279,7 +19279,7 @@ snapshots:
   remark-parse@11.0.0:
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.0.3
+      mdast-util-from-markdown: 2.0.3(supports-color@8.1.1)
       micromark-util-types: 2.0.2
       unified: 11.0.5
     transitivePeerDependencies:
