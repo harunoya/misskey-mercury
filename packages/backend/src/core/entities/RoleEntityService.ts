@@ -101,6 +101,7 @@ export class RoleEntityService {
 			isAdministrator: role.isAdministrator,
 			asBadge: role.asBadge,
 			isPublicDisplayRequired: role.isPublicDisplayRequired,
+			isExplorable: role.isExplorable,
 			displayOrder: role.displayOrder,
 		};
 	}

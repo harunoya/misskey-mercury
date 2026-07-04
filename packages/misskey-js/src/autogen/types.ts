@@ -5329,6 +5329,8 @@ export type components = {
             asBadge: boolean;
             /** @example false */
             isPublicDisplayRequired: boolean;
+            /** @example false */
+            isExplorable: boolean;
             /** @example 0 */
             displayOrder: number;
         };

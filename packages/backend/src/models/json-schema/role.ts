@@ -379,6 +379,11 @@ export const packedRoleLiteSchema = {
 			optional: false, nullable: false,
 			example: false,
 		},
+		isExplorable: {
+			type: 'boolean',
+			optional: false, nullable: false,
+			example: false,
+		},
 		displayOrder: {
 			type: 'integer',
 			optional: false, nullable: false,
