@@ -115,8 +115,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 
 		<hr>
+		<div class="_gaps_s">
+			<!-- ページ移動したのでリンクを残してある。そのうち消しても良いかも -->
+			<FormLink to="/settings/roles">
+				<template #icon><i class="ti ti-badges"></i></template>
+				{{ i18n.ts.rolesAssignedToMe }}
+			</FormLink>
 
-		<FormLink to="/registry"><template #icon><i class="ti ti-adjustments"></i></template>{{ i18n.ts.registry }}</FormLink>
+			<FormLink to="/registry"><template #icon><i class="ti ti-adjustments"></i></template>{{ i18n.ts.registry }}</FormLink>
+		</div>
 
 		<hr>
 
