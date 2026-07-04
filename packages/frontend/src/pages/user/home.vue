@@ -226,6 +226,7 @@ const visibleProfileRoles = computed(() => {
 	const roles = user.value.roles;
 	if ($i == null || $i.id !== user.value.id) return roles;
 
+	// 自分のプロフィールを自分で見た場合レスポンスに非表示ロールも含まれるので、別途除外する必要がある
 	const hiddenRoleIds = new Set($i.hiddenRoleIds ?? []);
 	return roles.filter(role => role.isPublicDisplayRequired === true || !hiddenRoleIds.has(role.id));
 });

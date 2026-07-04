@@ -51,6 +51,7 @@ const badgeRoles = computed(() => {
 	const roles = props.note.user.badgeRoles;
 	if (roles == null || $i == null || $i.id !== props.note.userId) return roles;
 
+	// 自分のプロフィールを自分で見た場合レスポンスに非表示ロールも含まれるので、別途除外する必要がある
 	const hiddenRoleIds = new Set(($i.hiddenRoleIds) ?? []);
 	return roles.filter(role => !hiddenRoleIds.has(role.id));
 });
