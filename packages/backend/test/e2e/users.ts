@@ -685,6 +685,7 @@ describe('ユーザー', () => {
 			isAdministrator: roleBadge.isAdministrator,
 			asBadge: roleBadge.asBadge,
 			isPublicDisplayRequired: roleBadge.isPublicDisplayRequired,
+			isExplorable: roleBadge.isExplorable,
 			displayOrder: roleBadge.displayOrder,
 		}]);
 	});
