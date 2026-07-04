@@ -251,6 +251,7 @@ import { Paginator } from '@/utility/paginator.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import number from '@/filters/number.js';
 import { DI } from '@/di.js';
+import { $i } from '@/i.js';
 import type { Keymap } from '@/utility/hotkey.js';
 
 // コンポーネント外部の依存関係
@@ -332,6 +333,13 @@ provide(DI.mfmEmojiReactCallback, reactViaMfmEmoji);
 // MkNoteDetailed固有
 const tab = ref(props.initialTab);
 const reactionTabType = ref<string | null>(null);
+const badgeRoles = computed(() => {
+	const roles = appearNote.user.badgeRoles;
+	if (roles == null || $i == null || $i.id !== props.note.userId) return roles;
+
+	const hiddenRoleIds = new Set(($i.hiddenRoleIds) ?? []);
+	return roles.filter(role => !hiddenRoleIds.has(role.id));
+});
 
 const renotesPaginator = markRaw(new Paginator('notes/renotes', {
 	limit: 10,
