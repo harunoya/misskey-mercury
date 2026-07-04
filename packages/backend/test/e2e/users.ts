@@ -663,6 +663,7 @@ describe('ユーザー', () => {
 			isAdministrator: rolePublic.isAdministrator,
 			asBadge: rolePublic.asBadge,
 			isPublicDisplayRequired: rolePublic.isPublicDisplayRequired,
+			isExplorable: rolePublic.isExplorable,
 			displayOrder: rolePublic.displayOrder,
 		}]);
 	});
