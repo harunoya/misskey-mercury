@@ -495,7 +495,7 @@ export function select<C extends OptionValue, D extends C | null = null>(props: 
 }
 
 export function selectPeriod(options: { title?: string } = {}): Promise<MkPeriodDialogDoneEvent> {
-	return new Promise(async (resolve) => {
+	return new Promise((resolve) => {
 		const { dispose } = popup(defineAsyncComponent(() => import('@/components/MkPeriodDialog.vue')), {
 			title: options.title,
 		}, {
