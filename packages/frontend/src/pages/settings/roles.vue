@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <SearchMarker path="/settings/roles" :label="i18n.ts.roles" :keywords="['role', 'badge']" icon="ti ti-badges">
 	<div class="_gaps_m">
-		<MkFeatureBanner icon="/client-assets/label_3d.png" color="#ffbf00">
+		<MkFeatureBanner icon="/fluent-emoji/1f3f7.png" color="#ffbf00">
 			<SearchText>{{ i18n.ts._roleDisplay.description }}</SearchText>
 		</MkFeatureBanner>
 		<SearchMarker :keywords="['roles']">
