@@ -70,7 +70,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<MkAcct :user="appearNote.user"/>
 						</div>
 						<div v-if="badgeRoles" :class="$style.noteHeaderBadgeRoles">
-							<img v-for="(role, i) in badgeRoles" :key="i" v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
+							<img v-for="role in badgeRoles" :key="role.id" v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
 						</div>
 					</div>
 					<MkInstanceTicker v-if="showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
@@ -335,10 +335,10 @@ const tab = ref(props.initialTab);
 const reactionTabType = ref<string | null>(null);
 const badgeRoles = computed(() => {
 	const roles = appearNote.user.badgeRoles;
-	if (roles == null || $i == null || $i.id !== props.note.userId) return roles;
+	if (roles == null || $i == null || $i.id !== appearNote.userId) return roles;
 
-	// 自分のプロフィールを自分で見た場合レスポンスに非表示ロールも含まれるので、別途除外する必要がある
-	const hiddenRoleIds = new Set(($i.hiddenRoleIds) ?? []);
+	// 自分のノートを自分で見た場合レスポンスに非表示ロールも含まれるので、別途除外する必要がある
+	const hiddenRoleIds = new Set($i.hiddenRoleIds ?? []);
 	return roles.filter(role => !hiddenRoleIds.has(role.id));
 });
 
