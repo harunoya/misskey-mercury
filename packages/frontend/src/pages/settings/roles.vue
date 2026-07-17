@@ -9,29 +9,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkFeatureBanner icon="/fluent-emoji/1f3f7.png" color="#ffbf00">
 			<SearchText>{{ i18n.ts._roleDisplay.description }}</SearchText>
 		</MkFeatureBanner>
-		<SearchMarker :keywords="['roles']">
-			<div class="_gaps_s">
-				<MkResult v-if="roleDisplayRoles.length === 0" type="empty"/>
-				<div v-for="role in roleDisplayRoles" :key="role.id" class="_panel _gaps" :class="$style.roleItem">
-					<MkRolePreview :role="role" :forModeration="false"/>
-					<MkSwitch
-						:modelValue="isRoleDisplayShown(role)"
-						:disabled="role.isPublicDisplayRequired"
-						@update:modelValue="value => updateRoleDisplay(role, value)"
-					>
-						<template #label>{{ i18n.ts._roleDisplay.displayToggle }}</template>
-						<template v-if="role.isPublicDisplayRequired" #caption>{{ i18n.ts._roleDisplay.alwaysShownByAdmin }}</template>
-						<template v-else-if="role.isExplorable" #caption>
-							<i class="ti ti-alert-triangle" style="color: var(--MI_THEME-warn);"></i> <I18n :src="i18n.ts._roleDisplay.roleExplorableAlert">
-								<template #link>
-									<MkA class="_link" :to="`/roles/${role.id}`">{{ i18n.ts.explore }}</MkA>
-								</template>
-							</I18n>
-						</template>
-					</MkSwitch>
-				</div>
+		<div class="_gaps_s">
+			<MkResult v-if="roleDisplayRoles.length === 0" type="empty"/>
+			<div v-for="role in roleDisplayRoles" :key="role.id" class="_panel _gaps" :class="$style.roleItem">
+				<MkRolePreview :role="role" :forModeration="false"/>
+				<MkSwitch
+					:modelValue="isRoleDisplayShown(role)"
+					:disabled="role.isPublicDisplayRequired"
+					@update:modelValue="value => updateRoleDisplay(role, value)"
+				>
+					<template #label>{{ i18n.ts._roleDisplay.displayToggle }}</template>
+					<template v-if="role.isPublicDisplayRequired" #caption>{{ i18n.ts._roleDisplay.alwaysShownByAdmin }}</template>
+					<template v-else-if="role.isExplorable" #caption>
+						<i class="ti ti-alert-triangle" style="color: var(--MI_THEME-warn);"></i> <I18n :src="i18n.ts._roleDisplay.roleExplorableAlert">
+							<template #link>
+								<MkA class="_link" :to="`/roles/${role.id}`">{{ i18n.ts.explore }}</MkA>
+							</template>
+						</I18n>
+					</template>
+				</MkSwitch>
 			</div>
-		</SearchMarker>
+		</div>
 	</div>
 </SearchMarker>
 </template>

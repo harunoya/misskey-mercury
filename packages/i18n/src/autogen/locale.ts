@@ -12189,6 +12189,10 @@ export interface Locale extends ILocale {
     };
     "_roleDisplay": {
         /**
+         * ロールの表示/非表示
+         */
+        "title": string;
+        /**
          * 自分に割り当てられているロールを確認したり、プロフィールやノート上で表示・公開するロールを選択したりできます。
          */
         "description": string;
