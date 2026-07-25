@@ -36,7 +36,7 @@ type Scope = Partial<{
 
 type ValueMeta = Partial<{
 	sync: boolean;
-	// TODO: modifiedAtをここでも(Record個別に)持っておいた方が値の新旧比較に使えて便利そう
+	modifiedAt?: number;
 }>;
 
 type PrefRecord<K extends keyof PREF> = [scope: Scope, value: ValueOf<K>, meta: ValueMeta];
@@ -89,9 +89,9 @@ export type PossiblyNonNormalizedPreferencesProfile = Omit<PreferencesProfile, '
 export type StorageProvider = {
 	load: () => PossiblyNonNormalizedPreferencesProfile | null;
 	save: (ctx: { profile: PreferencesProfile; }) => void;
-	cloudGetBulk: <K extends keyof PREF>(ctx: { needs: { key: K; scope: Scope; }[] }) => Promise<Partial<Record<K, ValueOf<K>>>>;
-	cloudGet: <K extends keyof PREF>(ctx: { key: K; scope: Scope; }) => Promise<{ value: ValueOf<K>; } | null>;
-	cloudSet: <K extends keyof PREF>(ctx: { key: K; scope: Scope; value: ValueOf<K>; }) => Promise<void>;
+	cloudGetBulk: <K extends keyof PREF>(ctx: { needs: { key: K; scope: Scope; }[] }) => Promise<Partial<Record<K, { value: ValueOf<K>; meta: { modifiedAt: ValueMeta['modifiedAt'] }; }>>>;
+	cloudGet: <K extends keyof PREF>(ctx: { key: K; scope: Scope; }) => Promise<{ value: ValueOf<K>; meta: { modifiedAt: ValueMeta['modifiedAt'] }; } | null>;
+	cloudSet: <K extends keyof PREF>(ctx: { key: K; scope: Scope; value: ValueOf<K>; meta: { modifiedAt: ValueMeta['modifiedAt'] }; }) => Promise<void>;
 };
 
 type PreferencesDefinitionRecord<Default, T = Default extends (...args: any) => infer R ? R : Default> = {
@@ -244,13 +244,13 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 	}
 
 	// TODO: desync対策 cloudの値のfetchが正常に完了していない状態でcommitすると多分値が上書きされる
-	public commit<K extends keyof PREF>(key: K, value: ValueOf<K>) {
+	public commit<K extends keyof PREF>(key: K, value: ValueOf<K>): PrefRecord<K> | null {
 		const currentAccount = this.currentAccount; // TSを黙らせるため
 		const v = JSON.parse(JSON.stringify(value)); // deep copy 兼 vueのプロキシ解除
 
 		if (deepEqual(this.s[key], v)) {
 			if (_DEV_) console.log('(skip) prefer:commit', key, v);
-			return;
+			return null;
 		}
 
 		if (_DEV_) console.log('prefer:commit', key, v);
@@ -260,30 +260,39 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 		const record = this.getMatchedRecordOf(key);
 
 		if (parseScope(record[0]).account == null && isAccountDependentKey(key) && currentAccount != null) {
-			this.profile.preferences[key].push([makeScope({
+			const newRecord = [makeScope({
 				server: host,
 				account: currentAccount.id,
-			}), v, {}]);
+			}), v, {
+				modifiedAt: Date.now(),
+			}] as PrefRecord<K>;
+			this.profile.preferences[key].push(newRecord);
 			this.save();
-			return;
+			return newRecord;
 		}
 
 		if (parseScope(record[0]).server == null && isServerDependentKey(key)) {
-			this.profile.preferences[key].push([makeScope({
+			const newRecord = [makeScope({
 				server: host,
-			}), v, {}]);
+			}), v, {
+				modifiedAt: Date.now(),
+			}] as PrefRecord<K>;
+			this.profile.preferences[key].push(newRecord);
 			this.save();
-			return;
+			return newRecord;
 		}
 
 		record[1] = v;
+		record[2].modifiedAt = Date.now();
 		this.save();
 
 		if (record[2].sync) {
 			// awaitの必要なし
 			// TODO: リクエストを間引く
-			this.io.cloudSet({ key, scope: record[0], value: record[1] });
+			this.io.cloudSet({ key, scope: record[0], value: record[1], meta: { modifiedAt: record[2].modifiedAt } });
 		}
+
+		return record;
 	}
 
 	/**
@@ -360,8 +369,9 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			if (record[2].sync && Object.hasOwn(cloudValues, key) && cloudValues[key] !== undefined) {
 				const cloudValue = cloudValues[key];
 				if (!deepEqual(cloudValue, record[1])) {
-					this.rewriteRawState(key, cloudValue);
-					record[1] = cloudValue;
+					this.rewriteRawState(key, cloudValue.value);
+					record[1] = cloudValue.value;
+					record[2].modifiedAt = cloudValue.meta.modifiedAt;
 					modified = true;
 					if (_DEV_) console.log('cloud fetched', key, cloudValue);
 				}
@@ -503,12 +513,12 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			newValue = resolvedValue;
 		}
 
-		this.commit(key, newValue);
+		const commitedRecord = this.commit(key, newValue);
 
 		const done = os.waiting();
 
 		try {
-			await this.io.cloudSet({ key, scope: record[0], value: newValue });
+			await this.io.cloudSet({ key, scope: record[0], value: newValue, meta: { modifiedAt: record[2].modifiedAt } });
 		} catch (err) {
 			done();
 
@@ -607,6 +617,11 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			icon: 'ti ti-cloud-cog',
 			text: i18n.ts.syncBetweenDevices,
 			ref: sync,
+		}, {
+			type: 'divider',
+		}, {
+			type: 'label',
+			text: i18n.ts.modifiedAt + ': ' + (this.getMatchedRecordOf(key)[2].modifiedAt ? new Date(this.getMatchedRecordOf(key)[2].modifiedAt!).toLocaleString() : '-'),
 		}];
 	}
 }

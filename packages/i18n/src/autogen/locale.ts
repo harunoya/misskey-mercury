@@ -5261,6 +5261,10 @@ export interface Locale extends ILocale {
      */
     "modified": string;
     /**
+     * 変更日時
+     */
+    "modifiedAt": string;
+    /**
      * 破棄
      */
     "discard": string;

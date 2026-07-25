@@ -36,11 +36,12 @@ const io: StorageProvider = {
 			const cloudData = await misskeyApi('i/registry/get', {
 				scope: ['client', 'preferences', 'sync'],
 				key: syncGroup + ':' + ctx.key,
-			}) as [any, any][];
+			}) as [any, any, any][];
 			const target = cloudData.find(([scope]) => isSameScope(scope, ctx.scope));
 			if (target == null) return null;
 			return {
 				value: target[1],
+				meta: target[2],
 			};
 		} catch (err: any) {
 			if (err.code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
@@ -52,12 +53,12 @@ const io: StorageProvider = {
 	},
 
 	cloudSet: async (ctx) => {
-		let cloudData: [any, any][] = [];
+		let cloudData: [any, any, any][] = [];
 		try {
 			cloudData = await misskeyApi('i/registry/get', {
 				scope: ['client', 'preferences', 'sync'],
 				key: syncGroup + ':' + ctx.key,
-			}) as [any, any][];
+			}) as [any, any, any][];
 		} catch (err: any) {
 			if (err.code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
 				cloudData = [];
@@ -69,9 +70,9 @@ const io: StorageProvider = {
 		const i = cloudData.findIndex(([scope]) => isSameScope(scope, ctx.scope));
 
 		if (i === -1) {
-			cloudData.push([ctx.scope, ctx.value]);
+			cloudData.push([ctx.scope, ctx.value, ctx.meta]);
 		} else {
-			cloudData[i] = [ctx.scope, ctx.value];
+			cloudData[i] = [ctx.scope, ctx.value, ctx.meta];
 		}
 
 		await misskeyApi('i/registry/set', {
@@ -86,10 +87,10 @@ const io: StorageProvider = {
 		const fetchings = ctx.needs.map(need => io.cloudGet(need).then(res => [need.key, res] as const));
 		const cloudDatas = await Promise.all(fetchings);
 
-		const res = {} as Partial<Record<string, any>>;
+		const res = {} as Partial<Record<string, { value: any; meta: any; }>>;
 		for (const cloudData of cloudDatas) {
 			if (cloudData[1] != null) {
-				res[cloudData[0]] = cloudData[1].value;
+				res[cloudData[0]] = cloudData[1];
 			}
 		}
 
