@@ -36,6 +36,7 @@ type Scope = Partial<{
 
 type ValueMeta = Partial<{
 	sync: boolean;
+	// TODO: modifiedAtをここでも(Record個別に)持っておいた方が値の新旧比較に使えて便利そう
 }>;
 
 type PrefRecord<K extends keyof PREF> = [scope: Scope, value: ValueOf<K>, meta: ValueMeta];
