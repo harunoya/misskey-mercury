@@ -123,10 +123,12 @@ createVisibilityAwareInterval(() => {
 }, 1000 * 60 * 3);
 //#endregion
 
-if (store.s.enablePreferencesAutoCloudSync) {
-	// TODO: 前回同期してから10分以上経過している場合のみ
-	cloudSync();
-}
+store.loaded.then(() => {
+	if (store.s.enablePreferencesAutoCloudSync) {
+		// TODO: 前回同期してから10分以上経過している場合のみ
+		cloudSync();
+	}
+});
 
 if (_DEV_) {
 	(window as any).prefer = prefer;

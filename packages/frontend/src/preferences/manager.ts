@@ -351,6 +351,8 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 
 		const cloudValues = await this.io.cloudGetBulk({ needs });
 
+		let modified = false;
+
 		for (const _key in PREF_DEF) {
 			const key = _key as keyof PREF;
 			const record = this.getMatchedRecordOf(key);
@@ -359,12 +361,14 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 				if (!deepEqual(cloudValue, record[1])) {
 					this.rewriteRawState(key, cloudValue);
 					record[1] = cloudValue;
+					modified = true;
 					if (_DEV_) console.log('cloud fetched', key, cloudValue);
 				}
 			}
 		}
 
-		this.save();
+		if (modified) this.save();
+
 		if (_DEV_) console.log('cloud fetch completed');
 	}
 

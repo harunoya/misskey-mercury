@@ -162,10 +162,12 @@ export async function cloudSync() {
 		key: prefer.profile.name,
 	}) as PreferencesProfile | null;
 
-	if (cloudProfile == null || cloudProfile.modifiedAt < prefer.profile.modifiedAt) {
-		await cloudBackup();
+	if (cloudProfile == null || cloudProfile.modifiedAt <= prefer.profile.modifiedAt) {
+		if (_DEV_) console.log('no new cloud profile found, skipping sync');
 		return;
 	}
+
+	if (_DEV_) console.log('new cloud profile found, restoring from cloud', cloudProfile);
 
 	miLocalStorage.setItem('preferences', JSON.stringify(cloudProfile));
 
@@ -177,6 +179,10 @@ export async function cloudBackup() {
 	if (!canAutoBackup()) {
 		throw new Error('cannot auto backup for this profile');
 	}
+
+	// TODO: 同期有効時、既に新しいバージョンがバックアップされている場合は上書きしないようにする
+
+	if (_DEV_) console.log('cloud backup', prefer.profile);
 
 	await misskeyApi('i/registry/set', {
 		scope: ['client', 'preferences', 'backups'],
