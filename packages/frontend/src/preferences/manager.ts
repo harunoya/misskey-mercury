@@ -75,7 +75,7 @@ export type PreferencesProfile = {
 	id: string;
 	version: string;
 	type: 'main';
-	modifiedAt: number; // 仕様が若干直感的ではない(syncされた値が降ってきたときは更新されないなど)ため、一応残してはいるが積極的な利用はしない方が無難
+	modifiedAt: number; // 仕様が若干直感的ではない(syncされた値が降ってきたときは更新されないなど)ため、一応残してはいるが積極的な利用はしない方が無難。設定値の新旧比較が必要なら項目ごとのmodifiedAtを使うべし
 	name: string;
 	preferences: {
 		[K in keyof PREF]: PrefRecord<K>[];
