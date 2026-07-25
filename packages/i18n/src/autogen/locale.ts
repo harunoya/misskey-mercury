@@ -6344,7 +6344,7 @@ export interface Locale extends ILocale {
          */
         "forceBackup": string;
         /**
-         * 自動同期
+         * デバイス間同期
          */
         "autoSync": string;
         /**

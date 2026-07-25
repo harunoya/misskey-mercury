@@ -1599,7 +1599,7 @@ _preferencesBackup:
   autoPreferencesBackupIsNotEnabledForThisDevice: "このデバイスで設定の自動バックアップは有効になっていません。"
   backupFound: "設定のバックアップが見つかりました"
   forceBackup: "今すぐバックアップ"
-  autoSync: "自動同期"
+  autoSync: "デバイス間同期"
   forceSync: "今すぐ同期"
 
 _accountSettings:
