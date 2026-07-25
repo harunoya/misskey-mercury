@@ -36,7 +36,7 @@ type Scope = Partial<{
 
 type ValueMeta = Partial<{
 	sync: boolean;
-	modifiedAt?: number;
+	modifiedAt?: number; // 設定値を変更した日時。同期した日時などではない。つまり別のデバイスでA日に変更したものをB日に同期して取得したとしてもmodifiedAtはA日である必要がある
 }>;
 
 type PrefRecord<K extends keyof PREF> = [scope: Scope, value: ValueOf<K>, meta: ValueMeta];
