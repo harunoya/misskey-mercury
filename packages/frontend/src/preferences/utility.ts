@@ -163,14 +163,14 @@ export async function cloudSync() {
 		key: prefer.profile.name,
 	}) as PreferencesProfile | null;
 
-	if (cloudProfile == null || cloudProfile.modifiedAt <= prefer.profile.modifiedAt) {
-		if (_DEV_) console.log('no new cloud profile found, skipping sync');
+	if (cloudProfile == null) {
+		if (_DEV_) console.log('no backuped profile found, skipping sync');
 		return;
 	}
 
-	if (_DEV_) console.log('new cloud profile found, restoring from cloud', cloudProfile);
+	if (_DEV_) console.log('backuped profile found, syncing', cloudProfile);
 
-	miLocalStorage.setItem('preferences', JSON.stringify(cloudProfile));
+	miLocalStorage.setItem('preferences', JSON.stringify(mergeProfiles(prefer.profile, cloudProfile)));
 
 	prefer.reloadProfile();
 }

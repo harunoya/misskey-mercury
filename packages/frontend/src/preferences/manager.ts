@@ -182,6 +182,7 @@ function normalizePreferences(preferences: PossiblyNonNormalizedPreferencesProfi
 }
 
 // 各recordについて、modifiedAtが大きい方を採用する
+// 引数の参照をmutateしないように注意すること
 export function mergeProfiles(a: PreferencesProfile, b: PreferencesProfile): PreferencesProfile {
 	const merged = {
 		...a,
