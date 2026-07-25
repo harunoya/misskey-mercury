@@ -372,7 +372,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 		if (_DEV_) console.log('cloud fetch completed');
 	}
 
-	public save() {
+	private save() {
 		this.profile.modifiedAt = Date.now();
 		this.profile.version = version;
 		this.io.save({ profile: this.profile });
