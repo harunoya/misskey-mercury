@@ -5,7 +5,7 @@
 
 import { createVisibilityAwareInterval } from '@@/js/interval.js';
 import type { StorageProvider } from '@/preferences/manager.js';
-import { cloudBackup } from '@/preferences/utility.js';
+import { cloudBackup, cloudSync } from '@/preferences/utility.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { isSameScope, PreferencesManager } from '@/preferences/manager.js';
 import { store } from '@/store.js';
@@ -122,6 +122,11 @@ createVisibilityAwareInterval(() => {
 	});
 }, 1000 * 60 * 3);
 //#endregion
+
+if (store.s.enablePreferencesAutoCloudSync) {
+	// TODO: 前回同期してから10分以上経過している場合のみ
+	cloudSync();
+}
 
 if (_DEV_) {
 	(window as any).prefer = prefer;
