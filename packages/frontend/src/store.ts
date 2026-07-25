@@ -122,6 +122,14 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'device',
 		default: true,
 	},
+	latestPreferencesBackupAt: {
+		where: 'device',
+		default: 0,
+	},
+	latestPreferencesSyncAt: {
+		where: 'device',
+		default: 0,
+	},
 }));
 
 // TODO: 他のタブと永続化されたstateを同期

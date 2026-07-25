@@ -66,11 +66,13 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 		type: 'switch',
 		icon: 'ti ti-cloud-up',
 		text: i18n.ts._preferencesBackup.autoBackup,
+		caption: i18n.ts.latestBackupAt + ': ' + (store.s.latestPreferencesBackupAt ? new Date(store.s.latestPreferencesBackupAt).toLocaleString() : '-'),
 		ref: autoBackupEnabled,
 	}, {
 		type: 'switch',
 		icon: 'ti ti-cloud-down',
 		text: i18n.ts._preferencesBackup.autoSync,
+		caption: i18n.ts.latestSyncAt + ': ' + (store.s.latestPreferencesSyncAt ? new Date(store.s.latestPreferencesSyncAt).toLocaleString() : '-'),
 		ref: autoSyncEnabled,
 	}, {
 		text: i18n.ts.export,
@@ -173,6 +175,8 @@ export async function cloudSync() {
 	miLocalStorage.setItem('preferences', JSON.stringify(mergeProfiles(prefer.profile, cloudProfile)));
 
 	prefer.reloadProfile();
+
+	store.set('latestPreferencesSyncAt', Date.now());
 }
 
 export async function cloudBackup() {
@@ -200,6 +204,8 @@ export async function cloudBackup() {
 		key: prefer.profile.name,
 		value: currentProfile,
 	});
+
+	store.set('latestPreferencesBackupAt', Date.now());
 }
 
 export async function listCloudBackups() {
