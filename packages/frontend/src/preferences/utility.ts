@@ -42,6 +42,16 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 		}
 	});
 
+	const autoSyncEnabled = ref(store.s.enablePreferencesAutoCloudSync);
+
+	watch(autoSyncEnabled, () => {
+		if (autoSyncEnabled.value) {
+			store.set('enablePreferencesAutoCloudSync', true);
+		} else {
+			store.set('enablePreferencesAutoCloudSync', false);
+		}
+	});
+
 	const menu: MenuItem[] = [{
 		type: 'label',
 		text: prefer.profile.name || `(${i18n.ts.noName})`,
@@ -56,6 +66,11 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 		icon: 'ti ti-cloud-up',
 		text: i18n.ts._preferencesBackup.autoBackup,
 		ref: autoBackupEnabled,
+	}, {
+		type: 'switch',
+		icon: 'ti ti-cloud-down',
+		text: i18n.ts._preferencesBackup.autoSync,
+		ref: autoSyncEnabled,
 	}, {
 		text: i18n.ts.export,
 		icon: 'ti ti-download',
@@ -139,6 +154,24 @@ function importProfile() {
 	input.click();
 }
 
+export async function cloudSync() {
+	if ($i == null) return;
+
+	const cloudProfile = await misskeyApi('i/registry/get', {
+		scope: ['client', 'preferences', 'backups'],
+		key: prefer.profile.name,
+	}) as PreferencesProfile | null;
+
+	if (cloudProfile == null || cloudProfile.modifiedAt < prefer.profile.modifiedAt) {
+		await cloudBackup();
+		return;
+	}
+
+	miLocalStorage.setItem('preferences', JSON.stringify(cloudProfile));
+
+	prefer.reloadProfile();
+}
+
 export async function cloudBackup() {
 	if ($i == null) return;
 	if (!canAutoBackup()) {
@@ -186,7 +219,6 @@ export async function restoreFromCloudBackup() {
 
 	const select = await os.select({
 		title: i18n.ts._preferencesBackup.selectBackupToRestore,
-		text: 'ℹ️ ' + i18n.ts._preferencesProfile.shareSameProfileBetweenDevicesIsNotRecommended + ' ' + i18n.ts._preferencesProfile.useSyncBetweenDevicesOptionIfYouWantToSyncSetting,
 		items: backups.map(backup => ({
 			label: backup.name,
 			value: backup.name,

@@ -110,6 +110,10 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'device',
 		default: false,
 	},
+	enablePreferencesAutoCloudSync: {
+		where: 'device',
+		default: false,
+	},
 	showPreferencesAutoCloudBackupSuggestion: {
 		where: 'device',
 		default: true,

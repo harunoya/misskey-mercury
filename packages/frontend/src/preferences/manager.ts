@@ -102,14 +102,6 @@ type PreferencesDefinitionRecord<Default, T = Default extends (...args: any) => 
 
 export type PreferencesDefinition = Record<string, PreferencesDefinitionRecord<any>>;
 
-type PreferencesManagerEvents = {
-	'committed': <K extends keyof PREF>(ctx: {
-		key: K;
-		value: ValueOf<K>;
-		oldValue: ValueOf<K>;
-	}) => void;
-};
-
 export function definePreferences<T extends Record<string, unknown>>(x: {
 	[K in keyof T]: PreferencesDefinitionRecord<T[K]>
 }): {
@@ -188,6 +180,10 @@ function normalizePreferences(preferences: PossiblyNonNormalizedPreferencesProfi
 	return data as PreferencesProfile['preferences'];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type PreferencesManagerEvents = {
+};
+
 // TODO: PreferencesManagerForGuest のような非ログイン専用のクラスを分離すればthis.currentAccountのnullチェックやaccountがnullであるスコープのレコード挿入などが不要になり綺麗になるかもしれない
 //       と思ったけど操作アカウントが存在しない場合も考慮する現在の設計の方が汎用的かつ堅牢かもしれない
 // NOTE: accountDependentな設定は初期状態であってもアカウントごとのスコープでレコードを作成しておかないと、サーバー同期する際に正しく動作しなくなる
@@ -262,21 +258,12 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 
 		const record = this.getMatchedRecordOf(key);
 
-		const _save = () => {
-			this.save();
-			this.emit('committed', {
-				key,
-				value: v,
-				oldValue: this.s[key],
-			});
-		};
-
 		if (parseScope(record[0]).account == null && isAccountDependentKey(key) && currentAccount != null) {
 			this.profile.preferences[key].push([makeScope({
 				server: host,
 				account: currentAccount.id,
 			}), v, {}]);
-			_save();
+			this.save();
 			return;
 		}
 
@@ -284,12 +271,12 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			this.profile.preferences[key].push([makeScope({
 				server: host,
 			}), v, {}]);
-			_save();
+			this.save();
 			return;
 		}
 
 		record[1] = v;
-		_save();
+		this.save();
 
 		if (record[2].sync) {
 			// awaitの必要なし
@@ -554,20 +541,18 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 	}
 
 	public reloadProfile() {
-		const newProfile = this.io.load();
-		if (newProfile == null) return;
+		const freshProfile = this.io.load();
+		if (freshProfile == null) return;
 
 		this.profile = {
-			...newProfile,
-			preferences: normalizePreferences(newProfile.preferences, this.currentAccount),
+			...freshProfile,
+			preferences: normalizePreferences(freshProfile.preferences, this.currentAccount),
 		};
 		const states = this.genStates();
 		for (const _key in states) {
 			const key = _key as keyof PREF;
 			this.rewriteRawState(key, states[key]);
 		}
-
-		this.fetchCloudValues();
 	}
 
 	public getPerPrefMenu<K extends keyof PREF>(key: K): MenuItem[] {

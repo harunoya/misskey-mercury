@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { BroadcastChannel } from 'broadcast-channel';
 import { createVisibilityAwareInterval } from '@@/js/interval.js';
 import type { StorageProvider } from '@/preferences/manager.js';
 import { cloudBackup } from '@/preferences/utility.js';
@@ -12,7 +11,6 @@ import { isSameScope, PreferencesManager } from '@/preferences/manager.js';
 import { store } from '@/store.js';
 import { $i } from '@/i.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
-import { TAB_ID } from '@/tab-id.js';
 
 // クラウド同期用グループ名
 const syncGroup = 'default';
@@ -102,41 +100,10 @@ const io: StorageProvider = {
 export const prefer = new PreferencesManager(io, $i);
 
 //#region タブ間同期
-let latestPreferencesUpdate: {
-	tabId: string;
-	timestamp: number;
-} | null = null;
-
-const preferencesChannel = new BroadcastChannel<{
-	type: 'preferencesUpdate';
-	tabId: string;
-	timestamp: number;
-}>('preferences');
-
-prefer.on('committed', () => {
-	latestPreferencesUpdate = {
-		tabId: TAB_ID,
-		timestamp: Date.now(),
-	};
-	preferencesChannel.postMessage({
-		type: 'preferencesUpdate',
-		tabId: TAB_ID,
-		timestamp: latestPreferencesUpdate.timestamp,
-	});
-});
-
-preferencesChannel.addEventListener('message', (msg) => {
-	if (msg.type === 'preferencesUpdate') {
-		if (msg.tabId === TAB_ID) return;
-		if (latestPreferencesUpdate != null) {
-			if (msg.timestamp <= latestPreferencesUpdate.timestamp) return;
-		}
+window.addEventListener('storage', (ev) => {
+	if (ev.key === 'preferences') {
 		prefer.reloadProfile();
-		if (_DEV_) console.log('prefer:received update from other tab');
-		latestPreferencesUpdate = {
-			tabId: msg.tabId,
-			timestamp: msg.timestamp,
-		};
+		if (_DEV_) console.log('prefer: received update from other tab');
 	}
 });
 //#endregion

@@ -6336,9 +6336,17 @@ export interface Locale extends ILocale {
          */
         "backupFound": string;
         /**
-         * 設定の強制バックアップ
+         * 今すぐバックアップ
          */
         "forceBackup": string;
+        /**
+         * 自動同期
+         */
+        "autoSync": string;
+        /**
+         * 今すぐ同期
+         */
+        "forceSync": string;
     };
     "_accountSettings": {
         /**

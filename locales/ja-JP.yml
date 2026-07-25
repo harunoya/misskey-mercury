@@ -1597,7 +1597,9 @@ _preferencesBackup:
   youNeedToNameYourProfileToEnableAutoBackup: "自動バックアップを有効にするにはプロファイル名の設定が必要です。"
   autoPreferencesBackupIsNotEnabledForThisDevice: "このデバイスで設定の自動バックアップは有効になっていません。"
   backupFound: "設定のバックアップが見つかりました"
-  forceBackup: "設定の強制バックアップ"
+  forceBackup: "今すぐバックアップ"
+  autoSync: "自動同期"
+  forceSync: "今すぐ同期"
 
 _accountSettings:
   requireSigninToViewContents: "コンテンツの表示にログインを必須にする"
