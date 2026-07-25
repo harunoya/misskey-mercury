@@ -75,7 +75,7 @@ export type PreferencesProfile = {
 	id: string;
 	version: string;
 	type: 'main';
-	modifiedAt: number;
+	modifiedAt: number; // 仕様が若干直感的ではない(syncされた値が降ってきたときは更新されないなど)ため、一応残してはいるが積極的な利用はしない方が無難
 	name: string;
 	preferences: {
 		[K in keyof PREF]: PrefRecord<K>[];
@@ -179,6 +179,39 @@ function normalizePreferences(preferences: PossiblyNonNormalizedPreferencesProfi
 	}
 
 	return data as PreferencesProfile['preferences'];
+}
+
+// 各recordについて、modifiedAtが大きい方を採用する
+export function mergeProfiles(a: PreferencesProfile, b: PreferencesProfile): PreferencesProfile {
+	const merged = {
+		...a,
+		modifiedAt: Math.max(a.modifiedAt, b.modifiedAt),
+		preferences: {},
+	} as PreferencesProfile;
+
+	for (const _key in PREF_DEF) {
+		const key = _key as keyof PREF;
+		const aRecords = a.preferences[key];
+		const bRecords = b.preferences[key];
+
+		const mergedRecords = [...aRecords];
+
+		for (const bRecord of bRecords) {
+			const existingIndex = mergedRecords.findIndex(([scope]) => isSameScope(scope, bRecord[0]));
+			if (existingIndex === -1) {
+				mergedRecords.push(bRecord);
+			} else {
+				const aRecord = mergedRecords[existingIndex];
+				if ((bRecord[2].modifiedAt ?? 0) > (aRecord[2].modifiedAt ?? 0)) {
+					mergedRecords[existingIndex] = bRecord;
+				}
+			}
+		}
+
+		(merged.preferences[key] as PrefRecord<typeof key>[]) = mergedRecords;
+	}
+
+	return merged;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

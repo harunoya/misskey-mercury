@@ -4,6 +4,7 @@
  */
 
 import { ref, watch } from 'vue';
+import { mergeProfiles } from './manager.js';
 import type { PreferencesProfile } from './manager.js';
 import type { MenuItem } from '@/types/menu.js';
 import { copyToClipboard } from '@/utility/copy-to-clipboard.js';
@@ -180,14 +181,24 @@ export async function cloudBackup() {
 		throw new Error('cannot auto backup for this profile');
 	}
 
-	// TODO: 同期有効時、既に新しいバージョンがバックアップされている場合は上書きしないようにする
+	let currentProfile = prefer.profile;
 
-	if (_DEV_) console.log('cloud backup', prefer.profile);
+	if (_DEV_) console.log('cloud backup', currentProfile);
+
+	const backupedProfile = await misskeyApi('i/registry/get', {
+		scope: ['client', 'preferences', 'backups'],
+		key: prefer.profile.name,
+	}) as PreferencesProfile | null;
+
+	// 古い設定で新しいバックアップを上書きしないようにマージ
+	if (backupedProfile != null) {
+		currentProfile = mergeProfiles(currentProfile, backupedProfile);
+	}
 
 	await misskeyApi('i/registry/set', {
 		scope: ['client', 'preferences', 'backups'],
 		key: prefer.profile.name,
-		value: prefer.profile,
+		value: currentProfile,
 	});
 }
 
