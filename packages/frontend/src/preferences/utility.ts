@@ -89,6 +89,7 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 			text: i18n.ts._preferencesBackup.autoSync,
 			caption: i18n.ts._preferencesBackup.autoSync_description,
 			ref: autoSyncEnabled,
+			disabled: computed(() => !autoBackupEnabled.value),
 		}, {
 			type: 'button',
 			icon: 'ti ti-cloud-down',
