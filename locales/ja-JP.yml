@@ -1592,7 +1592,9 @@ _preferencesProfile:
   useSyncBetweenDevicesOptionIfYouWantToSyncSetting: "複数のデバイスで同期したい設定項目が存在する場合は、個別に「複数のデバイスで同期」オプションを有効にしてください。"
 
 _preferencesBackup:
+  backupAndSync: "バックアップと同期"
   autoBackup: "自動バックアップ"
+  autoBackup_description: "設定を自動でサーバーに保存し、いつでも復元できるようにします"
   restoreFromBackup: "バックアップから復元"
   noBackupsFoundTitle: "バックアップが見つかりませんでした"
   noBackupsFoundDescription: "自動で作成されたバックアップは見つかりませんでしたが、バックアップファイルを手動で保存している場合、それをインポートして復元することはできます。"
@@ -1602,6 +1604,7 @@ _preferencesBackup:
   backupFound: "設定のバックアップが見つかりました"
   forceBackup: "今すぐバックアップ"
   autoSync: "デバイス間同期"
+  autoSync_description: "サーバーに保存された設定を自動で取得し、別のデバイスでの変更と同期できるようにします"
   forceSync: "今すぐ同期"
 
 _accountSettings:

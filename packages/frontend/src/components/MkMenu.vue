@@ -629,6 +629,7 @@ function guardMouseMove(ev: MouseEvent) {
 	box-sizing: border-box;
 	max-width: 100vw;
 	min-width: 200px;
+	width: max-content;
 	overflow: auto;
 	overscroll-behavior: contain;
 

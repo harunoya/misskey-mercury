@@ -6316,9 +6316,17 @@ export interface Locale extends ILocale {
     };
     "_preferencesBackup": {
         /**
+         * バックアップと同期
+         */
+        "backupAndSync": string;
+        /**
          * 自動バックアップ
          */
         "autoBackup": string;
+        /**
+         * 設定を自動でサーバーに保存し、いつでも復元できるようにします
+         */
+        "autoBackup_description": string;
         /**
          * バックアップから復元
          */
@@ -6355,6 +6363,10 @@ export interface Locale extends ILocale {
          * デバイス間同期
          */
         "autoSync": string;
+        /**
+         * サーバーに保存された設定を自動で取得し、別のデバイスでの変更と同期できるようにします
+         */
+        "autoSync_description": string;
         /**
          * 今すぐ同期
          */

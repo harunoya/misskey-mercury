@@ -63,17 +63,23 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 			renameProfile();
 		},
 	}, {
-		type: 'switch',
-		icon: 'ti ti-cloud-up',
-		text: i18n.ts._preferencesBackup.autoBackup,
-		caption: i18n.ts.latestBackupAt + ': ' + (store.s.latestPreferencesBackupAt ? new Date(store.s.latestPreferencesBackupAt).toLocaleString() : '-'),
-		ref: autoBackupEnabled,
-	}, {
-		type: 'switch',
-		icon: 'ti ti-cloud-down',
-		text: i18n.ts._preferencesBackup.autoSync,
-		caption: i18n.ts.latestSyncAt + ': ' + (store.s.latestPreferencesSyncAt ? new Date(store.s.latestPreferencesSyncAt).toLocaleString() : '-'),
-		ref: autoSyncEnabled,
+		type: 'parent',
+		text: i18n.ts._preferencesBackup.backupAndSync,
+		caption: i18n.ts.latestBackupAt + ': ' + (store.s.latestPreferencesBackupAt !== 0 ? new Date(store.s.latestPreferencesBackupAt).toLocaleString() : '-'),
+		icon: 'ti ti-cloud',
+		children: [{
+			type: 'switch',
+			icon: 'ti ti-cloud-up',
+			text: i18n.ts._preferencesBackup.autoBackup,
+			caption: i18n.ts._preferencesBackup.autoBackup_description,
+			ref: autoBackupEnabled,
+		}, {
+			type: 'switch',
+			icon: 'ti ti-cloud-down',
+			text: i18n.ts._preferencesBackup.autoSync,
+			caption: i18n.ts._preferencesBackup.autoSync_description,
+			ref: autoSyncEnabled,
+		}],
 	}, {
 		text: i18n.ts.export,
 		icon: 'ti ti-download',
