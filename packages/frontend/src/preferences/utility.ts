@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { mergeProfiles } from './manager.js';
 import type { PreferencesProfile } from './manager.js';
 import type { MenuItem } from '@/types/menu.js';
@@ -74,11 +74,29 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 			caption: i18n.ts._preferencesBackup.autoBackup_description,
 			ref: autoBackupEnabled,
 		}, {
+			type: 'button',
+			icon: 'ti ti-cloud-up',
+			text: i18n.ts._preferencesBackup.forceBackup,
+			disabled: computed(() => !autoBackupEnabled.value),
+			action: () => {
+				cloudBackup();
+			},
+		}, {
+			type: 'divider',
+		}, {
 			type: 'switch',
 			icon: 'ti ti-cloud-down',
 			text: i18n.ts._preferencesBackup.autoSync,
 			caption: i18n.ts._preferencesBackup.autoSync_description,
 			ref: autoSyncEnabled,
+		}, {
+			type: 'button',
+			icon: 'ti ti-cloud-down',
+			text: i18n.ts._preferencesBackup.forceSync,
+			disabled: computed(() => !autoSyncEnabled.value),
+			action: () => {
+				cloudSync();
+			},
 		}],
 	}, {
 		text: i18n.ts.export,
