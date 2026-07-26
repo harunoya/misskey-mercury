@@ -47,8 +47,18 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 
 	const autoSyncEnabled = ref(store.s.enablePreferencesAutoCloudSync);
 
-	watch(autoSyncEnabled, () => {
+	watch(autoSyncEnabled, async () => {
 		if (autoSyncEnabled.value) {
+			const confirm = await os.confirm({
+				type: 'warning',
+				title: i18n.ts._preferencesBackup.autoSyncAreYouSure,
+				text: i18n.ts._preferencesBackup.autoSyncAreYouSure_description,
+			});
+			if (confirm.canceled) {
+				autoSyncEnabled.value = false;
+				return;
+			}
+
 			store.set('enablePreferencesAutoCloudSync', true);
 		} else {
 			store.set('enablePreferencesAutoCloudSync', false);

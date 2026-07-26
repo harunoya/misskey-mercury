@@ -1606,6 +1606,8 @@ _preferencesBackup:
   autoSync: "デバイス間同期"
   autoSync_description: "サーバーに保存された設定を自動で取得し、別のデバイスでの変更と同期できるようにします"
   forceSync: "今すぐ同期"
+  autoSyncAreYouSure: "デバイス間の同期をオンにしますか？"
+  autoSyncAreYouSure_description: "通信量が増えるため、他のデバイスとこのプロファイルを共有する予定がない場合はオンにしないでください。"
 
 _accountSettings:
   requireSigninToViewContents: "コンテンツの表示にログインを必須にする"

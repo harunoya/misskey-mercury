@@ -6371,6 +6371,14 @@ export interface Locale extends ILocale {
          * 今すぐ同期
          */
         "forceSync": string;
+        /**
+         * デバイス間の同期をオンにしますか？
+         */
+        "autoSyncAreYouSure": string;
+        /**
+         * 通信量が増えるため、他のデバイスとこのプロファイルを共有する予定がない場合はオンにしないでください。
+         */
+        "autoSyncAreYouSure_description": string;
     };
     "_accountSettings": {
         /**
