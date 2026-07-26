@@ -40,6 +40,8 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 			cloudBackup();
 		} else {
 			store.set('enablePreferencesAutoCloudBackup', false);
+
+			autoSyncEnabled.value = false;
 		}
 	});
 
