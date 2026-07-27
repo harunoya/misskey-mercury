@@ -7,13 +7,13 @@ import * as BABYLON from '@babylonjs/core/pure.js';
 import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
 import { findMaterial, GRAPHICS_QUALITY, treeClone } from '../../utility.js';
 import { SYSTEM_HEYA_MESH_NAMES } from '../utility.js';
-import { EnvManager } from '../env.js';
+import { RoomEnvManager } from '../env.js';
 import type { RoomEngine } from '../engine.js';
 import type { SimpleEnvOptions } from 'misskey-world/src/room/env.js';
 
 // TODO: マテリアルは必要になるまで作成しないようにする
 
-export class SimpleEnvManager extends EnvManager<SimpleEnvOptions> {
+export class SimpleEnvManager extends RoomEnvManager<SimpleEnvOptions> {
 	private loaderResult: BABYLON.ISceneLoaderAsyncResult | null = null;
 	private rootNode: BABYLON.TransformNode;
 	private wallRoots: Record<'zPositive' | 'zNegative' | 'xPositive' | 'xNegative', BABYLON.TransformNode>;

@@ -34,7 +34,7 @@ import { CustomMadoriEnvManager } from './envs/customMadori.js';
 import { FurnitureContainer } from './FurnitureContainer.js';
 import type { FurnitureDef } from './furniture.js';
 import type { GridMaterial } from '@babylonjs/materials';
-import type { EnvManager } from './env.js';
+import type { RoomEnvManager } from './env.js';
 import type { RoomState_InstalledFurniture } from 'misskey-world/src/room/furniture.js';
 import type { RoomAttachments, RoomState } from 'misskey-world/src/room/type.js';
 import type { RawOptions } from 'misskey-world/src/mono.js';
@@ -97,7 +97,7 @@ export class RoomEngine extends EngineBase<{
 	private fov: number;
 	private fixedCamera: BABYLON.FreeCamera;
 	public furnitureContainers: Map<string, FurnitureContainer> = new Map();
-	private envManager: EnvManager | null = null;
+	private envManager: RoomEnvManager | null = null;
 
 	// TODO: たぶんオブジェクト内の値のmutateはsetで検知できないので、そのような操作を実際に行うようになった & それを検知する必要性が出てきたら専用の設定関数などを新設してそれを使わせる
 	private _grabbingCtx: {
@@ -561,7 +561,7 @@ export class RoomEngine extends EngineBase<{
 			this.pauseRender();
 		}
 
-		let envManager: EnvManager;
+		let envManager: RoomEnvManager;
 
 		if (this.roomState.env.type === 'simple') {
 			envManager = new SimpleEnvManager(this);

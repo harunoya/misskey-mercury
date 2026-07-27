@@ -7,11 +7,11 @@ import * as BABYLON from '@babylonjs/core/pure.js';
 import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
 import { findMaterial, GRAPHICS_QUALITY } from '../../utility.js';
 import { SYSTEM_HEYA_MESH_NAMES } from '../utility.js';
-import { EnvManager } from '../env.js';
+import { RoomEnvManager } from '../env.js';
 import type { RoomEngine } from '../engine.js';
 import type { MuseumEnvOptions } from 'misskey-world/src/room/env.js';
 
-export class MuseumEnvManager extends EnvManager<MuseumEnvOptions> {
+export class MuseumEnvManager extends RoomEnvManager<MuseumEnvOptions> {
 	private loaderResult: BABYLON.ISceneLoaderAsyncResult | null = null;
 	private meshes: BABYLON.Mesh[] = [];
 	private roomLight: BABYLON.DirectionalLight | null = null;

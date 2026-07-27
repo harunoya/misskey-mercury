@@ -7,21 +7,21 @@ import { reactive, ref, shallowRef, triggerRef, watch } from 'vue';
 import { EventEmitter } from 'eventemitter3';
 import * as Misskey from 'misskey-js';
 import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
-import type { RoomController } from './controller.js';
+import type { WorldEngineController } from './controller.js';
 import { useStream } from '@/stream.js';
 import * as os from '@/os.js';
 import { withTimeout } from '@/utility/promise-timeout.js';
 import { deepEqual } from '@/utility/deep-equal.js';
 
-export class RoomMultiplayer {
+export class WorldMultiplayer {
 	public isOnline = ref(false);
-	private controller: RoomController;
+	private controller: WorldEngineController;
 	private connection: Misskey.IChannelConnection<Misskey.Channels['worldRoom']> | null = null;
-	private roomId: string;
+	private dimensionId: string;
 	public playerProfiles: Record<string, PlayerProfile> = {};
 
-	constructor(roomId: string, controller: RoomController) {
-		this.roomId = roomId;
+	constructor(dimensionId: string, controller: WorldEngineController) {
+		this.dimensionId = dimensionId;
 		this.controller = controller;
 
 		this.onSync = this.onSync.bind(this);
@@ -32,7 +32,7 @@ export class RoomMultiplayer {
 	public enter() {
 		const p = new Promise<void>((resolve, reject) => {
 			this.connection = useStream().useChannel('worldRoom', {
-				roomId: this.roomId,
+				roomId: this.dimensionId,
 			});
 			this.connection.once('entered', ({ playerProfiles }) => {
 				console.log('entered', playerProfiles);

@@ -5,34 +5,22 @@
  */
 
 import * as BABYLON from '@babylonjs/core/pure.js';
-import { SYSTEM_HEYA_MESH_NAMES } from './utility.js';
-import type { RoomEngine } from './engine.js';
+import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
+import { findMaterial, GRAPHICS_QUALITY } from './utility.js';
+import type { WorldEngine } from './engine.js';
 
-export abstract class RoomEnvManager<T = any> {
-	protected engine: RoomEngine;
+export abstract class WorldEnvManager {
+	protected engine: WorldEngine;
 	public abstract envMapIndoor: BABYLON.CubeTexture | null;
 	public abstract maxCameraZ: number;
 	private shadowGenerators: BABYLON.ShadowGenerator[] = [];
-	protected isRoomLightOn = true;
 
-	constructor(engine: RoomEngine) {
+	constructor(engine: WorldEngine) {
 		this.engine = engine;
 	}
 
-	abstract load(options: T): Promise<void>;
-	abstract applyOptions(options: T): void;
+	abstract load(): Promise<void>;
 	abstract setTime(time: number): void;
-	abstract applyRoomLight(): void;
-
-	public turnOnRoomLight() {
-		this.isRoomLightOn = true;
-		this.applyRoomLight();
-	}
-
-	public turnOffRoomLight() {
-		this.isRoomLightOn = false;
-		this.applyRoomLight();
-	}
 
 	protected registerShadowGenerator(shadowGenerator: BABYLON.ShadowGenerator) {
 		this.shadowGenerators.push(shadowGenerator);
@@ -86,7 +74,7 @@ export abstract class RoomEnvManager<T = any> {
 		for (const mesh of meshes) {
 			if (!this.engine.scene.meshes.includes(mesh)) this.engine.scene.addMesh(mesh);
 
-			if (SYSTEM_HEYA_MESH_NAMES.some(name => mesh.name.includes(name))) {
+			if (['__COLLISION__'].some(name => mesh.name.includes(name))) {
 				mesh.isPickable = false;
 				mesh.receiveShadows = false;
 				mesh.isVisible = false;

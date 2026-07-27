@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { EngineControllerBase } from './EngineControllerBase.js';
-import type { WorldEngine } from './engine.js';
+import { shallowRef } from 'vue';
+import { EngineControllerBase, WASD } from './EngineControllerBase.js';
+import type { WorldEngine } from 'misskey-world-engine/src/engine.js';
+import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
 
 export type WorldEngineControllerOptions = {
 	workerMode?: boolean;
@@ -16,31 +18,72 @@ export type WorldEngineControllerOptions = {
 
 // 抽象化レイヤー
 export class WorldEngineController extends EngineControllerBase<WorldEngine> {
+	public myPlayerState = shallowRef<PlayerState>({
+		position: [0, 0, 0],
+		rotation: [0, 0, 0],
+	});
+
 	constructor(options: WorldEngineControllerOptions) {
-		super({
-			...options,
-		});
+		super(options, new WASD({
+			setCameraMoveVector: (vec, dash) => {
+				this.call('cameraMove', [vec, dash]);
+			},
+		}));
 	}
 
 	public async init(canvas: HTMLCanvasElement) {
-		/*
-		await this._init_(canvas, {
+		const { engineEvents } = await this._init_(canvas, {
 			createWorker: (offscreen) => new Promise((resolve) => {
-				import('./worker?worker').then(({ default: WorldEngineWorker }) => {
-					const worker = new WorldEngineWorker();
+				import('frontend-misskey-world-engine/src/worker?worker').then(({ default: WorldWorker }) => {
+					const worker = new WorldWorker();
 					worker.postMessage({ type: 'init', canvas: offscreen, options: this.options }, [offscreen]);
 					resolve(worker);
 				});
 			}),
-			createEngine: (babylonEngine) => new Promise((resolve) => {
-				import('./engine.js').then(({ WorldEngine }) => {
-					resolve(new WorldEngine({
-						engine: babylonEngine,
-						...this.options,
-					}));
+			createEngine: () => new Promise((resolve) => {
+				import('frontend-misskey-world-engine/src/nonWorker.js').then(({ createWorldEngine }) => {
+					const engine = createWorldEngine({ canvas, options: this.options });
+					resolve(engine);
 				});
 			}),
 		});
-		*/
+
+		engineEvents.on('changeMyPlayerState', (playerState) => {
+			this.myPlayerState.value = playerState;
+		});
+
+		engineEvents.on('playerPointed', ({ playerId }) => {
+			this.emit('playerPointed', { playerId });
+		});
+	}
+
+	public async reset(canvas: HTMLCanvasElement, options?: WorldEngineControllerOptions | null) {
+		this._reset_();
+		if (options != null) this.options = options;
+		this.myPlayerState.value = {
+			position: [0, 0, 0],
+			rotation: [0, 0, 0],
+		};
+		await this.init(canvas);
+	}
+
+	public setCameraJoystickMoveVector(vec: { x: number; y: number }) {
+		this.call('cameraJoystickMove', [vec]);
+	}
+
+	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
+		this.call('updatePlayerProfiles', [profiles]);
+	}
+
+	public updatePlayerStates(states: Record<string, PlayerState>) {
+		this.call('updatePlayerStates', [states]);
+	}
+
+	public clearPlayers() {
+		this.call('clearPlayers');
+	}
+
+	public updateAvatarDisplayOptions(options: { showUsername: boolean; show2dAvatar: boolean }) {
+		this.call('updateAvatarDisplayOptions', [options]);
 	}
 }
