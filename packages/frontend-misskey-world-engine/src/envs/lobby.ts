@@ -369,6 +369,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			const time = Date.now();
 			worldRingH.rotation.x = ((time % _12h) / _12h) * Math.PI * 2;
 			worldRingM.rotation.y = -(((time % _1h) / _1h) * Math.PI);
+			this.engine.sr.updateMesh([worldRingH, ...worldRingH.getChildMeshes(), worldRingM, ...worldRingM.getChildMeshes()], false);
 		}, 100);
 
 		const screenMeshes = this.meshes.filter(m => m.name.includes('__SCREEN__'));
