@@ -372,6 +372,17 @@ export class LobbyEnvManager extends WorldEnvManager {
 			this.engine.sr.updateMesh([worldRingH, ...worldRingH.getChildMeshes(), worldRingM, ...worldRingM.getChildMeshes()], false);
 		}, 100);
 
+		const sphere = this.meshes.find(m => m.name.includes('__DOME__'));
+		const texture = new BABYLON.CustomProceduralTexture('texture', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
+		texture.hasAlpha = true;
+		texture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
+		texture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
+		sphere.material = new BABYLON.StandardMaterial('sphereMat', this.engine.scene);
+		(sphere.material as BABYLON.StandardMaterial).diffuseTexture = texture;
+		(sphere.material as BABYLON.StandardMaterial).emissiveColor = new BABYLON.Color3(1, 1, 1);
+		(sphere.material as BABYLON.StandardMaterial).disableLighting = true;
+		(sphere.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
+
 		const screenMeshes = this.meshes.filter(m => m.name.includes('__SCREEN__'));
 		const screenMaterial = screenMeshes[0].material as BABYLON.PBRMaterial;
 
