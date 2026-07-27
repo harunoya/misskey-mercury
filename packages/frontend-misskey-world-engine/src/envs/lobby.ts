@@ -31,7 +31,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 	public async load() {
 		this.engine.camera.position = new BABYLON.Vector3(cm(0), cm(250), cm(3000));
 
-		this.skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: cm(30000) }, this.engine.scene);
+		this.skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: cm(50000) }, this.engine.scene);
 		this.skyboxMat = new BABYLON.StandardMaterial('skyboxMat', this.engine.scene);
 		this.skyboxMat.backFaceCulling = false;
 		this.skyboxMat.disableLighting = true;
@@ -60,6 +60,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		this.meshes[0].scaling = this.meshes[0].scaling.scale(WORLD_SCALE);
 		this.meshes[0].rotationQuaternion = null;
 		this.meshes[0].rotation = new BABYLON.Vector3(0, 0, 0);
+		this.meshes[0].bakeCurrentTransformIntoVertices();
 
 		for (const mesh of this.meshes) {
 			if (['__COLLISION__'].some(name => mesh.name.includes(name))) continue;
@@ -91,6 +92,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			objet.animations = [anim];
 			this.engine.scene.beginAnimation(objet, 0, 5000, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([objet, ...objet.getChildMeshes()], false);
+			});
 		}
 
 		{
@@ -105,6 +110,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			ring.animations = [anim];
 			this.engine.scene.beginAnimation(ring, 0, 5000, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([ring, ...ring.getChildMeshes()], false);
+			});
 		}
 
 		{
@@ -129,6 +138,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			messageRing.animations = [anim];
 			this.engine.scene.beginAnimation(messageRing, 0, 10000, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([messageRing, ...messageRing.getChildMeshes()], false);
+			});
 
 			const texts = [
 				'Wellcome to Misskey World!',
@@ -172,6 +185,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			messageRing.animations = [anim];
 			this.engine.scene.beginAnimation(messageRing, 0, 10000, true);
 
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([messageRing, ...messageRing.getChildMeshes()], false);
+			});
+
 			this.timer.setInterval(() => {
 				text.write(Date.now().toString());
 			}, 10);
@@ -197,6 +214,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			messageRing.animations = [anim];
 			this.engine.scene.beginAnimation(messageRing, 0, 10000, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([messageRing, ...messageRing.getChildMeshes()], false);
+			});
 
 			this.timer.setInterval(() => {
 				const now = new Date();
@@ -227,6 +248,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			messageRing.animations = [anim];
 			this.engine.scene.beginAnimation(messageRing, 0, 10000, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([messageRing, ...messageRing.getChildMeshes()], false);
+			});
 
 			this.timer.setInterval(() => {
 				const now = new Date();
@@ -260,6 +285,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			sphereRoot.animations = [anim];
 			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([...sphereRoot.getChildMeshes()], false);
+			});
 		}
 
 		for (let i = 0; i < 64; i++) {
@@ -285,6 +314,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			sphereRoot.animations = [anim];
 			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
+
+			this.engine.scene.onAfterAnimationsObservable.add(() => {
+				this.engine.sr.updateMesh([...sphereRoot.getChildMeshes()], false);
+			});
 		}
 
 		//const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(10) }, this.engine.scene);
@@ -368,7 +401,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 					if (tex == null) return;
 					const srcAspect = tex.getSize().width / tex.getSize().height;
 					const targetAspect = 16 / 9;
-					updateUv(srcAspect, targetAspect, 'cover');
+					updateUv(srcAspect, targetAspect, 'cover', 0);
 				}
 			});
 		}, 3000);
@@ -396,6 +429,8 @@ export class LobbyEnvManager extends WorldEnvManager {
 		ps.colorDead = new BABYLON.Color4(1, 1, 1, 0);
 		ps.preWarmCycles = Math.random() * 1000;
 		ps.start();
+
+		this.engine.sr.fixParticleSystem(ps);
 
 		this.registerMeshes(this.meshes);
 	}
