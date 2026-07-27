@@ -333,7 +333,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 				adMesh.parent = adRoot;
 				adMesh.position = new BABYLON.Vector3(cm(0), cm(0), cm(7500));
 
-				const tex = new BABYLON.Texture('/client-assets/world/lobby/dummy-ads/angry_ai.png', this.engine.scene);
+				const tex = new BABYLON.Texture('/client-assets/world/envs/lobby/dummy-ads/angry_ai.png', this.engine.scene);
 				const adMat = new BABYLON.StandardMaterial(`ad_${j}_${i}_mat`, this.engine.scene);
 				adMat.emissiveTexture = tex;
 				adMat.disableLighting = true;
@@ -376,10 +376,11 @@ export class LobbyEnvManager extends WorldEnvManager {
 
 		const videoEl = document.createElement('video');
 		videoEl.crossOrigin = 'anonymous';
+		videoEl.src = 'http://syu-win.localhost:3000/files/cf5bca47-8b4b-42d2-b782-0d6ca67187cf';
 
-		const hls = new Hls();
-		hls.loadSource('https://tvs.misskey.io/official/hq-beta/ts:abr.m3u8');
-		hls.attachMedia(videoEl);
+		//const hls = new Hls();
+		//hls.loadSource('https://tvs.misskey.io/official/hq-beta/ts:abr.m3u8');
+		//hls.attachMedia(videoEl);
 
 		this.timer.setTimeout(() => {
 			const tex = new BABYLON.VideoTexture('', videoEl, this.engine.scene, true, true);
@@ -387,11 +388,9 @@ export class LobbyEnvManager extends WorldEnvManager {
 			tex.video.loop = true;
 			tex.video.volume = 0.25;
 			tex.video.muted = true;
-
 			screenMaterial.albedoColor = new BABYLON.Color3(0, 0, 0);
 			screenMaterial.emissiveTexture = tex;
 			screenMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
-
 			tex.onLoadObservable.addOnce(() => {
 				tex.video.play();
 				for (const mesh of screenMeshes) {

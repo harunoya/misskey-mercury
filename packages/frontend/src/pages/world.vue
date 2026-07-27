@@ -157,7 +157,7 @@ controller.addListener('playerPointed', ({ playerId }) => {
 async function refresh() {
 	canvasKey.value++;
 	await nextTick();
-	await controller.reset(canvas.value!, attachments, null, roomControllerOptions.value);
+	await controller.reset(canvas.value!, worldControllerOptions.value);
 }
 
 async function takeScreenshot() {

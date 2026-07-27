@@ -21,6 +21,7 @@ export function registerBabylonRuntime(): void {
 	BABYLON.RegisterEnginesWebGPUExtensionsEngineRenderTargetCube();
 	BABYLON.RegisterEnginesWebGPUExtensionsEngineQuery();
 	BABYLON.RegisterEnginesWebGPUExtensionsEngineDynamicTexture();
+	BABYLON.RegisterEnginesWebGPUExtensionsEngineVideoTexture();
 	BABYLON.RegisterBufferAlign();
 	BABYLON.RegisterCubeTexture();
 	BABYLON.RegisterStandardMaterial();
