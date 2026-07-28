@@ -21,6 +21,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 	public envMapIndoor: BABYLON.CubeTexture | null = null;
 	public maxCameraZ = cm(100000);
 	private textMaterial: BABYLON.StandardMaterial | null = null;
+	private textBwMaterial: BABYLON.StandardMaterial | null = null;
 	private translucentTextMaterial: BABYLON.StandardMaterial | null = null;
 	private timer: Timer = new Timer();
 
@@ -71,12 +72,17 @@ export class LobbyEnvManager extends WorldEnvManager {
 		}
 
 		this.textMaterial = new BABYLON.StandardMaterial('textMaterial', this.engine.scene);
-		this.textMaterial.diffuseTexture = new BABYLON.Texture('/client-assets/world/chars.png', this.engine.scene, false, false);
+		this.textMaterial.diffuseTexture = new BABYLON.Texture('/client-assets/world/envs/lobby/chars-black.png', this.engine.scene, false, false);
 		this.textMaterial.diffuseTexture.hasAlpha = true;
 		this.textMaterial.disableLighting = true;
 		this.textMaterial.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
 		this.textMaterial.useAlphaFromDiffuseTexture = true;
 		this.textMaterial.freeze();
+
+		this.textBwMaterial = new BABYLON.StandardMaterial('textBwMaterial', this.engine.scene);
+		this.textBwMaterial.emissiveTexture = new BABYLON.Texture('/client-assets/world/envs/lobby/chars-bw.png', this.engine.scene, false, false);
+		this.textBwMaterial.disableLighting = true;
+		this.textBwMaterial.freeze();
 
 		this.translucentTextMaterial = this.textMaterial.clone('translucentTextMaterial');
 		this.translucentTextMaterial.alpha = 0.25;
@@ -125,7 +131,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			messageRing.rotationQuaternion = null;
 			const text = new RecyvlingTextGrid(messageRing, 256, {
 				meshFlipped: true,
-				material: this.textMaterial,
+				material: this.textBwMaterial,
 			});
 
 			text.write('Wellcome to Misskey World!');
