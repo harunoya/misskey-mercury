@@ -263,6 +263,8 @@ export class LobbyEnvManager extends WorldEnvManager {
 			}, 1000);
 		}
 
+		const spheres = [] as BABYLON.Mesh[];
+
 		for (let i = 0; i < 16; i++) {
 			const sphereRoot = new BABYLON.TransformNode('', this.engine.scene);
 			sphereRoot.position = new BABYLON.Vector3(cm(0), cm(1000 + (100 * i)), cm(0));
@@ -270,6 +272,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(randomRange(50, 300)), segments: 16 }, this.engine.scene);
 			sphere.parent = sphereRoot;
 			sphere.position = new BABYLON.Vector3(cm(0), cm(0), cm(randomRange(2000, 7000)));
+			spheres.push(sphere);
 
 			const mat = new BABYLON.PBRMaterial('', this.engine.scene);
 			const color = tinycolor({ h: Math.random() * 360, s: 1, l: 0.5 }).toRgb();
@@ -286,10 +289,6 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			sphereRoot.animations = [anim];
 			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
-
-			this.engine.scene.onAfterAnimationsObservable.add(() => {
-				this.engine.sr.updateMesh([...sphereRoot.getChildMeshes()], false);
-			});
 		}
 
 		for (let i = 0; i < 64; i++) {
@@ -299,6 +298,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(randomRange(500, 3000)), segments: 16 }, this.engine.scene);
 			sphere.parent = sphereRoot;
 			sphere.position = new BABYLON.Vector3(cm(0), cm(0), cm(randomRange(10000, 15000)));
+			spheres.push(sphere);
 
 			const mat = new BABYLON.PBRMaterial('', this.engine.scene);
 			const color = tinycolor({ h: Math.random() * 360, s: randomRange(0, 1), l: randomRange(0.75, 1) }).toRgb();
@@ -315,16 +315,15 @@ export class LobbyEnvManager extends WorldEnvManager {
 			]);
 			sphereRoot.animations = [anim];
 			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
-
-			this.engine.scene.onAfterAnimationsObservable.add(() => {
-				this.engine.sr.updateMesh([...sphereRoot.getChildMeshes()], false);
-			});
 		}
 
-		//const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(10) }, this.engine.scene);
+		this.engine.scene.onAfterAnimationsObservable.add(() => {
+			this.engine.sr.updateMesh(spheres, false);
+		});
 
 		const adsCountCol = 4;
 		const adsCountRow = 2;
+		const adRoots = [] as BABYLON.TransformNode[];
 		for (let j = 0; j < adsCountRow; j++) {
 			for (let i = 0; i < adsCountCol; i++) {
 				const adRoot = new BABYLON.TransformNode(`ad_${j}_${i}_root`, this.engine.scene);
@@ -347,8 +346,14 @@ export class LobbyEnvManager extends WorldEnvManager {
 				]);
 				adRoot.animations = [anim];
 				this.engine.scene.beginAnimation(adRoot, 0, 15000, true);
+
+				adRoots.push(adRoot);
 			}
 		}
+
+		this.engine.scene.onAfterAnimationsObservable.add(() => {
+			this.engine.sr.updateMesh(adRoots.flatMap(adRoot => [...adRoot.getChildMeshes()]), false);
+		});
 
 		const worldRingH = this.meshes.find(m => m.name.includes('__WORLD_RING_H__'));
 		const worldRingM = this.meshes.find(m => m.name.includes('__WORLD_RING_M__'));
@@ -374,6 +379,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		}, 100);
 
 		const dome = this.meshes.find(m => m.name.includes('__DOME__'));
+		dome.infiniteDistance = true;
 		const domeTexture = new BABYLON.CustomProceduralTexture('texture', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
 		domeTexture.hasAlpha = true;
 		domeTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
@@ -422,7 +428,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
 		emitter.position = new BABYLON.Vector3(0, cm(-1000), 0);
 		const ps = new BABYLON.ParticleSystem('', 128, this.engine.scene);
-		ps.particleTexture = new BABYLON.Texture('/client-assets/world/objects/lava-lamp/bubble.png');
+		ps.particleTexture = new BABYLON.Texture('/client-assets/world/envs/lobby/bubble.png');
 		ps.emitter = emitter;
 		ps.isLocal = true;
 		ps.minEmitBox = new BABYLON.Vector3(cm(-1000), 0, cm(-1000));
