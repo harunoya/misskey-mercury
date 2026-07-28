@@ -16,6 +16,7 @@
 // TODO: meshをdiposeした際、scene.meshesやshadowmapのrenderlistからも明示的に削除しないとメモリリークするのかどうかbabylonのforumで尋ねる
 // TODO: 起動時、ひとつでもcustom imageの読み込みに失敗したら「一部の画像を読み込めませんでした」を出す
 // TODO: 座ると一升瓶のマテリアルがおかしくなる現象をbabylonに報告
+// TODO: engineをdestroyするとthis.hideLoadingUI is not a functionが出る問題をbabylonに報告
 
 import * as BABYLON from '@babylonjs/core/pure.js';
 import { registerBuiltInLoaders } from '@babylonjs/loaders/dynamic.js';
