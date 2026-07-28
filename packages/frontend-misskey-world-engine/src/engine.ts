@@ -46,6 +46,7 @@ export class WorldEngine extends EngineBase<{
 	private show2dAvatarOnAvatar: boolean;
 	private envManager: WorldEnvManager | null = null;
 	private inited = false;
+	private isGodMode = false;
 
 	constructor(options: {
 		engine: BABYLON.WebGPUEngine;
@@ -107,20 +108,24 @@ export class WorldEngine extends EngineBase<{
 		this.camera.maxZ = cm(1000);
 		this.camera.fov = this.fov;
 		this.camera.ellipsoid = new BABYLON.Vector3(cm(15), cm(65), cm(15));
-		this.camera.checkCollisions = true;
-		this.camera.applyGravity = true;
-		this.camera.needMoveForGravity = true;
+		if (!this.isGodMode) {
+			this.camera.checkCollisions = true;
+			this.camera.applyGravity = true;
+			this.camera.needMoveForGravity = true;
+		}
 		this.camera.inputs.clear();
 		if (options.useVirtualJoystick) {
 			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
-				moveSensitivity: 0.015 * WORLD_SCALE,
+				moveSensitivity: 0.02 * WORLD_SCALE,
 				rotationSensitivity: 0.0007,
+				isGodMode: this.isGodMode,
 			}));
 			this.camera.inertia = 0.75;
 		} else {
 			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
-				moveSensitivity: 0.002 * WORLD_SCALE,
+				moveSensitivity: 0.003 * WORLD_SCALE,
 				rotationSensitivity: 0.0003,
+				isGodMode: this.isGodMode,
 			}));
 		}
 

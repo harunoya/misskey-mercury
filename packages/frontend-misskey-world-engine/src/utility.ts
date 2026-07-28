@@ -677,14 +677,17 @@ export class FreeCameraManualInput implements BABYLON.ICameraInput<BABYLON.FreeC
 	private moveSensitivity: number;
 	private rotationSensitivity: number;
 	private moveVector = BABYLON.Vector3.Zero();
+	private isGodMode: boolean;
 
 	constructor(scene: BABYLON.Scene, options: {
 		moveSensitivity?: number;
 		rotationSensitivity?: number;
+		isGodMode?: boolean;
 	}) {
 		this.scene = scene;
 		this.moveSensitivity = options.moveSensitivity ?? 0.01;
 		this.rotationSensitivity = options.rotationSensitivity ?? 0.01;
+		this.isGodMode = options.isGodMode ?? false;
 	}
 
 	getClassName = () => this.constructor.name;
@@ -712,17 +715,18 @@ export class FreeCameraManualInput implements BABYLON.ICameraInput<BABYLON.FreeC
 
 	checkInputs() {
 		const ratio = this.scene.getAnimationRatio();
-		this.camera.cameraDirection.addInPlace(
-			BABYLON.Vector3.TransformCoordinates(this.moveVector.scale(ratio), BABYLON.Matrix.RotationY(this.camera.rotation.y)),
-		);
 
-		//const engine = this.camera.getEngine();
-		//const v = this.moveVector.scale(Math.sqrt(engine.getDeltaTime() / (engine.getFps() * 100.0)));
-		//console.log(v);
-		//this.camera._localDirection.copyFromFloats(v.x, v.y, v.z);
-		//this.camera.getViewMatrix().invertToRef(this.camera._cameraTransformMatrix);
-		//BABYLON.Vector3.TransformNormalToRef(this.camera._localDirection, this.camera._cameraTransformMatrix, this.camera._transformedDirection);
-		//this.camera.cameraDirection.addInPlace(this.camera._transformedDirection);
+		if (this.isGodMode) {
+			const v = this.moveVector.scale(ratio);
+			this.camera._localDirection.copyFromFloats(v.x, v.y, v.z);
+			this.camera.getViewMatrix().invertToRef(this.camera._cameraTransformMatrix);
+			BABYLON.Vector3.TransformNormalToRef(this.camera._localDirection, this.camera._cameraTransformMatrix, this.camera._transformedDirection);
+			this.camera.cameraDirection.addInPlace(this.camera._transformedDirection);
+		} else {
+			this.camera.cameraDirection.addInPlace(
+				BABYLON.Vector3.TransformCoordinates(this.moveVector.scale(ratio), BABYLON.Matrix.RotationY(this.camera.rotation.y)),
+			);
+		}
 	}
 }
 
