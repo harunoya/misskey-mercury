@@ -37,6 +37,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		this.skyboxMat.disableLighting = true;
 		this.skybox.material = this.skyboxMat;
 		this.skybox.infiniteDistance = true;
+		this.engine.gl!.addExcludedMesh(this.skybox);
 
 		const ambientLight1 = new BABYLON.HemisphericLight('ambientLight1', new BABYLON.Vector3(0, 1, 0), this.engine.scene);
 		ambientLight1.diffuse = new BABYLON.Color3(1.0, 0.9, 0.8);
@@ -372,16 +373,17 @@ export class LobbyEnvManager extends WorldEnvManager {
 			this.engine.sr.updateMesh([worldRingH, ...worldRingH.getChildMeshes(), worldRingM, ...worldRingM.getChildMeshes()], false);
 		}, 100);
 
-		const sphere = this.meshes.find(m => m.name.includes('__DOME__'));
-		const texture = new BABYLON.CustomProceduralTexture('texture', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
-		texture.hasAlpha = true;
-		texture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
-		texture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
-		sphere.material = new BABYLON.StandardMaterial('sphereMat', this.engine.scene);
-		(sphere.material as BABYLON.StandardMaterial).diffuseTexture = texture;
-		(sphere.material as BABYLON.StandardMaterial).emissiveColor = new BABYLON.Color3(1, 1, 1);
-		(sphere.material as BABYLON.StandardMaterial).disableLighting = true;
-		(sphere.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
+		const dome = this.meshes.find(m => m.name.includes('__DOME__'));
+		const domeTexture = new BABYLON.CustomProceduralTexture('texture', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
+		domeTexture.hasAlpha = true;
+		domeTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
+		domeTexture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
+		dome.material = new BABYLON.StandardMaterial('sphereMat', this.engine.scene);
+		(dome.material as BABYLON.StandardMaterial).diffuseTexture = domeTexture;
+		(dome.material as BABYLON.StandardMaterial).emissiveColor = new BABYLON.Color3(1, 1, 1);
+		(dome.material as BABYLON.StandardMaterial).disableLighting = true;
+		(dome.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
+		//this.engine.gl!.addExcludedMesh(dome);
 
 		const screenMeshes = this.meshes.filter(m => m.name.includes('__SCREEN__'));
 		const screenMaterial = screenMeshes[0].material as BABYLON.PBRMaterial;

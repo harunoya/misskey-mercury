@@ -78,15 +78,22 @@ uniform float time;
 
 void main(void) {
 	vec2 uv = gl_FragCoord.xy / vec2(4096.0, 4096.0);
-	float noise = snoise(vec3(uv.x * 3.0, uv.y * 3.0, time * 0.05));
-	float radius = 0.001;
-	float spacing = 0.01;
+	float noise = snoise(vec3((uv.x * 3.0) + (time * 0.05), uv.y * 3.0, time * 0.01));
+	noise = max(0.0, noise - 0.5) * 2.0;
+	noise = min(1.0, noise * 1.5);
+	float radius = 0.0015;
+	float spacing = 0.02;
 	float x = mod(uv.x, spacing);
 	float y = mod(uv.y, spacing);
 	float dist = sqrt((x - spacing / 2.0) * (x - spacing / 2.0) + (y - spacing / 2.0) * (y - spacing / 2.0));
 	if (dist < radius) {
-			gl_FragColor = vec4(1.0, 1.0, 1.0, max(0.0, noise - 0.5) * 2.0);
+			gl_FragColor = vec4(1.0, 1.0, 1.0, noise);
 	} else {
-			gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+			gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
 	}
+
+	//gl_FragColor = vec4(noise, noise, noise, 1.0);
+
+	//vec2 uv = gl_FragCoord.xy / vec2(4096.0, 4096.0);
+	//gl_FragColor = vec4(uv.x, uv.y, 0.0, 1.0);
 }
