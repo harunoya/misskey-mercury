@@ -33,4 +33,5 @@ export function registerBabylonRuntime(): void {
 	BABYLON.RegisterPostProcessRenderPipelineManagerSceneComponent(
 		BABYLON.PostProcessRenderPipelineManager,
 	);
+	BABYLON.RegisterAbstractEngineLoadingScreen();
 }
