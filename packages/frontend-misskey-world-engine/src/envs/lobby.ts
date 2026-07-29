@@ -38,7 +38,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		this.skyboxMat.disableLighting = true;
 		this.skybox.material = this.skyboxMat;
 		this.skybox.infiniteDistance = true;
-		this.engine.gl!.addExcludedMesh(this.skybox);
+		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(this.skybox);
 
 		const ambientLight1 = new BABYLON.HemisphericLight('ambientLight1', new BABYLON.Vector3(0, 1, 0), this.engine.scene);
 		ambientLight1.diffuse = new BABYLON.Color3(1.0, 0.9, 0.8);
@@ -430,6 +430,22 @@ export class LobbyEnvManager extends WorldEnvManager {
 				}
 			});
 		}, 3000);
+
+		const hourHands = this.meshes.filter(m => m.name.includes('__CLOCK_HAND_H__'));
+		const minuteHands = this.meshes.filter(m => m.name.includes('__CLOCK_HAND_M__'));
+
+		this.timer.setInterval(() => {
+			const now = new Date();
+			const hours = now.getHours() % 12;
+			const minutes = now.getMinutes();
+			const hAngle = -(hours / 12) * Math.PI * 2 - (minutes / 60) * (Math.PI * 2 / 12);
+			const mAngle = -(minutes / 60) * Math.PI * 2;
+
+			for (const hourHand of hourHands) hourHand.rotation = new BABYLON.Vector3(0, 0, hAngle);
+			for (const minuteHand of minuteHands) minuteHand.rotation = new BABYLON.Vector3(0, 0, mAngle);
+
+			this.engine.sr.updateMesh([...hourHands, ...minuteHands], false);
+		}, 1000);
 
 		const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
 		emitter.position = new BABYLON.Vector3(0, cm(-1000), 0);

@@ -33,7 +33,7 @@ export class WorldEngine extends EngineBase<{
 	private envMap: BABYLON.CubeTexture;
 	public lightContainer: BABYLON.ClusteredLightContainer;
 	public sr: BABYLON.SnapshotRenderingHelper;
-	private gl: BABYLON.GlowLayer | null = null;
+	public gl: BABYLON.GlowLayer | null = null;
 	public timer: Timer = new Timer();
 	public isSitting = false;
 	private cameraHeight = cm(130);
@@ -80,23 +80,9 @@ export class WorldEngine extends EngineBase<{
 
 		this.sr = new BABYLON.SnapshotRenderingHelper(this.scene);
 
-		const skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: cm(50000) }, this.scene);
-		const skyboxMat = new BABYLON.StandardMaterial('skyboxMat', this.scene);
-		skyboxMat.backFaceCulling = false;
-		skyboxMat.disableLighting = true;
-		skybox.material = skyboxMat;
-		skybox.infiniteDistance = true;
-
 		this.time = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
 		//this.time = TIME_MAP[12 as keyof typeof TIME_MAP];
 
-		if (this.time === 0) {
-			skyboxMat.emissiveColor = new BABYLON.Color3(1, 1, 1);
-		} else if (this.time === 1) {
-			skyboxMat.emissiveColor = new BABYLON.Color3(0.7, 0.68, 0.66);
-		} else {
-			skyboxMat.emissiveColor = new BABYLON.Color3(0.48, 0.5, 0.6);
-		}
 		this.scene.ambientColor = new BABYLON.Color3(0.9, 0.9, 0.9);
 
 		this.envMap = BABYLON.CubeTexture.CreateFromPrefilteredData(this.time === 2 ? '/client-assets/room/outdoor-night.env' : '/client-assets/room/outdoor-day.env', this.scene);
@@ -143,7 +129,6 @@ export class WorldEngine extends EngineBase<{
 				blurKernelSize: 64,
 			});
 			this.gl.intensity = 0.5;
-			this.gl.addExcludedMesh(skybox);
 			this.scene.setRenderingAutoClearDepthStencil(this.gl.renderingGroupId, false);
 			this.sr.updateMeshesForEffectLayer(this.gl);
 		}
