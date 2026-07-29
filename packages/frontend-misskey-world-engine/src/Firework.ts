@@ -69,8 +69,10 @@ export class Firework {
 			ps.stop();
 
 			this.timer.setTimeout(() => {
+				this.engine.sr.disableSnapshotRendering();
 				ps.dispose();
 				emitter.dispose();
+				this.engine.sr.enableSnapshotRendering();
 			}, 1000);
 
 			this.explode({
@@ -79,13 +81,15 @@ export class Firework {
 			});
 		});
 
-		//this.engine.sr.enableSnapshotRendering();
+		this.engine.sr.enableSnapshotRendering();
 	}
 
 	public explode(options: {
 		position: [number, number, number];
 		texture: BABYLON.Texture;
 	}) {
+		this.engine.sr.disableSnapshotRendering();
+
 		const ps = new BABYLON.ParticleSystem('', 128, this.engine.scene);
 		ps.particleTexture = options.texture;
 		ps.emitter = new BABYLON.Vector3(options.position[0], options.position[1], options.position[2]);
@@ -111,8 +115,12 @@ export class Firework {
 		this.engine.sr.fixParticleSystem(ps);
 
 		this.timer.setTimeout(() => {
+			this.engine.sr.disableSnapshotRendering();
 			ps.dispose();
+			this.engine.sr.enableSnapshotRendering();
 		}, 2000);
+
+		this.engine.sr.enableSnapshotRendering();
 	}
 
 	public dispose() {
