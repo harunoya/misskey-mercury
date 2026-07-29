@@ -10,6 +10,7 @@ import Hls from 'hls.js';
 import { findMaterial, GRAPHICS_QUALITY, Timer } from '../utility.js';
 import { WorldEnvManager } from '../env.js';
 import { RecyvlingTextGrid, createPlaneUvMapper, randomRange } from '../utility.js';
+import { Firework } from '../Firework.js';
 import type { WorldEngine } from '../engine.js';
 
 export class LobbyEnvManager extends WorldEnvManager {
@@ -447,31 +448,37 @@ export class LobbyEnvManager extends WorldEnvManager {
 			this.engine.sr.updateMesh([...hourHands, ...minuteHands], false);
 		}, 1000);
 
-		const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
-		emitter.position = new BABYLON.Vector3(0, cm(-1000), 0);
-		const ps = new BABYLON.ParticleSystem('', 128, this.engine.scene);
-		ps.particleTexture = new BABYLON.Texture('/client-assets/world/envs/lobby/bubble.png');
-		ps.emitter = emitter;
-		ps.isLocal = true;
-		ps.minEmitBox = new BABYLON.Vector3(cm(-1000), 0, cm(-1000));
-		ps.maxEmitBox = new BABYLON.Vector3(cm(1000), 0, cm(1000));
-		ps.minEmitPower = cm(100);
-		ps.maxEmitPower = cm(500);
-		ps.minLifeTime = 30;
-		ps.maxLifeTime = 30;
-		ps.minSize = cm(30);
-		ps.maxSize = cm(300);
-		ps.direction1 = new BABYLON.Vector3(0, 1, 0);
-		ps.direction2 = new BABYLON.Vector3(0, 1, 0);
-		ps.emitRate = 1.5;
-		ps.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
-		ps.color1 = new BABYLON.Color4(1, 1, 1, 0.3);
-		ps.color2 = new BABYLON.Color4(1, 1, 1, 0.2);
-		ps.colorDead = new BABYLON.Color4(1, 1, 1, 0);
-		ps.preWarmCycles = Math.random() * 1000;
-		ps.start();
+		//const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
+		//emitter.position = new BABYLON.Vector3(0, cm(-1000), 0);
+		//const ps = new BABYLON.ParticleSystem('', 128, this.engine.scene);
+		//ps.particleTexture = new BABYLON.Texture('/client-assets/world/envs/lobby/bubble.png');
+		//ps.emitter = emitter;
+		//ps.isLocal = true;
+		//ps.minEmitBox = new BABYLON.Vector3(cm(-1000), 0, cm(-1000));
+		//ps.maxEmitBox = new BABYLON.Vector3(cm(1000), 0, cm(1000));
+		//ps.minEmitPower = cm(100);
+		//ps.maxEmitPower = cm(500);
+		//ps.minLifeTime = 30;
+		//ps.maxLifeTime = 30;
+		//ps.minSize = cm(30);
+		//ps.maxSize = cm(300);
+		//ps.direction1 = new BABYLON.Vector3(0, 1, 0);
+		//ps.direction2 = new BABYLON.Vector3(0, 1, 0);
+		//ps.emitRate = 1.5;
+		//ps.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+		//ps.color1 = new BABYLON.Color4(1, 1, 1, 0.3);
+		//ps.color2 = new BABYLON.Color4(1, 1, 1, 0.2);
+		//ps.colorDead = new BABYLON.Color4(1, 1, 1, 0);
+		//ps.preWarmCycles = Math.random() * 1000;
+		//ps.start();
+		//this.engine.sr.fixParticleSystem(ps);
 
-		this.engine.sr.fixParticleSystem(ps);
+		this.timer.setInterval(() => {
+			const firework = new Firework(this.engine);
+			firework.launch({
+				position: [randomRange(cm(-2000), cm(2000)), cm(randomRange(1000, 3000)), randomRange(cm(-2000), cm(2000))],
+			});
+		}, 1000);
 
 		this.registerMeshes(this.meshes);
 	}
