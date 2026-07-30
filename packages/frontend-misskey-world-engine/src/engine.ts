@@ -132,6 +132,22 @@ export class WorldEngine extends EngineBase<{
 			this.scene.setRenderingAutoClearDepthStencil(this.gl.renderingGroupId, false);
 			this.sr.updateMeshesForEffectLayer(this.gl);
 		}
+
+		if (this.graphicsQuality >= GRAPHICS_QUALITY.HIGH) {
+			const pipeline = new BABYLON.DefaultRenderingPipeline('default', true, this.scene);
+			if (options.antialias) {
+				pipeline.samples = 4;
+			}
+
+			pipeline.bloomEnabled = true;
+			pipeline.bloomThreshold = 0.95;
+			pipeline.bloomWeight = 0.3;
+			pipeline.bloomKernel = 256;
+			pipeline.bloomScale = 2;
+
+			pipeline.sharpenEnabled = true;
+			pipeline.sharpen.edgeAmount = 0.5;
+		}
 	}
 
 	public async init() {
