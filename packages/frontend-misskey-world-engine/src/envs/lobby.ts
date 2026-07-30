@@ -11,6 +11,7 @@ import { findMaterial, GRAPHICS_QUALITY, Timer } from '../utility.js';
 import { WorldEnvManager } from '../env.js';
 import { RecyvlingTextGrid, createPlaneUvMapper, randomRange } from '../utility.js';
 import { Firework } from '../Firework.js';
+import { getTimezoneOffsetLabel, timezones } from '../timezones.js';
 import type { WorldEngine } from '../engine.js';
 
 export class LobbyEnvManager extends WorldEnvManager {
@@ -25,6 +26,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 	private textBwMaterial: BABYLON.StandardMaterial | null = null;
 	private translucentTextMaterial: BABYLON.StandardMaterial | null = null;
 	private timer: Timer = new Timer();
+	private tz = timezones.find((tz) => tz.abbrev === 'JST')!;
 
 	constructor(engine: WorldEngine) {
 		super(engine);
@@ -228,11 +230,11 @@ export class LobbyEnvManager extends WorldEnvManager {
 			});
 
 			this.timer.setInterval(() => {
-				const now = new Date();
+				const now = this.getCurrentTime();
 				const hours = now.getHours().toString().padStart(2, '0');
 				const minutes = now.getMinutes().toString().padStart(2, '0');
 				const seconds = now.getSeconds().toString().padStart(2, '0');
-				text.write(`${hours}:${minutes}:${seconds}`);
+				text.write(`${hours}:${minutes}:${seconds} ${getTimezoneOffsetLabel(this.tz.offset)}`);
 			}, 1000);
 		}
 
@@ -262,11 +264,13 @@ export class LobbyEnvManager extends WorldEnvManager {
 			});
 
 			this.timer.setInterval(() => {
-				const now = new Date();
+				const now = this.getCurrentTime();
 				const years = now.getFullYear().toString();
 				const months = (now.getMonth() + 1).toString().padStart(2, '0');
 				const days = now.getDate().toString().padStart(2, '0');
-				text.write(`${years}/${months}/${days}`);
+				const dayOfWeek = now.getDay();
+				const dayOfWeekStr = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek];
+				text.write(`${this.tz.abbrev} ${years}/${months}/${days} ${dayOfWeekStr.toUpperCase()}`);
 			}, 1000);
 		}
 
@@ -436,7 +440,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		const minuteHands = this.meshes.filter(m => m.name.includes('__CLOCK_HAND_M__'));
 
 		this.timer.setInterval(() => {
-			const now = new Date();
+			const now = this.getCurrentTime();
 			const hours = now.getHours() % 12;
 			const minutes = now.getMinutes();
 			const hAngle = -(hours / 12) * Math.PI * 2 - (minutes / 60) * (Math.PI * 2 / 12);
@@ -498,6 +502,12 @@ export class LobbyEnvManager extends WorldEnvManager {
 			this.sunLight.diffuse = time === 0 ? new BABYLON.Color3(1.0, 0.9, 0.8) : time === 1 ? new BABYLON.Color3(1.0, 0.8, 0.6) : new BABYLON.Color3(0.6, 0.8, 1.0);
 			this.sunLight.intensity = time === 0 ? 3 : time === 1 ? 1 : 0.25;
 		}
+	}
+
+	private getCurrentTime() {
+		const now = new Date();
+		now.setMinutes(now.getMinutes() + now.getTimezoneOffset() + this.tz.offset);
+		return now;
 	}
 
 	public dispose() {
