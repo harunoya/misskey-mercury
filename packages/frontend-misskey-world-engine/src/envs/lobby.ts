@@ -480,7 +480,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		const firework = new Firework(this.engine);
 		this.timer.setInterval(() => {
 			firework.launch({
-				position: [randomRange(cm(-2000), cm(2000)), cm(randomRange(1000, 3000)), randomRange(cm(-2000), cm(2000))],
+				position: [randomRange(cm(-5000), cm(5000)), cm(randomRange(1000, 3000)), randomRange(cm(-5000), cm(5000))],
 			});
 		}, 1000);
 

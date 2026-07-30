@@ -35,9 +35,11 @@ export class Firework {
 		ps.maxLifeTime = 1;
 		ps.minSize = cm(3);
 		ps.maxSize = cm(30);
+		ps.addDragGradient(0, 0.1);
+		ps.addDragGradient(1, 0.8);
 		//ps.direction1 = new BABYLON.Vector3(0, 1, 0);
 		//ps.direction2 = new BABYLON.Vector3(0, 1, 0);
-		ps.emitRate = 20;
+		ps.emitRate = 30;
 		ps.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
 		//ps.color1 = new BABYLON.Color4(1, 1, 1, 0.3);
 		//ps.color2 = new BABYLON.Color4(1, 1, 1, 0.2);
@@ -55,7 +57,7 @@ export class Firework {
 		);
 		launchAnim.setKeys([
 			{ frame: 0, value: new BABYLON.Vector3(options.position[0], options.position[1], options.position[2]) },
-			{ frame: 60, value: new BABYLON.Vector3(options.position[0], options.position[1] + cm(randomRange(1000, 4000)), options.position[2]) },
+			{ frame: 60, value: new BABYLON.Vector3(options.position[0], options.position[1] + cm(randomRange(2000, 6000)), options.position[2]) },
 		]);
 
 		emitter.animations.push(launchAnim);
@@ -96,16 +98,16 @@ export class Firework {
 		ps.addDragGradient(0, 0.1);
 		ps.addDragGradient(1, 0.8);
 		ps.gravity = new BABYLON.Vector3(0, -50, 0).scale(WORLD_SCALE);
-		ps.minSize = cm(20);
-		ps.maxSize = cm(40);
+		ps.minSize = cm(50);
+		ps.maxSize = cm(50);
 		const sphereEmitter = ps.createSphereEmitter(cm(1));
 		//ps.direction1 = new BABYLON.Vector3(0, 1, 0);
 		//ps.direction2 = new BABYLON.Vector3(0, 1, 0);
 		ps.manualEmitCount = 100;
 		ps.blendMode = BABYLON.ParticleSystem.BLENDMODE_MULTIPLYADD;
-		ps.color1 = new BABYLON.Color4(1, 1, 1, 1);
-		ps.color2 = new BABYLON.Color4(1, 1, 1, 1);
-		ps.colorDead = new BABYLON.Color4(1, 1, 1, 0);
+		ps.addColorGradient(0.0, new BABYLON.Color4(1, 1, 1, 1));
+		ps.addColorGradient(0.7, new BABYLON.Color4(1, 1, 1, 1));
+		ps.addColorGradient(1.0, new BABYLON.Color4(1, 1, 1, 0));
 		ps.start();
 
 		this.engine.sr.fixParticleSystem(ps);
