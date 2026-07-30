@@ -16,7 +16,7 @@ import { deepEqual } from '@/utility/deep-equal.js';
 export class WorldMultiplayer {
 	public isOnline = ref(false);
 	private controller: WorldEngineController;
-	private connection: Misskey.IChannelConnection<Misskey.Channels['worldRoom']> | null = null;
+	private connection: Misskey.IChannelConnection<Misskey.Channels['world']> | null = null;
 	private dimensionId: string;
 	public playerProfiles: Record<string, PlayerProfile> = {};
 
@@ -31,7 +31,7 @@ export class WorldMultiplayer {
 
 	public enter() {
 		const p = new Promise<void>((resolve, reject) => {
-			this.connection = useStream().useChannel('worldRoom', {
+			this.connection = useStream().useChannel('world', {
 				roomId: this.dimensionId,
 			});
 			this.connection.once('entered', ({ playerProfiles }) => {

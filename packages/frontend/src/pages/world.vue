@@ -85,7 +85,7 @@ import { prefer } from '@/preferences.js';
 import { isTouchUsing } from '@/utility/touch.js';
 import { deviceKind } from '@/utility/device-kind.js';
 import MkProgressBar from '@/components/MkProgressBar.vue';
-import { RoomMultiplayer } from '@/world/room/multiplayer.js';
+import { WorldMultiplayer } from '@/world/multiplayer.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
@@ -132,7 +132,7 @@ const worldControllerOptions = computed<WorldEngineControllerOptions>(() => ({
 }));
 
 const controller = markRaw(new WorldEngineController(worldControllerOptions.value));
-const multiplayer = markRaw(new RoomMultiplayer(0, controller));
+const multiplayer = markRaw(new WorldMultiplayer('0', controller));
 
 const pointedPlayerInfo = ref<PlayerProfile | null>(null);
 const isMenuShowing = ref(!isNarrow);
@@ -200,12 +200,12 @@ onMounted(async () => {
 });
 
 useInterval(() => {
-	//multiplayer.updateState(controller.myPlayerState.value);
+	multiplayer.updateState(controller.myPlayerState.value);
 }, 100, { immediate: false, afterMounted: true });
 
 onDeactivated(() => {
 	controller.destroy();
-	//multiplayer.dispose();
+	multiplayer.dispose();
 
 	window.removeEventListener('resize', resize);
 });
@@ -216,7 +216,7 @@ onActivated(() => {
 
 onUnmounted(() => {
 	controller.destroy();
-	//multiplayer.dispose();
+	multiplayer.dispose();
 
 	window.removeEventListener('resize', resize);
 });
@@ -336,9 +336,20 @@ function showOtherMenu(ev: PointerEvent) {
 	}], ev.currentTarget ?? ev.target);
 }
 
+function leaveOnline() {
+	multiplayer.left();
+}
+
+function enterOnline() {
+	const closeWaiting = os.waiting();
+	multiplayer.enter().finally(() => {
+		closeWaiting();
+	});
+}
+
 definePage(() => ({
-	title: 'Room',
-	icon: 'ti ti-door',
+	title: 'World',
+	icon: 'ti ti-universe',
 	needWideArea: true,
 }));
 </script>

@@ -40,10 +40,6 @@ export class WorldEngine extends EngineBase<{
 	private fov: number;
 	private useGlow: boolean;
 	public graphicsQuality: number;
-	private playerProfiles: Record<string, PlayerProfile> = {};
-	private playerContainers: PlayerContainer[] = [];
-	private showUsernameOnAvatar: boolean;
-	private show2dAvatarOnAvatar: boolean;
 	private envManager: WorldEnvManager | null = null;
 	private inited = false;
 	private isGodMode = false;
