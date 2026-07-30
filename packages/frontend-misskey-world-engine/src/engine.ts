@@ -118,7 +118,7 @@ export class WorldEngine extends EngineBase<{
 		this.scene.activeCamera = this.camera;
 
 		this.lightContainer = new BABYLON.ClusteredLightContainer('clustered', [], this.scene);
-		this.lightContainer.maxRange = cm(1000);
+		this.lightContainer.maxRange = cm(10000);
 		this.lightContainer.verticalTiles = 32;
 		this.lightContainer.horizontalTiles = 32;
 		this.lightContainer.depthSlices = 32;

@@ -11,6 +11,16 @@ import type { EngineBase } from './EngineBase.js';
 export class Firework {
 	private engine: EngineBase<any>;
 	private timer: Timer = new Timer();
+	private texturePatterns = [
+		{ path: '/client-assets/world/other/firework/flare-glow-1.png', color: new BABYLON.Color3(0.0, 1.0, 0.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-2.png', color: new BABYLON.Color3(0.0, 1.0, 1.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-3.png', color: new BABYLON.Color3(0.0, 0.0, 1.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-4.png', color: new BABYLON.Color3(1.0, 0.0, 1.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-5.png', color: new BABYLON.Color3(1.0, 0.0, 0.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-6.png', color: new BABYLON.Color3(1.0, 0.5, 0.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-7.png', color: new BABYLON.Color3(1.0, 1.0, 0.0) },
+		{ path: '/client-assets/world/other/firework/flare-glow-8.png', color: new BABYLON.Color3(0.5, 1.0, 0.0) },
+	];
 
 	constructor(engine: EngineBase<any>) {
 		this.engine = engine;
@@ -21,7 +31,8 @@ export class Firework {
 	}) {
 		this.engine.sr.disableSnapshotRendering();
 
-		const texture = new BABYLON.Texture(`/client-assets/world/other/firework/flare-glow-${Math.round(randomRange(1, 8))}.png`, this.engine.scene);
+		const texturePattern = this.texturePatterns[Math.floor(Math.random() * this.texturePatterns.length)];
+		const texture = new BABYLON.Texture(texturePattern.path, this.engine.scene);
 		const textureScaleFactor = 3;
 
 		//const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
@@ -71,6 +82,7 @@ export class Firework {
 				position: [emitter.position.x, emitter.position.y, emitter.position.z],
 				texture,
 				textureScaleFactor,
+				color: texturePattern.color,
 				callback: () => { // explode途中でSRの状態を切り替えるとパーティクルが消える現象があるため、explodeが終了してから片づける
 					this.engine.sr.disableSnapshotRendering();
 					ps.dispose();
@@ -87,13 +99,37 @@ export class Firework {
 		position: [number, number, number];
 		texture: BABYLON.Texture;
 		textureScaleFactor: number;
+		color: BABYLON.Color3;
 		callback: () => void;
 	}) {
 		this.engine.sr.disableSnapshotRendering();
 
+		const pos = new BABYLON.Vector3(options.position[0], options.position[1], options.position[2]);
+
+		const light = new BABYLON.PointLight('', pos, this.engine.scene, true);
+		light.range = cm(10000);
+		light.radius = cm(50);
+		light.intensity = 100000 * WORLD_SCALE * WORLD_SCALE;
+		light.diffuse = options.color;
+		this.engine.lightContainer.addLight(light);
+
+		const lightAnim = new BABYLON.Animation(
+			'',
+			'intensity',
+			120,
+			BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+			BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+		);
+		lightAnim.setKeys([
+			{ frame: 0, value: 100000 * WORLD_SCALE * WORLD_SCALE },
+			{ frame: 120, value: 0 },
+		]);
+		light.animations.push(lightAnim);
+		this.engine.scene.beginAnimation(light, 0, 120, false, 1);
+
 		const ps = new BABYLON.ParticleSystem('', 128, this.engine.scene);
 		ps.particleTexture = options.texture;
-		ps.emitter = new BABYLON.Vector3(options.position[0], options.position[1], options.position[2]);
+		ps.emitter = pos;
 		ps.minEmitPower = cm(3700);
 		ps.maxEmitPower = cm(4000);
 		ps.minLifeTime = 0.8;
@@ -118,6 +154,9 @@ export class Firework {
 		this.timer.setTimeout(() => {
 			this.engine.sr.disableSnapshotRendering();
 			ps.dispose();
+			light.dispose();
+			this.engine.lightContainer.removeLight(light);
+			this.engine.scene.removeLight(light); // lc使用時はsceneには追加してないはずだが、これがないとクラッシュする babylonのバグ？
 			this.engine.sr.enableSnapshotRendering();
 
 			options.callback();

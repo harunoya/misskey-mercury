@@ -21,6 +21,7 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 	protected engine: BABYLON.WebGPUEngine;
 	public scene: BABYLON.Scene;
 	abstract sr: BABYLON.SnapshotRenderingHelper;
+	abstract lightContainer: BABYLON.ClusteredLightContainer;
 	protected fps: number | null = null;
 	protected disposed = false;
 
