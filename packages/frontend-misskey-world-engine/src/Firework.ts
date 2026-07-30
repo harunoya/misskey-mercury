@@ -21,7 +21,8 @@ export class Firework {
 	}) {
 		this.engine.sr.disableSnapshotRendering();
 
-		const texture = new BABYLON.Texture(`/client-assets/world/other/firework/flare-${Math.round(randomRange(1, 8))}.png`, this.engine.scene);
+		const texture = new BABYLON.Texture(`/client-assets/world/other/firework/flare-glow-${Math.round(randomRange(1, 8))}.png`, this.engine.scene);
+		const textureScaleFactor = 3;
 
 		//const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
 		const emitter = BABYLON.MeshBuilder.CreateBox('emitter', { size: cm(10) }, this.engine.scene);
@@ -33,8 +34,8 @@ export class Firework {
 		ps.maxEmitPower = cm(500);
 		ps.minLifeTime = 0.5;
 		ps.maxLifeTime = 1;
-		ps.minSize = cm(3);
-		ps.maxSize = cm(30);
+		ps.minSize = cm(3) * textureScaleFactor;
+		ps.maxSize = cm(30) * textureScaleFactor;
 		ps.addDragGradient(0, 0.1);
 		ps.addDragGradient(1, 0.8);
 		//ps.direction1 = new BABYLON.Vector3(0, 1, 0);
@@ -69,6 +70,7 @@ export class Firework {
 			this.explode({
 				position: [emitter.position.x, emitter.position.y, emitter.position.z],
 				texture,
+				textureScaleFactor,
 				callback: () => { // explode途中でSRの状態を切り替えるとパーティクルが消える現象があるため、explodeが終了してから片づける
 					this.engine.sr.disableSnapshotRendering();
 					ps.dispose();
@@ -84,6 +86,7 @@ export class Firework {
 	public explode(options: {
 		position: [number, number, number];
 		texture: BABYLON.Texture;
+		textureScaleFactor: number;
 		callback: () => void;
 	}) {
 		this.engine.sr.disableSnapshotRendering();
@@ -98,8 +101,8 @@ export class Firework {
 		ps.addDragGradient(0, 0.1);
 		ps.addDragGradient(1, 0.8);
 		ps.gravity = new BABYLON.Vector3(0, -50, 0).scale(WORLD_SCALE);
-		ps.minSize = cm(50);
-		ps.maxSize = cm(50);
+		ps.minSize = cm(50) * options.textureScaleFactor;
+		ps.maxSize = cm(50) * options.textureScaleFactor;
 		const sphereEmitter = ps.createSphereEmitter(cm(1));
 		//ps.direction1 = new BABYLON.Vector3(0, 1, 0);
 		//ps.direction2 = new BABYLON.Vector3(0, 1, 0);
