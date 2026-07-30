@@ -189,7 +189,7 @@ import { prefer } from '@/preferences.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { FURNITURE_UI_DEFS } from '@/world/room/furniture-ui-defs.js';
-import { RoomMultiplayer } from '@/world/room/multiplayer.js';
+import { Multiplayer } from '@/world/multiplayer.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
@@ -340,7 +340,7 @@ const roomControllerOptions = computed<RoomControllerOptions>(() => ({
 }));
 
 const controller = markRaw(new RoomController(deepClone(initialRoomState), roomControllerOptions.value));
-const multiplayer = markRaw(new RoomMultiplayer(props.room.id, controller));
+const multiplayer = markRaw(new Multiplayer(`room:${props.room.id}`, controller));
 
 watch(controller.roomState, () => {
 	controller.roomState.value.worldScale = WORLD_SCALE;

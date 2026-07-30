@@ -7,6 +7,8 @@ import * as BABYLON from '@babylonjs/core/pure.js';
 import EventEmitter from 'eventemitter3';
 import { PlayerContainer, type PlayerProfile, type PlayerState } from './PlayerContainer.js';
 
+// TODO: multiplayer関連は全ての子クラスで必要とは限らない(preview用など)ため、このクラスを継承する別のabstract classに分離
+
 const IN_WEB_WORKER = typeof window === 'undefined';
 
 export type EngineBaseEvents = {

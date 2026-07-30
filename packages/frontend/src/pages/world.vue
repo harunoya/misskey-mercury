@@ -85,7 +85,7 @@ import { prefer } from '@/preferences.js';
 import { isTouchUsing } from '@/utility/touch.js';
 import { deviceKind } from '@/utility/device-kind.js';
 import MkProgressBar from '@/components/MkProgressBar.vue';
-import { WorldMultiplayer } from '@/world/multiplayer.js';
+import { Multiplayer } from '@/world/multiplayer.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
@@ -132,7 +132,7 @@ const worldControllerOptions = computed<WorldEngineControllerOptions>(() => ({
 }));
 
 const controller = markRaw(new WorldEngineController(worldControllerOptions.value));
-const multiplayer = markRaw(new WorldMultiplayer('0', controller));
+const multiplayer = markRaw(new Multiplayer('world:main:0', controller));
 
 const pointedPlayerInfo = ref<PlayerProfile | null>(null);
 const isMenuShowing = ref(!isNarrow);

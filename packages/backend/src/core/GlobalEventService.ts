@@ -173,7 +173,7 @@ export interface ChatEventTypes {
 	};
 }
 
-export interface WorldRoomEventTypes {
+export interface WorldEventTypes {
 	enter: {
 		user: Packed<'UserLite'>;
 		avatar: Packed<'WorldAvatarLite'>['def'] | null;
@@ -325,9 +325,9 @@ export type GlobalEvents = {
 		name: `chatRoomStream:${MiChatRoom['id']}`;
 		payload: EventTypesToEventPayload<ChatEventTypes>;
 	};
-	worldRoom: {
-		name: `worldRoomStream:${string}`;
-		payload: EventTypesToEventPayload<WorldRoomEventTypes>;
+	world: {
+		name: `worldStream:${string}`;
+		payload: EventTypesToEventPayload<WorldEventTypes>;
 	};
 	reversi: {
 		name: `reversiStream:${MiUser['id']}`;
@@ -451,7 +451,7 @@ export class GlobalEventService {
 	}
 
 	@bindThis
-	public publishWorldRoomStream<K extends keyof WorldRoomEventTypes>(roomId: string, type: K, value?: WorldRoomEventTypes[K]): void {
-		this.publish(`worldRoomStream:${roomId}`, type, typeof value === 'undefined' ? null : value);
+	public publishWorldStream<K extends keyof WorldEventTypes>(spaceKey: string, type: K, value?: WorldEventTypes[K]): void {
+		this.publish(`worldStream:${spaceKey}`, type, typeof value === 'undefined' ? null : value);
 	}
 }

@@ -10,16 +10,17 @@ import { bindThis } from '@/decorators.js';
 import type { GlobalEvents } from '@/core/GlobalEventService.js';
 import type { JsonObject } from '@/misc/json-value.js';
 import { WorldRoomService } from '@/core/WorldRoomService.js';
-import { WorldRoomMultiplayService } from '@/core/WorldRoomMultiplayService.js';
+import { WorldMultiplayService } from '@/core/WorldMultiplayService.js';
 import Channel, { type ChannelRequest } from '../channel.js';
 
 @Injectable({ scope: Scope.TRANSIENT })
-export class WorldRoomChannel extends Channel {
-	public readonly chName = 'worldRoom';
+export class WorldChannel extends Channel {
+	public readonly chName = 'world';
 	public static shouldShare = false;
 	public static requireCredential = true as const;
-	public static kind = 'read:worldRoom';
+	public static kind = 'read:world';
 	private roomId: string;
+	private spaceKey: string;
 	private intervalId: NodeJS.Timeout;
 	private isEntered = false;
 
@@ -28,20 +29,17 @@ export class WorldRoomChannel extends Channel {
 		request: ChannelRequest,
 
 		private worldRoomService: WorldRoomService,
-		private worldRoomMultiplayService: WorldRoomMultiplayService,
+		private worldMultiplayService: WorldMultiplayService,
 	) {
 		super(request);
 	}
 
 	@bindThis
 	public async init(params: JsonObject): Promise<boolean> {
-		if (typeof params.roomId !== 'string') return false;
+		if (typeof params.spaceKey !== 'string') return false;
 		if (!this.user) return false;
 
-		this.roomId = params.roomId;
-
-		const room = await this.worldRoomService.findRoomById(this.roomId);
-		if (room == null) return false;
+		this.spaceKey = params.spaceKey;
 
 		try {
 			await this.enter();
@@ -49,7 +47,7 @@ export class WorldRoomChannel extends Channel {
 			return false;
 		}
 
-		this.subscriber.on(`worldRoomStream:${this.roomId}`, this.onEvent);
+		this.subscriber.on(`worldStream:${this.spaceKey}`, this.onEvent);
 
 		return true;
 	}
@@ -58,29 +56,29 @@ export class WorldRoomChannel extends Channel {
 	private async enter() {
 		if (this.isEntered) return;
 
-		await this.worldRoomMultiplayService.enter(this.user!.id, this.roomId);
+		await this.worldMultiplayService.enter(this.user!.id, this.spaceKey);
 
 		this.isEntered = true;
 
 		this.send('entered', {
-			playerProfiles: await this.worldRoomMultiplayService.getPlayerProfiles(this.roomId, this.user!.id),
+			playerProfiles: await this.worldMultiplayService.getPlayerProfiles(this.spaceKey, this.user!.id),
 		});
 
 		this.intervalId = setInterval(async () => {
-			const states = await this.worldRoomMultiplayService.getPlayerStatesAndHeatbeat(this.user!.id, this.roomId);
+			const states = await this.worldMultiplayService.getPlayerStatesAndHeatbeat(this.user!.id, this.spaceKey);
 			delete states[this.user!.id];
 			this.send('sync', states);
 		}, 100);
 	}
 
 	@bindThis
-	private async onEvent(data: GlobalEvents['worldRoom']['payload']) {
+	private async onEvent(data: GlobalEvents['world']['payload']) {
 		switch (data.type) {
 			case 'enter': {
 				if (data.body.user.id === this.user!.id) return; // 自分の入室は無視
 				this.send('playerEntered', {
 					id: data.body.user.id,
-					profile: this.worldRoomMultiplayService.packPlayerProfile(data.body.user, data.body.avatar),
+					profile: this.worldMultiplayService.packPlayerProfile(data.body.user, data.body.avatar),
 				});
 				break;
 			}
@@ -98,8 +96,8 @@ export class WorldRoomChannel extends Channel {
 	public onMessage(type: string, body: any) {
 		switch (type) {
 			case 'update':
-				if (this.roomId && this.isEntered) {
-					this.worldRoomMultiplayService.updatePlayerState(this.user!.id, this.roomId, body);
+				if (this.spaceKey != null && this.isEntered) {
+					this.worldMultiplayService.updatePlayerState(this.user!.id, this.spaceKey, body);
 				}
 				break;
 		}
@@ -107,9 +105,9 @@ export class WorldRoomChannel extends Channel {
 
 	@bindThis
 	public dispose() {
-		this.subscriber.off(`worldRoomStream:${this.roomId}`, this.onEvent);
+		this.subscriber.off(`worldStream:${this.spaceKey}`, this.onEvent);
 
 		clearInterval(this.intervalId);
-		this.worldRoomMultiplayService.left(this.user!.id, this.roomId);
+		this.worldMultiplayService.left(this.user!.id, this.spaceKey);
 	}
 }

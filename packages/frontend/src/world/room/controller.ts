@@ -223,32 +223,4 @@ export class RoomController extends EngineControllerBase<RoomEngine, {
 	public interact(id: string) {
 		this.call('interact', [this.selected.value!.furnitureId, id]);
 	}
-
-	public sit() {
-		this.call('sit');
-	}
-
-	public lyingDown() {
-		this.call('lyingDown');
-	}
-
-	public standUp() {
-		this.call('standUp');
-	}
-
-	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
-		this.call('updatePlayerProfiles', [profiles]);
-	}
-
-	public updatePlayerStates(states: Record<string, PlayerState>) {
-		this.call('updatePlayerStates', [states]);
-	}
-
-	public clearPlayers() {
-		this.call('clearPlayers');
-	}
-
-	public updateAvatarDisplayOptions(options: { showUsername: boolean; show2dAvatar: boolean }) {
-		this.call('updateAvatarDisplayOptions', [options]);
-	}
 }

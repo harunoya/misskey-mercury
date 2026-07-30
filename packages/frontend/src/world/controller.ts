@@ -70,20 +70,4 @@ export class WorldEngineController extends EngineControllerBase<WorldEngine> {
 	public setCameraJoystickMoveVector(vec: { x: number; y: number }) {
 		this.call('cameraJoystickMove', [vec]);
 	}
-
-	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
-		this.call('updatePlayerProfiles', [profiles]);
-	}
-
-	public updatePlayerStates(states: Record<string, PlayerState>) {
-		this.call('updatePlayerStates', [states]);
-	}
-
-	public clearPlayers() {
-		this.call('clearPlayers');
-	}
-
-	public updateAvatarDisplayOptions(options: { showUsername: boolean; show2dAvatar: boolean }) {
-		this.call('updateAvatarDisplayOptions', [options]);
-	}
 }

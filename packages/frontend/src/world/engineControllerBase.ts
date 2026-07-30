@@ -6,8 +6,11 @@
 import { reactive, ref, shallowRef, triggerRef, watch } from 'vue';
 import { EventEmitter } from 'eventemitter3';
 import type { EngineBase, EngineBaseEvents } from 'frontend-misskey-world-engine/src/EngineBase.js';
+import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
+
+// TODO: multiplayer関連は全ての子クラスで必要とは限らない(preview用など)ため、このクラスを継承する別のabstract classに分離
 
 export type EngineControllerBaseOptions = {
 	workerMode?: boolean;
@@ -412,6 +415,34 @@ export abstract class EngineControllerBase<T extends EngineBase<EngineBaseEvents
 
 	public resumeRender() {
 		this.call('resumeRender');
+	}
+
+	public sit() {
+		this.call('sit');
+	}
+
+	public lyingDown() {
+		this.call('lyingDown');
+	}
+
+	public standUp() {
+		this.call('standUp');
+	}
+
+	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
+		this.call('updatePlayerProfiles', [profiles]);
+	}
+
+	public updatePlayerStates(states: Record<string, PlayerState>) {
+		this.call('updatePlayerStates', [states]);
+	}
+
+	public clearPlayers() {
+		this.call('clearPlayers');
+	}
+
+	public updateAvatarDisplayOptions(options: { showUsername: boolean; show2dAvatar: boolean }) {
+		this.call('updateAvatarDisplayOptions', [options]);
 	}
 
 	public takeScreenshot() {

@@ -156,7 +156,7 @@ import { QueueService } from './QueueService.js';
 import { LoggerService } from './LoggerService.js';
 import { WorldRoomService } from './WorldRoomService.js';
 import { WorldRoomEntityService } from './entities/WorldRoomEntityService.js';
-import { WorldRoomMultiplayService } from './WorldRoomMultiplayService.js';
+import { WorldMultiplayService } from './WorldMultiplayService.js';
 import { WorldAvatarService } from './WorldAvatarService.js';
 import { WorldAvatarEntityService } from './entities/WorldAvatarEntityService.js';
 import { TelemetryService } from './telemetry/TelemetryService.js';
@@ -237,7 +237,7 @@ const $RegistryApiService: Provider = { provide: 'RegistryApiService', useExisti
 const $ReversiService: Provider = { provide: 'ReversiService', useExisting: ReversiService };
 const $PageService: Provider = { provide: 'PageService', useExisting: PageService };
 const $WorldRoomService: Provider = { provide: 'WorldRoomService', useExisting: WorldRoomService };
-const $WorldRoomMultiplayService: Provider = { provide: 'WorldRoomMultiplayService', useExisting: WorldRoomMultiplayService };
+const $WorldMultiplayService: Provider = { provide: 'WorldMultiplayService', useExisting: WorldMultiplayService };
 const $WorldAvatarService: Provider = { provide: 'WorldAvatarService', useExisting: WorldAvatarService };
 
 const $ChartLoggerService: Provider = { provide: 'ChartLoggerService', useExisting: ChartLoggerService };
@@ -395,7 +395,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		ReversiService,
 		PageService,
 		WorldRoomService,
-		WorldRoomMultiplayService,
+		WorldMultiplayService,
 		WorldAvatarService,
 
 		ChartLoggerService,
@@ -551,7 +551,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		$ReversiService,
 		$PageService,
 		$WorldRoomService,
-		$WorldRoomMultiplayService,
+		$WorldMultiplayService,
 		$WorldAvatarService,
 
 		$ChartLoggerService,
@@ -707,7 +707,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		ReversiService,
 		PageService,
 		WorldRoomService,
-		WorldRoomMultiplayService,
+		WorldMultiplayService,
 		WorldAvatarService,
 
 		FederationChart,
@@ -861,7 +861,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		$ReversiService,
 		$PageService,
 		$WorldRoomService,
-		$WorldRoomMultiplayService,
+		$WorldMultiplayService,
 		$WorldAvatarService,
 
 		$FederationChart,
