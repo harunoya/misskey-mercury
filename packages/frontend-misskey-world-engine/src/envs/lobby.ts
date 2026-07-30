@@ -473,8 +473,8 @@ export class LobbyEnvManager extends WorldEnvManager {
 		//ps.start();
 		//this.engine.sr.fixParticleSystem(ps);
 
+		const firework = new Firework(this.engine);
 		this.timer.setInterval(() => {
-			const firework = new Firework(this.engine);
 			firework.launch({
 				position: [randomRange(cm(-2000), cm(2000)), cm(randomRange(1000, 3000)), randomRange(cm(-2000), cm(2000))],
 			});
