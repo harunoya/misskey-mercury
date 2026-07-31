@@ -16,7 +16,7 @@ export type MultiplayerEngineControllerBaseOptions = {
 	antialias: boolean;
 };
 
-export abstract class MultiplayerEngineControllerBase<T extends MultiplayEngineBase<MultiplayEngineBaseEvents>> extends EngineControllerBase<T> {
+export abstract class MultiplayerEngineControllerBase<T extends MultiplayEngineBase<MultiplayEngineBaseEvents>, E> extends EngineControllerBase<T, E> {
 	public myPlayerState = shallowRef<PlayerState>({
 		position: [0, 0, 0],
 		rotation: [0, 0, 0],

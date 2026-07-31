@@ -11,7 +11,6 @@ import type { ShallowRef } from 'vue';
 import type { RoomState_InstalledFurniture } from 'misskey-world/src/room/furniture.js';
 import type { RoomEngine } from 'misskey-world-engine/src/room/engine.js';
 import type { RoomAttachments, RoomState } from 'misskey-world/src/room/type.js';
-import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
 import * as sound from '@/utility/sound.js';
 import { deepEqual } from '@/utility/deep-equal.js';
 import { deepClone } from '@/utility/clone.js';

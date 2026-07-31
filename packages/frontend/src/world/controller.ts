@@ -7,7 +7,6 @@ import { shallowRef } from 'vue';
 import { MultiplayerEngineControllerBase } from './MultiplayerEngineControllerBase.js';
 import { Wasd } from './Wasd.js';
 import type { WorldEngine } from 'misskey-world-engine/src/engine.js';
-import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
 
 export type WorldEngineControllerOptions = {
 	workerMode?: boolean;
@@ -18,7 +17,9 @@ export type WorldEngineControllerOptions = {
 };
 
 // 抽象化レイヤー
-export class WorldEngineController extends MultiplayerEngineControllerBase<WorldEngine> {
+export class WorldEngineController extends MultiplayerEngineControllerBase<WorldEngine, {
+	'playerPointed': { playerId: string; };
+}> {
 	constructor(options: WorldEngineControllerOptions) {
 		super(options, new Wasd({
 			setCameraMoveVector: (vec, dash) => {
