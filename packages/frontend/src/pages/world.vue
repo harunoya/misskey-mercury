@@ -85,7 +85,7 @@ import { prefer } from '@/preferences.js';
 import { isTouchUsing } from '@/utility/touch.js';
 import { deviceKind } from '@/utility/device-kind.js';
 import MkProgressBar from '@/components/MkProgressBar.vue';
-import { Multiplayer } from '@/world/multiplayer.js';
+import { Multiplayer } from '@/world/Multiplayer.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';

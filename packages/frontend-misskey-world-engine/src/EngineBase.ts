@@ -5,9 +5,6 @@
 
 import * as BABYLON from '@babylonjs/core/pure.js';
 import EventEmitter from 'eventemitter3';
-import { PlayerContainer, type PlayerProfile, type PlayerState } from './PlayerContainer.js';
-
-// TODO: multiplayer関連は全ての子クラスで必要とは限らない(preview用など)ため、このクラスを継承する別のabstract classに分離
 
 const IN_WEB_WORKER = typeof window === 'undefined';
 
@@ -28,11 +25,6 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 	abstract getEnvMap(): BABYLON.CubeTexture | null;
 	protected fps: number | null = null;
 	protected disposed = false;
-
-	protected playerProfiles: Record<string, PlayerProfile> = {};
-	protected playerContainers: PlayerContainer[] = [];
-	protected showUsernameOnAvatar: boolean;
-	protected show2dAvatarOnAvatar: boolean;
 
 	public inputs: EventEmitter<{
 		'click': (event: { x: number; y: number; }) => void;
@@ -123,114 +115,12 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 
 	public abstract resize(): void;
 
-	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
-		this.playerProfiles = profiles;
-
-		for (const playerContainer of this.playerContainers) {
-			if (this.playerProfiles[playerContainer.id] == null) {
-				this.sr.disableSnapshotRendering();
-				playerContainer.destroy();
-				this.sr.enableSnapshotRendering();
-			}
-		}
-		this.playerContainers = this.playerContainers.filter(p => this.playerProfiles[p.id] != null);
-	}
-
-	public updatePlayerStates(states: Record<string, PlayerState>) {
-		for (const [k, v] of Object.entries(this.playerProfiles)) {
-			const playerContainer = this.playerContainers.find(p => p.id === k);
-			if (playerContainer == null) {
-				const p = new PlayerContainer({
-					id: k,
-					profile: v,
-					state: states[k],
-					scene: this.scene,
-					sr: this.sr,
-					showUsername: this.showUsernameOnAvatar,
-					show2dAvatar: this.show2dAvatarOnAvatar,
-				});
-				// TODO: loadFurnitureのものとある程度共通化
-				p.registerMeshes = (meshes) => {
-					for (const mesh of meshes) {
-						mesh.receiveShadows = false;
-						mesh.metadata = { isPlayer: true, playerId: k };
-
-						//if (mesh.material) (mesh.material as BABYLON.PBRMaterial).ambientColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-						if (mesh.material) {
-							if (mesh.material instanceof BABYLON.MultiMaterial) {
-								for (const subMat of mesh.material.subMaterials) {
-									if ((subMat as BABYLON.PBRMaterial).subSurface.isRefractionEnabled) {
-										(subMat as BABYLON.PBRMaterial).subSurface.isRefractionEnabled = false; // 有効にするとドローコールが激増する
-										(subMat as BABYLON.PBRMaterial).transparencyMode = BABYLON.PBRMaterial.PBRMATERIAL_ALPHABLEND;
-										(subMat as BABYLON.PBRMaterial).alpha = 0.5;
-										(subMat as BABYLON.PBRMaterial).metallic = 1;
-									}
-									(subMat as BABYLON.PBRMaterial).reflectionTexture = this.getEnvMap();
-									if ((subMat as BABYLON.PBRMaterial).metadata == null) (subMat as BABYLON.PBRMaterial).metadata = {};
-									(subMat as BABYLON.PBRMaterial).metadata.useEnvMap = true;
-									(subMat as BABYLON.PBRMaterial).useGLTFLightFalloff = true; // Clustered Lightingではphysical falloffを持つマテリアルはアーチファクトが発生する https://doc.babylonjs.com/features/featuresDeepDive/lights/clusteredLighting/#materials-with-a-physical-falloff-may-cause-artefacts
-									(subMat as BABYLON.PBRMaterial).anisotropy.isEnabled = false; // なんかきれいにレンダリングされないため
-								}
-							} else {
-								if ((mesh.material as BABYLON.PBRMaterial).subSurface.isRefractionEnabled) {
-									(mesh.material as BABYLON.PBRMaterial).subSurface.isRefractionEnabled = false; // 有効にするとドローコールが激増する
-									(mesh.material as BABYLON.PBRMaterial).transparencyMode = BABYLON.PBRMaterial.PBRMATERIAL_ALPHABLEND;
-									(mesh.material as BABYLON.PBRMaterial).alpha = 0.5;
-									(mesh.material as BABYLON.PBRMaterial).metallic = 1;
-								}
-								(mesh.material as BABYLON.PBRMaterial).reflectionTexture = this.getEnvMap();
-								if ((mesh.material as BABYLON.PBRMaterial).metadata == null) (mesh.material as BABYLON.PBRMaterial).metadata = {};
-								(mesh.material as BABYLON.PBRMaterial).metadata.useEnvMap = true;
-								(mesh.material as BABYLON.PBRMaterial).useGLTFLightFalloff = true; // Clustered Lightingではphysical falloffを持つマテリアルはアーチファクトが発生する https://doc.babylonjs.com/features/featuresDeepDive/lights/clusteredLighting/#materials-with-a-physical-falloff-may-cause-artefacts
-								(mesh.material as BABYLON.PBRMaterial).anisotropy.isEnabled = false; // なんかきれいにレンダリングされないため
-							}
-						}
-
-						if (!this.scene.meshes.includes(mesh)) this.scene.addMesh(mesh);
-					}
-				};
-				p.loadAvatar().then(() => {
-					this.sr.disableSnapshotRendering();
-					this.sr.enableSnapshotRendering();
-				});
-				this.playerContainers.push(p);
-			} else {
-				if (states[k] != null) {
-					playerContainer.applyState(states[k]);
-				}
-			}
-		}
-	}
-
-	public clearPlayers() {
-		this.sr.disableSnapshotRendering();
-		for (const playerContainer of this.playerContainers) {
-			playerContainer.destroy();
-		}
-		this.sr.enableSnapshotRendering();
-		this.playerContainers = [];
-	}
-
-	public updateAvatarDisplayOptions(options: { showUsername: boolean; show2dAvatar: boolean }) {
-		this.showUsernameOnAvatar = options.showUsername;
-		this.show2dAvatarOnAvatar = options.show2dAvatar;
-
-		this.sr.disableSnapshotRendering();
-		for (const playerContainer of this.playerContainers) {
-			playerContainer.updateUserInfoDisplayOptions(options);
-		}
-		this.sr.enableSnapshotRendering();
-	}
-
 	public destroy() {
 		this.babylonEngine.stopRenderLoop();
 		if (this.currentRafId != null) {
 			// workerで実行される可能性がある
 			cancelAnimationFrame(this.currentRafId);
 			this.currentRafId = null;
-		}
-		for (const playerContainer of this.playerContainers) {
-			playerContainer.destroy();
 		}
 		this.babylonEngine.dispose();
 		this.scene.dispose();

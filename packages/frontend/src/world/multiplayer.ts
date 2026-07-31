@@ -4,23 +4,21 @@
  */
 
 import { reactive, ref, shallowRef, triggerRef, watch } from 'vue';
-import { EventEmitter } from 'eventemitter3';
 import * as Misskey from 'misskey-js';
 import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
-import type { EngineControllerBase } from './EngineControllerBase.js';
+import type { MultiplayerEngineControllerBase } from './MultiplayerEngineControllerBase.js';
 import { useStream } from '@/stream.js';
-import * as os from '@/os.js';
 import { withTimeout } from '@/utility/promise-timeout.js';
 import { deepEqual } from '@/utility/deep-equal.js';
 
 export class Multiplayer {
 	public isOnline = ref(false);
-	private controller: EngineControllerBase<any>;
+	private controller: MultiplayerEngineControllerBase<any>;
 	private connection: Misskey.IChannelConnection<Misskey.Channels['world']> | null = null;
 	private spaceKey: string;
 	public playerProfiles: Record<string, PlayerProfile> = {};
 
-	constructor(spaceKey: string, controller: EngineControllerBase<any>) {
+	constructor(spaceKey: string, controller: MultiplayerEngineControllerBase<any>) {
 		this.spaceKey = spaceKey;
 		this.controller = controller;
 

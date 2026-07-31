@@ -22,7 +22,7 @@ import * as BABYLON from '@babylonjs/core/pure.js';
 import { registerBuiltInLoaders } from '@babylonjs/loaders/dynamic.js';
 import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
 import { TIME_MAP, getMeshesBoundingBox, Timer, getYRotationDirection, FreeCameraManualInput, remap, GRAPHICS_QUALITY } from '../utility.js';
-import { EngineBase } from '../EngineBase.js';
+import { MultiplayEngineBase } from '../MultiplayEngineBase.js';
 import { genId } from '../id.js';
 import { deepClone } from '../clone.js';
 import { PlayerContainer, type PlayerProfile, type PlayerState } from '../PlayerContainer.js';
@@ -63,7 +63,7 @@ function intersectBoundingBoxes(bb1: { min: BABYLON.Vector3; max: BABYLON.Vector
 	return true;
 }
 
-export class RoomEngine extends EngineBase<{
+export class RoomEngine extends MultiplayEngineBase<{
 	'changeSelectedState': (ctx: {
 		selected: {
 			furnitureId: string;

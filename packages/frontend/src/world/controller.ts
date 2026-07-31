@@ -4,7 +4,8 @@
  */
 
 import { shallowRef } from 'vue';
-import { EngineControllerBase, WASD } from './EngineControllerBase.js';
+import { MultiplayerEngineControllerBase } from './MultiplayerEngineControllerBase.js';
+import { Wasd } from './Wasd.js';
 import type { WorldEngine } from 'misskey-world-engine/src/engine.js';
 import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
 
@@ -17,14 +18,9 @@ export type WorldEngineControllerOptions = {
 };
 
 // 抽象化レイヤー
-export class WorldEngineController extends EngineControllerBase<WorldEngine> {
-	public myPlayerState = shallowRef<PlayerState>({
-		position: [0, 0, 0],
-		rotation: [0, 0, 0],
-	});
-
+export class WorldEngineController extends MultiplayerEngineControllerBase<WorldEngine> {
 	constructor(options: WorldEngineControllerOptions) {
-		super(options, new WASD({
+		super(options, new Wasd({
 			setCameraMoveVector: (vec, dash) => {
 				this.call('cameraMove', [vec, dash]);
 			},

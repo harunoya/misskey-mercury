@@ -189,7 +189,7 @@ import { prefer } from '@/preferences.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { FURNITURE_UI_DEFS } from '@/world/room/furniture-ui-defs.js';
-import { Multiplayer } from '@/world/multiplayer.js';
+import { Multiplayer } from '@/world/Multiplayer.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';

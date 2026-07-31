@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { onMounted, ref, useTemplateRef } from 'vue';
-import { Joystick } from '@/world/joystick.js';
+import { Joystick } from '@/world/Joystick.js';
 
 const emit = defineEmits<{
 	(ev: 'update', vector: { x: number; y: number; }): void;

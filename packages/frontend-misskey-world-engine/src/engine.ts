@@ -8,14 +8,14 @@ import { registerBuiltInLoaders } from '@babylonjs/loaders/dynamic.js';
 import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
 import { FreeCameraManualInput, GRAPHICS_QUALITY, Timer } from './utility.js';
 import { TIME_MAP } from './utility.js';
-import { EngineBase } from './EngineBase.js';
+import { MultiplayEngineBase } from './MultiplayEngineBase.js';
 import { LobbyEnvManager } from './envs/lobby.js';
 import type { PlayerContainer, PlayerProfile, PlayerState } from './PlayerContainer.js';
 import type { WorldEnvManager } from './env.js';
 
 const IN_WEB_WORKER = typeof window === 'undefined';
 
-export class WorldEngine extends EngineBase<{
+export class WorldEngine extends MultiplayEngineBase<{
 	'changeMyPlayerState': (ctx: PlayerState) => void;
 	'playerPointed': (ctx: { playerId: string; }) => void;
 	'playSfxUrl': (ctx: {

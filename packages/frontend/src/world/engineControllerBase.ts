@@ -6,11 +6,9 @@
 import { reactive, ref, shallowRef, triggerRef, watch } from 'vue';
 import { EventEmitter } from 'eventemitter3';
 import type { EngineBase, EngineBaseEvents } from 'frontend-misskey-world-engine/src/EngineBase.js';
-import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
+import type { Wasd } from './Wasd.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
-
-// TODO: multiplayer関連は全ての子クラスで必要とは限らない(preview用など)ため、このクラスを継承する別のabstract classに分離
 
 export type EngineControllerBaseOptions = {
 	workerMode?: boolean;
@@ -24,84 +22,6 @@ type EngineEventsOf<T> = T extends EngineBase<infer X> ? X : EngineBaseEvents;
 
 type ControllerEvents = EventEmitter.ValidEventTypes;
 
-export class WASD {
-	private isWPressing = false;
-	private isSPressing = false;
-	private isAPressing = false;
-	private isDPressing = false;
-	private isDashing = false;
-	private setCameraMoveVector: (vec: { x: number; y: number }, dash: boolean) => void;
-
-	constructor(options: {
-		setCameraMoveVector: WASD['setCameraMoveVector'];
-	}) {
-		this.setCameraMoveVector = options.setCameraMoveVector;
-	}
-
-	private calcWasdVec() {
-		const vec = { x: 0, y: 0 };
-		if (this.isWPressing) vec.y -= 1;
-		if (this.isSPressing) vec.y += 1;
-		if (this.isAPressing) vec.x -= 1;
-		if (this.isDPressing) vec.x += 1;
-		return vec;
-	}
-
-	public keydown(ev: KeyboardEvent) {
-		if (ev.repeat) return;
-
-		switch (ev.code) {
-			case 'KeyW':
-				this.isWPressing = true;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'KeyS':
-				this.isSPressing = true;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'KeyA':
-				this.isAPressing = true;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'KeyD':
-				this.isDPressing = true;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'ShiftLeft':
-			case 'ShiftRight':
-				this.isDashing = true;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-		}
-	}
-
-	public keyup(ev: KeyboardEvent) {
-		switch (ev.code) {
-			case 'KeyW':
-				this.isWPressing = false;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'KeyS':
-				this.isSPressing = false;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'KeyA':
-				this.isAPressing = false;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'KeyD':
-				this.isDPressing = false;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-			case 'ShiftLeft':
-			case 'ShiftRight':
-				this.isDashing = false;
-				this.setCameraMoveVector(this.calcWasdVec(), this.isDashing);
-				break;
-		}
-	}
-}
-
 // UIとエンジンの間に挟まり抽象化を行うレイヤー。
 // UIからは、エンジンが直で動いててもワーカーで動いてても同じように操作できるように見える
 export abstract class EngineControllerBase<T extends EngineBase<EngineBaseEvents>, E extends EventEmitter.ValidEventTypes = EventEmitter.ValidEventTypes> extends EventEmitter<ControllerEvents & E> {
@@ -113,11 +33,11 @@ export abstract class EngineControllerBase<T extends EngineBase<EngineBaseEvents
 	public isReady = ref(false);
 	public initializeProgress = ref(0);
 	private pointerDownPosition: { x: number; y: number } | null = null;
-	private wasd: WASD | null = null;
+	private wasd: Wasd | null = null;
 	private abortController = new AbortController();
 	private destroyed = false;
 
-	constructor(options: EngineControllerBaseOptions, wasd?: WASD) {
+	constructor(options: EngineControllerBaseOptions, wasd?: Wasd) {
 		super();
 		this.options = options;
 		this.wasd = wasd ?? null;
@@ -415,34 +335,6 @@ export abstract class EngineControllerBase<T extends EngineBase<EngineBaseEvents
 
 	public resumeRender() {
 		this.call('resumeRender');
-	}
-
-	public sit() {
-		this.call('sit');
-	}
-
-	public lyingDown() {
-		this.call('lyingDown');
-	}
-
-	public standUp() {
-		this.call('standUp');
-	}
-
-	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
-		this.call('updatePlayerProfiles', [profiles]);
-	}
-
-	public updatePlayerStates(states: Record<string, PlayerState>) {
-		this.call('updatePlayerStates', [states]);
-	}
-
-	public clearPlayers() {
-		this.call('clearPlayers');
-	}
-
-	public updateAvatarDisplayOptions(options: { showUsername: boolean; show2dAvatar: boolean }) {
-		this.call('updateAvatarDisplayOptions', [options]);
 	}
 
 	public takeScreenshot() {

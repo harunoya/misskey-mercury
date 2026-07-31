@@ -5,7 +5,8 @@
 
 import { ref, shallowRef } from 'vue';
 import { cm } from 'misskey-world/src/utility.js';
-import { EngineControllerBase, WASD } from '../EngineControllerBase.js';
+import { MultiplayerEngineControllerBase } from '../MultiplayerEngineControllerBase.js';
+import { Wasd } from '../Wasd.js';
 import type { ShallowRef } from 'vue';
 import type { RoomState_InstalledFurniture } from 'misskey-world/src/room/furniture.js';
 import type { RoomEngine } from 'misskey-world-engine/src/room/engine.js';
@@ -28,7 +29,7 @@ export type RoomControllerOptions = {
 };
 
 // 抽象化レイヤー
-export class RoomController extends EngineControllerBase<RoomEngine, {
+export class RoomController extends MultiplayerEngineControllerBase<RoomEngine, {
 	'playerPointed': { playerId: string; };
 }> {
 	public isSitting = ref(false);
@@ -46,13 +47,9 @@ export class RoomController extends EngineControllerBase<RoomEngine, {
 		}[];
 	} | null>(null);
 	public roomState: ShallowRef<RoomState>;
-	public myPlayerState = shallowRef<PlayerState>({
-		position: [0, 0, 0],
-		rotation: [0, 0, 0],
-	});
 
 	constructor(roomState: RoomState, options: RoomControllerOptions) {
-		super(options, new WASD({
+		super(options, new Wasd({
 			setCameraMoveVector: (vec, dash) => {
 				this.call('cameraMove', [vec, dash]);
 			},
