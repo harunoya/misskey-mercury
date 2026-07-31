@@ -46,7 +46,7 @@ export class WorldMultiplayService {
 
 	@bindThis
 	public async enter(userId: MiUser['id'], spaceKey: string) {
-		console.log('enter', { userId, spaceKey: spaceKey });
+		// TODO: 同じユーザーが同時に複数のspacedに入れないようにする
 
 		// TODO: atomicにやる
 		const currentPlayers = await this.redisClient.hlen(`world:${spaceKey}:players`);
