@@ -144,8 +144,17 @@ describe('queue-trace-context', () => {
 
 	test('waits for resolved Promise work before ending the span', async () => {
 		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
+		let resolveWork: ((value: string) => void) | undefined;
+		const work = new Promise<string>(resolve => {
+			resolveWork = resolve;
+		});
 
-		await expect(executeSpan(span as any, () => Promise.resolve('ok'), SpanStatusCode.ERROR)).resolves.toBe('ok');
+		const result = executeSpan(span as any, () => work, SpanStatusCode.ERROR);
+		expect(span.end).not.toHaveBeenCalled();
+
+		if (resolveWork == null) throw new Error('work resolver was not initialized');
+		resolveWork('ok');
+		await expect(result).resolves.toBe('ok');
 		expect(span.end).toHaveBeenCalledOnce();
 		expect(span.recordException).not.toHaveBeenCalled();
 	});
@@ -175,6 +184,7 @@ describe('queue-trace-context', () => {
 
 		recordSpanError(span as any, 'boom', SpanStatusCode.ERROR);
 
+		expect(span.recordException).toHaveBeenCalledWith(expect.any(Error));
 		expect(span.recordException).toHaveBeenCalledWith(expect.objectContaining({ message: 'boom' }));
 		expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR, message: 'boom' });
 	});
@@ -182,11 +192,12 @@ describe('queue-trace-context', () => {
 	test('starts a span with the extracted queue context', () => {
 		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
 		const startActiveSpan = vi.fn((_name: string, _options: unknown, _context: unknown, fn: (spanArg: typeof span) => string) => fn(span));
+		const getSpanContext = vi.fn(() => sourceSpanContext);
 		const deps = {
 			tracer: { startActiveSpan } as any,
 			rootContext,
 			propagation: { inject: vi.fn(), extract: () => extractedContext } as any,
-			trace: { getSpanContext: () => sourceSpanContext },
+			trace: { getSpanContext },
 			getActiveContext: () => rootContext,
 			mode: 'link' as const,
 			spanStatusCodeError: SpanStatusCode.ERROR,
@@ -197,6 +208,8 @@ describe('queue-trace-context', () => {
 			root: true,
 			links: [{ context: sourceSpanContext }],
 		}, rootContext, expect.any(Function));
+		expect(getSpanContext).toHaveBeenCalledOnce();
+		expect(getSpanContext).toHaveBeenCalledWith(extractedContext);
 		expect(span.end).toHaveBeenCalledOnce();
 	});
 
