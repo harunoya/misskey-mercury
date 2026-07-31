@@ -28,12 +28,12 @@ export class AvatarPreviewEngine extends EngineBase<{ // PlayerPreviewEngineに�
 	private profile: PlayerProfile;
 
 	constructor(profile: PlayerProfile, options: {
-		engine: BABYLON.WebGPUEngine;
+		babylonEngine: BABYLON.WebGPUEngine;
 		graphicsQuality: number;
 		fps: number | null;
 	}) {
 		super({
-			engine: options.engine,
+			babylonEngine: options.babylonEngine,
 			fps: options.fps,
 		});
 
@@ -193,7 +193,7 @@ export class AvatarPreviewEngine extends EngineBase<{ // PlayerPreviewEngineに�
 		// ~~...が、一旦無効にしたらしたで複数のマテリアルがそれぞれ入れ替わる(?)という謎の現象が発生するためコメントアウトしとく(エラー出てもレンダリングが止まったりするわけでもないし)~~
 		// ↑追記: engine.resizeした後に一瞬待つことで回避できることが判明
 		this.sr.disableSnapshotRendering();
-		this.engine.resize(true);
+		this.babylonEngine.resize(true);
 		// workerで実行される可能性がある
 
 		setTimeout(() => {

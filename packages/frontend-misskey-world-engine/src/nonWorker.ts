@@ -30,7 +30,7 @@ export async function createWorldEngine(params: {
 	if (params.options.resolution === 0.5) babylonEngine.setHardwareScalingLevel(2);
 
 	const engine = new WorldEngine({
-		engine: babylonEngine,
+		babylonEngine: babylonEngine,
 		...params.options,
 	});
 

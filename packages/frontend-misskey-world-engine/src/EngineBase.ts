@@ -21,7 +21,7 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 }> {
 	declare _eventTypes?: EVs;
 
-	protected engine: BABYLON.WebGPUEngine;
+	protected babylonEngine: BABYLON.WebGPUEngine;
 	public scene: BABYLON.Scene;
 	abstract sr: BABYLON.SnapshotRenderingHelper;
 	abstract lightContainer: BABYLON.ClusteredLightContainer;
@@ -44,14 +44,14 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 	}> = new EventEmitter();
 
 	constructor(options: {
-		engine: BABYLON.WebGPUEngine;
+		babylonEngine: BABYLON.WebGPUEngine;
 		fps: number | null;
 	}) {
 		super();
 
 		this.fps = options.fps;
 
-		this.engine = options.engine;
+		this.babylonEngine = options.babylonEngine;
 		// doNotHandleContextLostがtrueだとそもそも呼ばれない
 		//babylonEngine.onContextLostObservable.add(() => {
 		//	os.alert({
@@ -60,18 +60,18 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 		//		text: i18n.ts._miWorld.crushed_description,
 		//	});
 		//});
-		this.engine._device.lost.then((info) => { // TODO: babylonEngineの内部プロパティに依存しない方法をforumで聞く
+		this.babylonEngine._device.lost.then((info) => { // TODO: babylonEngineの内部プロパティに依存しない方法をforumで聞く
 			this.ev('contextlost', { reason: info.reason, message: info.message }); // transferableじゃないデータが含まれている可能性も考慮してinfoそのままは送らない
 		});
 
-		this.scene = new BABYLON.Scene(this.engine);
+		this.scene = new BABYLON.Scene(this.babylonEngine);
 	}
 
 	private currentRafId: number | null = null;
 
 	protected startRenderLoop() {
 		if (this.fps == null) {
-			this.engine.runRenderLoop(() => {
+			this.babylonEngine.runRenderLoop(() => {
 				this.scene.render();
 			});
 		} else {
@@ -88,9 +88,9 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 				if (delta <= interval) return;
 				then = timeStamp - (delta % interval);
 
-				this.engine.beginFrame();
+				this.babylonEngine.beginFrame();
 				this.scene.render();
-				this.engine.endFrame();
+				this.babylonEngine.endFrame();
 			};
 
 			// workerで実行される可能性がある
@@ -99,7 +99,7 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 	}
 
 	public pauseRender() { // TODO: srと同じく参照カウント方式にした方が便利そう
-		this.engine.stopRenderLoop();
+		this.babylonEngine.stopRenderLoop();
 		if (this.currentRafId != null) {
 			// workerで実行される可能性がある
 			cancelAnimationFrame(this.currentRafId);
@@ -118,7 +118,7 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 	}
 
 	public async takeScreenshot() {
-		return await BABYLON.Tools.CreateScreenshotAsync(this.engine, this.scene.activeCamera!, { precision: 1 });
+		return await BABYLON.Tools.CreateScreenshotAsync(this.babylonEngine, this.scene.activeCamera!, { precision: 1 });
 	}
 
 	public abstract resize(): void;
@@ -223,7 +223,7 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 	}
 
 	public destroy() {
-		this.engine.stopRenderLoop();
+		this.babylonEngine.stopRenderLoop();
 		if (this.currentRafId != null) {
 			// workerで実行される可能性がある
 			cancelAnimationFrame(this.currentRafId);
@@ -232,7 +232,7 @@ export abstract class EngineBase<EVs extends EngineBaseEvents> extends EventEmit
 		for (const playerContainer of this.playerContainers) {
 			playerContainer.destroy();
 		}
-		this.engine.dispose();
+		this.babylonEngine.dispose();
 		this.scene.dispose();
 		this.disposed = true;
 	}

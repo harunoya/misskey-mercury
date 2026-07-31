@@ -33,7 +33,7 @@ export async function createRoomEngine(params: {
 	if (params.options.resolution === 0.5) babylonEngine.setHardwareScalingLevel(2);
 
 	const engine = new RoomEngine(params.roomState, params.roomAttachments, {
-		engine: babylonEngine,
+		babylonEngine: babylonEngine,
 		...params.options,
 	});
 

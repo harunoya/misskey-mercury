@@ -20,7 +20,7 @@ export async function createRoomPreviewEngine(params: {
 	if (params.options.resolution === 0.5) babylonEngine.setHardwareScalingLevel(2);
 
 	const engine = new RoomFurniturePreviewEngine({
-		engine: babylonEngine,
+		babylonEngine: babylonEngine,
 		...params.options,
 	});
 

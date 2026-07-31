@@ -34,12 +34,12 @@ export class RoomFurniturePreviewEngine extends EngineBase<{
 	private graphicsQuality: number;
 
 	constructor(options: {
-		engine: BABYLON.WebGPUEngine;
+		babylonEngine: BABYLON.WebGPUEngine;
 		graphicsQuality: number;
 		fps: number | null;
 	}) {
 		super({
-			engine: options.engine,
+			babylonEngine: options.babylonEngine,
 			fps: options.fps,
 		});
 
@@ -140,7 +140,7 @@ export class RoomFurniturePreviewEngine extends EngineBase<{
 				this.zGridPreviewPlane.isVisible = false;
 
 				window.setTimeout(() => {
-					BABYLON.Tools.CreateScreenshotUsingRenderTarget(this.engine, camera, { width: 256, height: 256 }, undefined, undefined, undefined, true, `${camelToKebab(this.furnitureContainer.type!)}.png`);
+					BABYLON.Tools.CreateScreenshotUsingRenderTarget(this.babylonEngine, camera, { width: 256, height: 256 }, undefined, undefined, undefined, true, `${camelToKebab(this.furnitureContainer.type!)}.png`);
 				}, 100);
 			};
 		}
@@ -308,7 +308,7 @@ export class RoomFurniturePreviewEngine extends EngineBase<{
 		// ~~...が、一旦無効にしたらしたで複数のマテリアルがそれぞれ入れ替わる(?)という謎の現象が発生するためコメントアウトしとく(エラー出てもレンダリングが止まったりするわけでもないし)~~
 		// ↑追記: engine.resizeした後に一瞬待つことで回避できることが判明
 		this.sr.disableSnapshotRendering();
-		this.engine.resize(true);
+		this.babylonEngine.resize(true);
 		// workerで実行される可能性がある
 
 		setTimeout(() => {

@@ -44,7 +44,7 @@ export class WorldEngine extends EngineBase<{
 	private isGodMode = false;
 
 	constructor(options: {
-		engine: BABYLON.WebGPUEngine;
+		babylonEngine: BABYLON.WebGPUEngine;
 		graphicsQuality: number;
 		fps: number | null;
 		antialias: boolean;
@@ -54,7 +54,7 @@ export class WorldEngine extends EngineBase<{
 		show2dAvatarOnAvatar: boolean;
 	}) {
 		super({
-			engine: options.engine,
+			babylonEngine: options.babylonEngine,
 			fps: options.fps,
 		});
 
@@ -259,7 +259,7 @@ export class WorldEngine extends EngineBase<{
 	}
 
 	public resize() {
-		this.engine.resize(true);
+		this.babylonEngine.resize(true);
 	}
 
 	public destroy() {

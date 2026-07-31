@@ -21,7 +21,7 @@ export async function createAvatarPreviewEngine(params: {
 	if (params.options.resolution === 0.5) babylonEngine.setHardwareScalingLevel(2);
 
 	const engine = new AvatarPreviewEngine(params.profile, {
-		engine: babylonEngine,
+		babylonEngine: babylonEngine,
 		...params.options,
 	});
 

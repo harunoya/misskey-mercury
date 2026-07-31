@@ -29,7 +29,7 @@ onmessage = async (event) => {
 			if (event.data.options.resolution === 0.5) babylonEngine.setHardwareScalingLevel(2);
 
 			engine = new AvatarPreviewEngine(profile, {
-				engine: babylonEngine,
+				babylonEngine: babylonEngine,
 				...event.data.options,
 			});
 
