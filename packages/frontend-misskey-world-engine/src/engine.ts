@@ -30,7 +30,6 @@ export class WorldEngine extends EngineBase<{
 }> {
 	public camera: BABYLON.UniversalCamera;
 	private time: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
-	private envMap: BABYLON.CubeTexture;
 	public lightContainer: BABYLON.ClusteredLightContainer;
 	public sr: BABYLON.SnapshotRenderingHelper;
 	public gl: BABYLON.GlowLayer | null = null;
@@ -80,10 +79,6 @@ export class WorldEngine extends EngineBase<{
 		//this.time = TIME_MAP[12 as keyof typeof TIME_MAP];
 
 		this.scene.ambientColor = new BABYLON.Color3(0.9, 0.9, 0.9);
-
-		this.envMap = BABYLON.CubeTexture.CreateFromPrefilteredData(this.time === 2 ? '/client-assets/room/outdoor-night.env' : '/client-assets/room/outdoor-day.env', this.scene);
-		//this.envMap.level = 1;
-		this.envMap.level = 0;
 
 		this.camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, this.cameraHeight, cm(0)), this.scene);
 		this.camera.minZ = cm(1);
@@ -225,6 +220,10 @@ export class WorldEngine extends EngineBase<{
 		this.envManager = envManager;
 
 		this.camera.maxZ = this.envManager.maxCameraZ;
+	}
+
+	public getEnvMap(): BABYLON.CubeTexture | null {
+		return this.envManager?.envMapIndoor ?? null;
 	}
 
 	public cameraMove(vector: { x: number; y: number; }, dash: boolean) {

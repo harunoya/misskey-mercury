@@ -339,7 +339,7 @@ export default class Connection {
 			case 'chatRoom': return ChatRoomChannel;
 			case 'reversi': return ReversiChannel;
 			case 'reversiGame': return ReversiGameChannel;
-			case 'worldRoom': return WorldChannel;
+			case 'world': return WorldChannel;
 
 			default:
 				throw new Error(`no such channel: ${name}`);
