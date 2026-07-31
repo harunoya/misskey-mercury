@@ -31,6 +31,7 @@ export type RoomControllerOptions = {
 export class RoomController extends MultiplayerEngineControllerBase<RoomEngine, {
 	'playerPointed': { playerId: string; };
 }> {
+	protected options: RoomControllerOptions;
 	public isSitting = ref(false);
 	public isEditMode = ref(false);
 	public isRoomLightOn = ref(true);
@@ -53,6 +54,7 @@ export class RoomController extends MultiplayerEngineControllerBase<RoomEngine, 
 				this.call('cameraMove', [vec, dash]);
 			},
 		}));
+		this.options = options;
 		this.roomState = shallowRef(deepClone(roomState));
 	}
 

@@ -5,18 +5,24 @@
 
 import { shallowRef } from 'vue';
 import { EngineControllerBase } from './EngineControllerBase.js';
+import type { EngineControllerBaseOptions } from './EngineControllerBase.js';
 import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
 import type { MultiplayEngineBase, MultiplayEngineBaseEvents } from 'misskey-world-engine/src/MultiplayEngineBase.js';
+import type { Wasd } from './Wasd.js';
 
-export type MultiplayerEngineControllerBaseOptions = {
-	workerMode?: boolean;
-	graphicsQuality: number;
-	fps: number | null;
-	resolution: number;
-	antialias: boolean;
+export type MultiplayerEngineControllerBaseOptions = EngineControllerBaseOptions & {
+	showUsernameOnAvatar: boolean;
+	show2dAvatarOnAvatar: boolean;
 };
 
 export abstract class MultiplayerEngineControllerBase<T extends MultiplayEngineBase<MultiplayEngineBaseEvents>, E> extends EngineControllerBase<T, E> {
+	protected options: MultiplayerEngineControllerBaseOptions;
+
+	constructor(options: MultiplayerEngineControllerBaseOptions, wasd?: Wasd) {
+		super(options, wasd);
+		this.options = options;
+	}
+
 	public myPlayerState = shallowRef<PlayerState>({
 		position: [0, 0, 0],
 		rotation: [0, 0, 0],

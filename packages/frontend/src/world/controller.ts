@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { shallowRef } from 'vue';
 import { MultiplayerEngineControllerBase } from './MultiplayerEngineControllerBase.js';
 import { Wasd } from './Wasd.js';
 import type { WorldEngine } from 'misskey-world-engine/src/engine.js';
@@ -14,18 +13,25 @@ export type WorldEngineControllerOptions = {
 	fps: number | null;
 	resolution: number;
 	antialias: boolean;
+	fov: number;
+	useVirtualJoystick?: boolean;
+	showUsernameOnAvatar: boolean;
+	show2dAvatarOnAvatar: boolean;
 };
 
 // 抽象化レイヤー
 export class WorldEngineController extends MultiplayerEngineControllerBase<WorldEngine, {
 	'playerPointed': { playerId: string; };
 }> {
+	protected options: WorldEngineControllerOptions;
+
 	constructor(options: WorldEngineControllerOptions) {
 		super(options, new Wasd({
 			setCameraMoveVector: (vec, dash) => {
 				this.call('cameraMove', [vec, dash]);
 			},
 		}));
+		this.options = options;
 	}
 
 	public async init(canvas: HTMLCanvasElement) {
