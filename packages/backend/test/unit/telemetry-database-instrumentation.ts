@@ -95,7 +95,7 @@ describe('database-instrumentation', () => {
 		}));
 	});
 
-	test('cleans up both instrumentations when initialization fails', () => {
+	test('cleans up the pg instrumentation when initialization fails', () => {
 		const pg = { setTracerProvider: vi.fn(), enable: vi.fn(), disable: vi.fn() };
 		pg.enable.mockImplementation(() => { throw new Error('failed'); });
 

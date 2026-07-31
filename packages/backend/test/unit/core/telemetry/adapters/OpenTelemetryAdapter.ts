@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SpanStatusCode } from '@opentelemetry/api';
 import { defaultResource, detectResources, envDetector, resourceFromAttributes } from '@opentelemetry/resources';
 import { ParentBasedSampler, TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_INSTANCE_ID, ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import type { Context, SpanContext } from '@opentelemetry/api';
-import { OpenTelemetryAdapter, createResource, createSampler, getMisskeyProcessRole } from '@/core/telemetry/adapters/OpenTelemetryAdapter.js';
+import { OpenTelemetryAdapter, createResource, createSampler, getMisskeyProcessRole, installInstrumentationsWithCleanup } from '@/core/telemetry/adapters/OpenTelemetryAdapter.js';
 
 const mocks = vi.hoisted(() => {
 	return {
@@ -40,6 +40,10 @@ const samplerDeps = {
 };
 
 describe('OpenTelemetryAdapter', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	test('wraps async work in an active span and ends it after success', async () => {
 		const span = {
 			end: vi.fn(),
@@ -216,7 +220,6 @@ describe('OpenTelemetryAdapter', () => {
 		await vi.advanceTimersByTimeAsync(50);
 
 		await expect(shutdown).resolves.toBeUndefined();
-		vi.useRealTimers();
 	});
 
 	test('clears the shutdown timeout timer once provider.shutdown() resolves first', async () => {
@@ -234,7 +237,30 @@ describe('OpenTelemetryAdapter', () => {
 
 		expect(clearTimeoutSpy).toHaveBeenCalled();
 		clearTimeoutSpy.mockRestore();
-		vi.useRealTimers();
+	});
+
+	test('continues shutdown and flushes the provider when instrumentation cleanup fails', async () => {
+		const shutdownHttpClientInstrumentation = vi.fn(() => { throw new Error('failed'); });
+		const shutdownDatabaseInstrumentation = vi.fn();
+		const shutdownRedisInstrumentation = vi.fn();
+		const provider = { shutdown: vi.fn().mockResolvedValue(undefined) };
+		const adapter = new OpenTelemetryAdapter({
+			tracer: { startActiveSpan: vi.fn() },
+			provider,
+			getActiveSpan: () => undefined,
+			spanStatusCodeError: SpanStatusCode.ERROR,
+			shutdownTimeout: 10,
+			shutdownHttpClientInstrumentation,
+			shutdownDatabaseInstrumentation,
+			shutdownRedisInstrumentation,
+		});
+
+		await expect(adapter.shutdown()).resolves.toBeUndefined();
+
+		expect(shutdownHttpClientInstrumentation).toHaveBeenCalledOnce();
+		expect(shutdownDatabaseInstrumentation).toHaveBeenCalledOnce();
+		expect(shutdownRedisInstrumentation).toHaveBeenCalledOnce();
+		expect(provider.shutdown).toHaveBeenCalledOnce();
 	});
 
 	test('captureMessage starts a standalone span to report the error when there is no active span', () => {
@@ -268,6 +294,38 @@ describe('OpenTelemetryAdapter', () => {
 			message: 'Queue: Deliver failed',
 		});
 		expect(reportSpan.end).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('installInstrumentationsWithCleanup', () => {
+	test('cleans up acquired instrumentations in reverse order and preserves the installation error', async () => {
+		const installationError = new Error('failed to install');
+		const shutdownHttpClientInstrumentation = vi.fn();
+		const shutdownDatabaseInstrumentation = vi.fn(() => { throw new Error('failed to clean up'); });
+
+		await expect(installInstrumentationsWithCleanup([
+			() => shutdownHttpClientInstrumentation,
+			() => shutdownDatabaseInstrumentation,
+			() => { throw installationError; },
+		], () => { throw new Error('should not create'); })).rejects.toBe(installationError);
+
+		expect(shutdownDatabaseInstrumentation).toHaveBeenCalledOnce();
+		expect(shutdownHttpClientInstrumentation).toHaveBeenCalledOnce();
+		expect(shutdownDatabaseInstrumentation.mock.invocationCallOrder[0]).toBeLessThan(shutdownHttpClientInstrumentation.mock.invocationCallOrder[0]);
+	});
+
+	test('cleans up all instrumentations when adapter construction fails', async () => {
+		const constructionError = new Error('failed to create adapter');
+		const shutdownHttpClientInstrumentation = vi.fn();
+		const shutdownDatabaseInstrumentation = vi.fn();
+
+		await expect(installInstrumentationsWithCleanup([
+			() => shutdownHttpClientInstrumentation,
+			() => shutdownDatabaseInstrumentation,
+		], () => { throw constructionError; })).rejects.toBe(constructionError);
+
+		expect(shutdownDatabaseInstrumentation).toHaveBeenCalledOnce();
+		expect(shutdownHttpClientInstrumentation).toHaveBeenCalledOnce();
 	});
 });
 

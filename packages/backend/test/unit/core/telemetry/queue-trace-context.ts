@@ -4,8 +4,9 @@
  */
 
 import { describe, expect, test, vi } from 'vitest';
+import { SpanStatusCode } from '@opentelemetry/api';
 import type { Context, SpanContext } from '@opentelemetry/api';
-import { getQueueSpanContext, getQueueTraceContextMode, injectActiveTraceContext, injectQueueTraceContext } from '@/core/telemetry/queue-trace-context.js';
+import { executeSpan, getQueueSpanContext, getQueueTraceContextMode, injectActiveTraceContext, injectQueueTraceContext, recordSpanError, startSpanWithQueueTraceContext } from '@/core/telemetry/queue-trace-context.js';
 
 const rootContext = { kind: 'root' } as unknown as Context;
 const extractedContext = { kind: 'extracted' } as unknown as Context;
@@ -131,5 +132,89 @@ describe('queue-trace-context', () => {
 		expect(getQueueTraceContextMode(undefined)).toBe('link');
 		expect(getQueueTraceContextMode('parent')).toBe('parent');
 		expect(() => getQueueTraceContextMode('children')).toThrow('otelForBackend.jobTraceContextMode');
+	});
+
+	test('executes synchronous work and ends the span once', () => {
+		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
+
+		expect(executeSpan(span as any, () => 'ok', SpanStatusCode.ERROR)).toBe('ok');
+		expect(span.end).toHaveBeenCalledOnce();
+		expect(span.recordException).not.toHaveBeenCalled();
+	});
+
+	test('waits for resolved Promise work before ending the span', async () => {
+		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
+
+		await expect(executeSpan(span as any, () => Promise.resolve('ok'), SpanStatusCode.ERROR)).resolves.toBe('ok');
+		expect(span.end).toHaveBeenCalledOnce();
+		expect(span.recordException).not.toHaveBeenCalled();
+	});
+
+	test('records and propagates synchronous failures', () => {
+		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
+		const error = new Error('boom');
+
+		expect(() => executeSpan(span as any, () => { throw error; }, SpanStatusCode.ERROR)).toThrow(error);
+		expect(span.recordException).toHaveBeenCalledWith(error);
+		expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR, message: error.message });
+		expect(span.end).toHaveBeenCalledOnce();
+	});
+
+	test('records and propagates rejected Promise work', async () => {
+		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
+		const error = new Error('boom');
+
+		await expect(executeSpan(span as any, () => Promise.reject(error), SpanStatusCode.ERROR)).rejects.toBe(error);
+		expect(span.recordException).toHaveBeenCalledWith(error);
+		expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR, message: error.message });
+		expect(span.end).toHaveBeenCalledOnce();
+	});
+
+	test('normalizes non-Error failures before recording them', () => {
+		const span = { recordException: vi.fn(), setStatus: vi.fn() };
+
+		recordSpanError(span as any, 'boom', SpanStatusCode.ERROR);
+
+		expect(span.recordException).toHaveBeenCalledWith(expect.objectContaining({ message: 'boom' }));
+		expect(span.setStatus).toHaveBeenCalledWith({ code: SpanStatusCode.ERROR, message: 'boom' });
+	});
+
+	test('starts a span with the extracted queue context', () => {
+		const span = { end: vi.fn(), recordException: vi.fn(), setStatus: vi.fn() };
+		const startActiveSpan = vi.fn((_name: string, _options: unknown, _context: unknown, fn: (spanArg: typeof span) => string) => fn(span));
+		const deps = {
+			tracer: { startActiveSpan } as any,
+			rootContext,
+			propagation: { inject: vi.fn(), extract: () => extractedContext } as any,
+			trace: { getSpanContext: () => sourceSpanContext },
+			getActiveContext: () => rootContext,
+			mode: 'link' as const,
+			spanStatusCodeError: SpanStatusCode.ERROR,
+		};
+
+		expect(startSpanWithQueueTraceContext(deps, 'Queue: Deliver', jobData(), () => 'ok', () => 'fallback')).toBe('ok');
+		expect(startActiveSpan).toHaveBeenCalledWith('Queue: Deliver', {
+			root: true,
+			links: [{ context: sourceSpanContext }],
+		}, rootContext, expect.any(Function));
+		expect(span.end).toHaveBeenCalledOnce();
+	});
+
+	test('uses the fallback without starting a span when queue context is missing', () => {
+		const startActiveSpan = vi.fn();
+		const fallback = vi.fn(() => 'fallback');
+		const deps = {
+			tracer: { startActiveSpan } as any,
+			rootContext,
+			propagation: { inject: vi.fn(), extract: vi.fn() } as any,
+			trace: { getSpanContext: vi.fn() },
+			getActiveContext: () => rootContext,
+			mode: 'link' as const,
+			spanStatusCodeError: SpanStatusCode.ERROR,
+		};
+
+		expect(startSpanWithQueueTraceContext(deps, 'Queue: Deliver', {}, () => 'ok', fallback)).toBe('fallback');
+		expect(fallback).toHaveBeenCalledOnce();
+		expect(startActiveSpan).not.toHaveBeenCalled();
 	});
 });

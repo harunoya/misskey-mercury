@@ -50,6 +50,8 @@ type CreateResourceDeps = {
 	serviceVersion: string;
 };
 
+type InstrumentationInstaller = () => (() => void) | Promise<() => void>;
+
 export class OpenTelemetryAdapter implements TelemetryAdapter {
 	public constructor(
 		private readonly deps: OpenTelemetryAdapterDeps,
@@ -111,39 +113,46 @@ export class OpenTelemetryAdapter implements TelemetryAdapter {
 
 		// provider操作をdepsに閉じ込め、span wrapper本体をユニットテストしやすくする。
 		const tracer = provider.getTracer('misskey-backend');
-
-		return new OpenTelemetryAdapter({
-			tracer,
-			provider,
-			getActiveSpan: () => trace.getActiveSpan(),
-			spanStatusCodeError: SpanStatusCode.ERROR,
-			shutdownTimeout: DEFAULT_SHUTDOWN_TIMEOUT,
-			shutdownHttpClientInstrumentation: installHttpClientInstrumentation({
+		return installInstrumentationsWithCleanup([
+			() => installHttpClientInstrumentation({
 				tracer,
 				spanKindClient: SpanKind.CLIENT,
 				spanStatusCodeError: SpanStatusCode.ERROR,
 			}),
 			// pg のrequire hookとioredis diagnostics channelは、Nest moduleの動的importより前に有効化する。
-			shutdownDatabaseInstrumentation: await installDatabaseInstrumentation(provider, {
+			() => installDatabaseInstrumentation(provider, {
 				capturePgSpans: config.capturePgSpans === true,
 				capturePgStatement: config.capturePgStatement === true,
 				capturePgConnectionSpans: config.capturePgConnectionSpans === true,
 			}),
-			shutdownRedisInstrumentation: installRedisInstrumentation(tracer, SpanKind.CLIENT, SpanStatusCode.ERROR, {
+			() => installRedisInstrumentation(tracer, SpanKind.CLIENT, SpanStatusCode.ERROR, {
 				captureConnectionSpans: config.captureRedisConnectionSpans === true,
 				captureCommandSpans: config.captureRedisCommandSpans === true,
 				requireParentSpan: config.captureRedisRootSpans !== true,
 			}),
-			queueTraceContext: {
+		], ([
+			shutdownHttpClientInstrumentation,
+			shutdownDatabaseInstrumentation,
+			shutdownRedisInstrumentation,
+		]) => new OpenTelemetryAdapter({
 				tracer,
-				propagation,
-				trace,
-				getActiveContext: () => context.active(),
-				rootContext: ROOT_CONTEXT,
-				mode: getQueueTraceContextMode(config.jobTraceContextMode),
+				provider,
+				getActiveSpan: () => trace.getActiveSpan(),
 				spanStatusCodeError: SpanStatusCode.ERROR,
-			},
-		});
+				shutdownTimeout: DEFAULT_SHUTDOWN_TIMEOUT,
+				shutdownHttpClientInstrumentation,
+				shutdownDatabaseInstrumentation,
+				shutdownRedisInstrumentation,
+				queueTraceContext: {
+					tracer,
+					propagation,
+					trace,
+					getActiveContext: () => context.active(),
+					rootContext: ROOT_CONTEXT,
+					mode: getQueueTraceContextMode(config.jobTraceContextMode),
+					spanStatusCodeError: SpanStatusCode.ERROR,
+				},
+			}));
 	}
 
 	public captureMessage(message: string, _opts: TelemetryCaptureMessageOptions): void {
@@ -192,9 +201,11 @@ export class OpenTelemetryAdapter implements TelemetryAdapter {
 	}
 
 	public async shutdown(): Promise<void> {
-		this.deps.shutdownHttpClientInstrumentation?.();
-		this.deps.shutdownDatabaseInstrumentation?.();
-		this.deps.shutdownRedisInstrumentation?.();
+		shutdownInstrumentations([
+			this.deps.shutdownHttpClientInstrumentation,
+			this.deps.shutdownDatabaseInstrumentation,
+			this.deps.shutdownRedisInstrumentation,
+		]);
 		// BatchSpanProcessorのflushが詰まってもプロセス終了を妨げないよう、上限時間を設ける。
 		// タイムアウト側のtimerは、flushが先に終わった場合にイベントループを無駄に引き留めないようclearする。
 		let timer: NodeJS.Timeout | undefined;
@@ -206,6 +217,32 @@ export class OpenTelemetryAdapter implements TelemetryAdapter {
 		]).finally(() => {
 			if (timer != null) clearTimeout(timer);
 		});
+	}
+}
+
+export async function installInstrumentationsWithCleanup<T>(
+	installers: readonly InstrumentationInstaller[],
+	create: (shutdowns: ReadonlyArray<() => void>) => T,
+): Promise<T> {
+	const shutdowns: Array<() => void> = [];
+	try {
+		for (const install of installers) {
+			shutdowns.push(await install());
+		}
+		return create(shutdowns);
+	} catch (error) {
+		shutdownInstrumentations(shutdowns.reverse());
+		throw error;
+	}
+}
+
+function shutdownInstrumentations(shutdowns: ReadonlyArray<(() => void) | undefined>): void {
+	for (const shutdown of shutdowns) {
+		try {
+			shutdown?.();
+		} catch {
+			// instrumentation の停止失敗で、残りの停止処理や provider の flush を妨げない。
+		}
 	}
 }
 
