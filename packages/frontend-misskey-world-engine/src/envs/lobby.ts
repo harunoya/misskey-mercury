@@ -32,7 +32,164 @@ export class LobbyEnvManager extends WorldEnvManager {
 		super(engine);
 	}
 
+	private registerShaders() {
+		BABYLON.ShaderStore.ShadersStoreWGSL['AnimatingCirclesDecoPixelShader'] = `
+			const PI = 3.141592653589793;
+			const TWO_PI = 6.283185307179586;
+			const HALF_PI = 1.5707963267948966;
+
+			fn mod289_3(x: vec3f) -> vec3f {
+				return x - floor(x * (1.0 / 289.0)) * 289.0;
+			}
+
+			fn mod289_4(x: vec4f) -> vec4f {
+				return x - floor(x * (1.0 / 289.0)) * 289.0;
+			}
+
+			fn permute(x: vec4f) -> vec4f {
+				return mod289_4(((x * 34.0) + 10.0) * x);
+			}
+
+			fn taylorInvSqrt(r: vec4f) -> vec4f {
+				return 1.79284291400159 - 0.85373472095314 * r;
+			}
+
+			// -1.0 ~ +1.0
+			fn snoise(v: vec3f) -> f32 {
+				const C = vec2f(1.0 / 6.0, 1.0 / 3.0);
+				const D = vec4f(0.0, 0.5, 1.0, 2.0);
+
+				var i = floor(v + dot(v, C.yyy));
+				var x0 = v - i + dot(i, C.xxx);
+
+				var g = step(x0.yzx, x0.xyz);
+				var l = 1.0 - g;
+				var i1 = min(g.xyz, l.zxy);
+				var i2 = max(g.xyz, l.zxy);
+
+				var x1 = x0 - i1 + C.xxx;
+				var x2 = x0 - i2 + C.yyy;
+				var x3 = x0 - D.yyy;
+
+				i = mod289_3(i);
+				var p = permute(permute(permute(
+									i.z + vec4f(0.0, i1.z, i2.z, 1.0))
+								+ i.y + vec4f(0.0, i1.y, i2.y, 1.0))
+								+ i.x + vec4f(0.0, i1.x, i2.x, 1.0));
+
+				var n_ = 0.142857142857;
+				var ns = n_ * D.wyz - D.xzx;
+
+				var j = p - 49.0 * floor(p * ns.z * ns.z);
+
+				var x_ = floor(j * ns.z);
+				var y_ = floor(j - 7.0 * x_);
+
+				var x = x_ * ns.x + ns.yyyy;
+				var y = y_ * ns.x + ns.yyyy;
+				var h = 1.0 - abs(x) - abs(y);
+
+				var b0 = vec4f(x.xy, y.xy);
+				var b1 = vec4f(x.zw, y.zw);
+
+				var s0 = floor(b0) * 2.0 + 1.0;
+				var s1 = floor(b1) * 2.0 + 1.0;
+				var sh = -step(h, vec4f(0.0));
+
+				var a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+				var a1 = b1.xzyw + s1.xzyw * sh.zzww;
+
+				var p0 = vec3f(a0.xy, h.x);
+				var p1 = vec3f(a0.zw, h.y);
+				var p2 = vec3f(a1.xy, h.z);
+				var p3 = vec3f(a1.zw, h.w);
+
+				var norm = taylorInvSqrt(vec4f(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+				p0 *= norm.x;
+				p1 *= norm.y;
+				p2 *= norm.z;
+				p3 *= norm.w;
+
+				var m = max(0.5 - vec4f(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), vec4f(0.0));
+				m = m * m;
+				return 105.0 * dot(m * m, vec4f(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+			}
+
+			// +0.0 ~ +1.0
+			fn snoise0to1(v: vec3f) -> f32 {
+				return (snoise(v) + 1.0) / 2.0;
+			}
+
+			// equivalent to GLSL's mod function
+			fn modVec2f(a: vec2f, b: vec2f) -> vec2f {
+				return a - b * floor(a / b);
+			}
+
+			fn premultiplyAlpha(color: vec4f) -> vec4f {
+				return vec4f(color.rgb * color.a, color.a);
+			}
+
+			fn getPixelatedUv(uv: vec2f, cellSize: vec2f) -> vec2f {
+				return (cellSize * floor(uv / cellSize)) + (cellSize / 2.0);
+			}
+
+			fn linearRisePulse(
+				phase: f32, // 0.0～1.0
+				riseLength: f32,
+			) -> f32 {
+				let _phase = fract(phase);
+				let riseStart = 1.0 - riseLength; // 1周期の最後の riseLength 区間で 0→1
+				return clamp((_phase - riseStart) / riseLength, 0.0, 1.0);
+			}
+
+			fn getV(uv: vec2f) -> f32 {
+				let phaseField = snoise(vec3f(uv * uniforms.waveScale, uniforms.time * 0.005));
+				let phase = fract((uniforms.time * 0.025) + phaseField);
+				let pulseFrequency = 3.0;
+				return linearRisePulse(phase * pulseFrequency, 0.3);
+			}
+
+			varying vUV: vec2f;
+			uniform time: f32;
+			uniform divisions: f32;
+			uniform waveScale: f32;
+			uniform colorA: vec3f;
+			uniform colorB: vec3f;
+			uniform colorC: vec3f;
+
+			@fragment
+			fn main(input: FragmentInputs) -> FragmentOutputs {
+				let uv = input.vUV;
+				let cellSize = vec2f(1.0 / (uniforms.divisions * 0.5));
+				let modUv = modVec2f(uv, cellSize);
+				let cellUv = getPixelatedUv(uv, cellSize);
+
+				let v = getV(cellUv);
+
+				var color = vec4f(1.0, 1.0, 1.0, 0.0);
+				let dist = distance(modUv, cellSize * 0.5);
+				let radius1 = clamp(v * 5.0, 0.0, 1.0);
+				let radius2 = clamp(v * 2.0, 0.0, 1.0);
+				let radius3 = clamp(max(0.0, v - 0.25) * 2.0, 0.0, 1.0);
+				let radius4 = max(0.0, v - 0.5) * 2.0;
+				let transparency = max(0.0, v - 0.75) * 4.0;
+
+				if (dist < radius1 * (cellSize.x * 0.5)) { color = vec4f(uniforms.colorA, 1.0); }
+				if (dist < radius2 * (cellSize.x * 0.5)) { color = vec4f(uniforms.colorB, 1.0); }
+				if (dist < radius3 * (cellSize.x * 0.5)) { color = vec4f(uniforms.colorC, 1.0); }
+				if (dist < radius4 * (cellSize.x * 0.5)) { color = vec4f(1.0, 1.0, 1.0, 0.0); }
+
+				color.a *= 1.0 - transparency;
+
+				//fragmentOutputs.color = premultiplyAlpha(color); // なんか半透明のときに黒ずむ
+				fragmentOutputs.color = color;
+			}
+		`;
+	}
+
 	public async load() {
+		this.registerShaders();
+
 		this.engine.camera.position = new BABYLON.Vector3(cm(0), cm(250), cm(3000));
 
 		this.skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: cm(50000) }, this.engine.scene);
@@ -391,16 +548,40 @@ export class LobbyEnvManager extends WorldEnvManager {
 
 		const dome = this.meshes.find(m => m.name.includes('__DOME__'));
 		dome.infiniteDistance = true;
-		const domeTexture = new BABYLON.CustomProceduralTexture('texture', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
+		const domeTexture = new BABYLON.CustomProceduralTexture('', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
 		domeTexture.hasAlpha = true;
 		domeTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
 		domeTexture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
-		dome.material = new BABYLON.StandardMaterial('sphereMat', this.engine.scene);
+		dome.material = new BABYLON.StandardMaterial('', this.engine.scene);
 		(dome.material as BABYLON.StandardMaterial).diffuseTexture = domeTexture;
 		(dome.material as BABYLON.StandardMaterial).emissiveColor = new BABYLON.Color3(1, 1, 1);
 		(dome.material as BABYLON.StandardMaterial).disableLighting = true;
 		(dome.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
 		//this.engine.gl!.addExcludedMesh(dome);
+
+		const decoPanels = this.meshes.filter(m => m.name.includes('__DECO_PANEL__'));
+		// merge meshes to reduce draw calls
+		const decoPanel = BABYLON.Mesh.MergeMeshes(decoPanels, true, false, undefined, false, false);
+		const decoPanelTexture = new BABYLON.CustomProceduralTexture('', 'AnimatingCirclesDeco', 1024, this.engine.scene, {
+			shaderLanguage: BABYLON.ShaderLanguage.WGSL,
+			skipJson: true,
+		});
+		decoPanelTexture.animate = true;
+		decoPanelTexture.refreshRate = 1;
+		decoPanelTexture.setFloat('time', 0);
+		decoPanelTexture.setFloat('divisions', 16);
+		decoPanelTexture.setFloat('waveScale', 1);
+		decoPanelTexture.setColor3('colorA', new BABYLON.Color3(0.7, 0.9, 0));
+		decoPanelTexture.setColor3('colorB', new BABYLON.Color3(0.9, 1, 0));
+		decoPanelTexture.setColor3('colorC', new BABYLON.Color3(1, 1, 1));
+		decoPanelTexture.hasAlpha = true;
+		decoPanelTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
+		decoPanelTexture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
+		decoPanel.material = new BABYLON.StandardMaterial('', this.engine.scene);
+		(decoPanel.material as BABYLON.StandardMaterial).diffuseTexture = decoPanelTexture;
+		(decoPanel.material as BABYLON.StandardMaterial).emissiveColor = new BABYLON.Color3(1, 1, 1);
+		(decoPanel.material as BABYLON.StandardMaterial).disableLighting = true;
+		(decoPanel.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
 
 		const screenMeshes = this.meshes.filter(m => m.name.includes('__SCREEN__'));
 		const screenMaterial = screenMeshes[0].material as BABYLON.PBRMaterial;
