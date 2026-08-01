@@ -570,7 +570,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		decoPanelTexture.refreshRate = 1;
 		decoPanelTexture.setFloat('time', 0);
 		decoPanelTexture.setFloat('divisions', 16);
-		decoPanelTexture.setFloat('waveScale', 1);
+		decoPanelTexture.setFloat('waveScale', 1.5);
 		decoPanelTexture.setColor3('colorA', new BABYLON.Color3(0.7, 0.9, 0));
 		decoPanelTexture.setColor3('colorB', new BABYLON.Color3(0.9, 1, 0));
 		decoPanelTexture.setColor3('colorC', new BABYLON.Color3(1, 1, 1));
