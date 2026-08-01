@@ -582,6 +582,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		(decoPanel.material as BABYLON.StandardMaterial).emissiveColor = new BABYLON.Color3(1, 1, 1);
 		(decoPanel.material as BABYLON.StandardMaterial).disableLighting = true;
 		(decoPanel.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
+		(decoPanel.material as BABYLON.StandardMaterial).backFaceCulling = false;
 
 		const screenMeshes = this.meshes.filter(m => m.name.includes('__SCREEN__'));
 		const screenMaterial = screenMeshes[0].material as BABYLON.PBRMaterial;
