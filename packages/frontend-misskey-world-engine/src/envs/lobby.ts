@@ -198,6 +198,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		this.skyboxMat.disableLighting = true;
 		this.skybox.material = this.skyboxMat;
 		this.skybox.infiniteDistance = true;
+		this.engine.celShadingRenderer.excludeMesh(this.skybox);
 		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(this.skybox);
 
 		const ambientLight1 = new BABYLON.HemisphericLight('ambientLight1', new BABYLON.Vector3(0, 1, 0), this.engine.scene);

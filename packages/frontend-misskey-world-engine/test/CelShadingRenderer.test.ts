@@ -567,3 +567,23 @@ test('restores mesh and engine state when the outline draw throws', async () => 
 		engine.dispose();
 	}
 });
+
+test('uses a disabled zero-offset Babylon outline delegate by default', () => {
+	const { engine, scene } = createScene();
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	});
+
+	try {
+		const outlineRenderer = scene.getOutlineRenderer();
+		expect(outlineRenderer.enabled).toBe(false);
+		expect(outlineRenderer.zOffset).toBe(0);
+		expect(outlineRenderer.zOffsetUnits).toBe(0);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});

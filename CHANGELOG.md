@@ -1,3 +1,17 @@
+## Unreleased
+
+### General
+
+-
+
+### Client
+
+- Enhance: Worldのロビーでメッシュの輪郭線を表示するように
+
+### Server
+
+-
+
 ## 2026.7.0
 
 ### Note

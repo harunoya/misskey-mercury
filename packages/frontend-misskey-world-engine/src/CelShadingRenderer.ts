@@ -72,14 +72,17 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	private readonly afterRenderingGroupObserver: BABYLON.Observer<BABYLON.RenderingGroupInfo>;
 	private readonly beforeParticlesRenderingObserver: BABYLON.Observer<BABYLON.Scene>;
 
-	public constructor(scene: BABYLON.Scene, options: CelShadingOptions, dependencies: CelShadingRendererDependencies) {
+	public constructor(scene: BABYLON.Scene, options: CelShadingOptions, dependencies?: CelShadingRendererDependencies) {
 		this.scene = scene;
 		this.defaultOptions = {
 			enabled: options.enabled,
 			color: options.color.clone(),
 			width: options.width,
 		};
-		this.outlineRenderer = dependencies.outlineRenderer;
+		this.outlineRenderer = dependencies?.outlineRenderer ?? this.scene.getOutlineRenderer();
+		this.outlineRenderer.enabled = false;
+		this.outlineRenderer.zOffset = 0;
+		this.outlineRenderer.zOffsetUnits = 0;
 
 		this.register();
 		this.beforeRenderingGroupObserver = this.scene.onBeforeRenderingGroupObservable.add(this.onBeforeRenderingGroup);
@@ -190,7 +193,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	}
 
 	private flush(renderingGroupId: number): void {
-		if (this.currentRenderingGroupId !== renderingGroupId) return;
+		if (this.currentRenderingGroupId !== renderingGroupId || this.queuedSubMeshes.length === 0) return;
 
 		const engine = this.scene.getEngine();
 		const previousEngineState = this.captureEngineState(engine);

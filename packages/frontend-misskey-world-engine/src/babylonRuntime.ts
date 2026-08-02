@@ -25,6 +25,7 @@ export function registerBabylonRuntime(): void {
 	BABYLON.RegisterBufferAlign();
 	BABYLON.RegisterCubeTexture();
 	BABYLON.RegisterStandardMaterial();
+	BABYLON.RegisterOutlineRenderer();
 	BABYLON.RegisterRay();
 	BABYLON.RegisterAnimation();
 	BABYLON.RegisterAnimatable();

@@ -9,6 +9,7 @@ import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
 import { FreeCameraManualInput, GRAPHICS_QUALITY, Timer } from './utility.js';
 import { TIME_MAP } from './utility.js';
 import { MultiplayEngineBase } from './MultiplayEngineBase.js';
+import { CelShadingRenderer } from './CelShadingRenderer.js';
 import { LobbyEnvManager } from './envs/lobby.js';
 import type { PlayerContainer, PlayerProfile, PlayerState } from './PlayerContainer.js';
 import type { WorldEnvManager } from './env.js';
@@ -32,6 +33,7 @@ export class WorldEngine extends MultiplayEngineBase<{
 	private time: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
 	public lightContainer: BABYLON.ClusteredLightContainer;
 	public sr: BABYLON.SnapshotRenderingHelper;
+	public readonly celShadingRenderer: CelShadingRenderer;
 	public gl: BABYLON.GlowLayer | null = null;
 	public timer: Timer = new Timer();
 	public isSitting = false;
@@ -73,6 +75,11 @@ export class WorldEngine extends MultiplayEngineBase<{
 		this.scene.gravity = new BABYLON.Vector3(0, -0.1, 0).scale(WORLD_SCALE);
 		this.scene.collisionsEnabled = true;
 
+		this.celShadingRenderer = new CelShadingRenderer(this.scene, {
+			enabled: true,
+			color: BABYLON.Color3.Black(),
+			width: cm(1),
+		});
 		this.sr = new BABYLON.SnapshotRenderingHelper(this.scene);
 
 		this.time = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
@@ -263,6 +270,7 @@ export class WorldEngine extends MultiplayEngineBase<{
 	}
 
 	public destroy() {
+		this.celShadingRenderer.dispose();
 		super.destroy();
 		this.timer.dispose();
 		this.envManager.dispose();
