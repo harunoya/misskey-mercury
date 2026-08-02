@@ -77,7 +77,7 @@ export class WorldEngine extends MultiplayEngineBase<{
 
 		this.celShadingRenderer = new CelShadingRenderer(this.scene, {
 			enabled: true,
-			color: BABYLON.Color3.Black(),
+			color: new BABYLON.Color3(0.4, 0.5, 0.6),
 			width: cm(1),
 		});
 		this.sr = new BABYLON.SnapshotRenderingHelper(this.scene);
