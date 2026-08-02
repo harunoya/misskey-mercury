@@ -97,7 +97,7 @@ Before calling the low-level delegate, the scheduler temporarily sets the render
 
 ### Main-pass isolation
 
-Collection and replay occur only when `engine.currentRenderPassId === BABYLON.Constants.RENDERPASS_MAIN`. This prevents outlines from leaking into `GlowLayer`, shadow maps, reflection probes, screenshots' auxiliary targets, or other object renderers. The renderer is installed before `SnapshotRenderingHelper.enableSnapshotRendering()` so its stable draw sequence can participate in the WebGPU snapshot capture. Existing World flows that disable snapshot rendering while adding or removing avatars continue to bracket those changes.
+Collection and replay occur only when `engine.currentRenderPassId` matches the active camera's output-target render pass or camera render pass. Babylon 9.19 assigns a dedicated render pass ID to the main camera instead of leaving the main scene on `Constants.RENDERPASS_MAIN`. Comparing against the active camera prevents outlines from leaking into `GlowLayer`, shadow maps, reflection probes, screenshots' auxiliary targets, or other object renderers. The renderer is installed before `SnapshotRenderingHelper.enableSnapshotRendering()` so its stable draw sequence can participate in the WebGPU snapshot capture. Existing World flows that disable snapshot rendering while adding or removing avatars continue to bracket those changes.
 
 ### Lobby integration and lifecycle
 
@@ -111,7 +111,7 @@ Neither `RoomEngine` nor avatar preview engines construct `CelShadingRenderer`. 
 
 An entry is eligible only when all of the following are true:
 
-- the current render pass is `RENDERPASS_MAIN`;
+- the current render pass matches the active camera's output-target or camera render pass;
 - the rendering object is a triangle `BABYLON.Mesh` with a material;
 - position and normal vertex buffers are present;
 - the material does not require alpha blending for the effective mesh;

@@ -98,7 +98,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 
 - [ ] Register an `_afterRenderingMeshStage` collection step and rendering-group observers. On group start, install a chained `RenderingGroup.onBeforeTransparentRendering` fallback. Flush first from `onBeforeParticlesRenderingObservable`, otherwise from the fallback. Clear the queue at group completion.
 
-- [ ] Filter collection to `Constants.RENDERPASS_MAIN`, the current group, non-blended materials, and one entry per `SubMesh`. This deduplicates `needDepthPrePass` draws.
+- [ ] Filter collection to the active camera's output-target or camera render pass, the current group, non-blended materials, and one entry per `SubMesh`. Babylon 9.19 gives the main camera its own render pass ID, so comparing with `Constants.RENDERPASS_MAIN` would reject the actual screen pass. Deduplication prevents `needDepthPrePass` from producing two outline draws.
 
 - [ ] Replace the dynamic import with a normal static import after the first passing implementation exists.
 

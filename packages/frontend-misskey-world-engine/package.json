@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"eslint": "eslint './**/*.{js,jsx,ts,tsx}'",
+		"test": "vitest run --config vitest.config.ts",
 		"typecheck": "tsgo --noEmit",
 		"lint": "pnpm typecheck && pnpm eslint"
 	},
@@ -15,7 +16,8 @@
 		"execa": "9.6.1",
 		"nodemon": "3.1.14",
 		"throttle-debounce": "5.0.2",
-		"@types/tinycolor2": "1.4.6"
+		"@types/tinycolor2": "1.4.6",
+		"vitest": "4.1.10"
 	},
 	"files": [
 		"built"
