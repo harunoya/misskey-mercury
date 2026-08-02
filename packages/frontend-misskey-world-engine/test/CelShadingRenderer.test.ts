@@ -6,12 +6,28 @@
 import * as BABYLON from '@babylonjs/core';
 import { CelShadingRenderer } from '../src/CelShadingRenderer.js';
 
-test('replays opaque meshes after their color pass and before transparent meshes', async () => {
+function createScene() {
 	const engine = new BABYLON.NullEngine();
 	const scene = new BABYLON.Scene(engine);
 	const camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, 0, -10), scene);
 	camera.setTarget(BABYLON.Vector3.Zero());
 	scene.activeCamera = camera;
+	return { engine, scene };
+}
+
+async function renderScene(scene: BABYLON.Scene): Promise<void> {
+	await scene.whenReadyAsync();
+	scene.render();
+}
+
+function createOpaqueBox(name: string, scene: BABYLON.Scene): BABYLON.Mesh {
+	const mesh = BABYLON.MeshBuilder.CreateBox(name, {}, scene);
+	mesh.material = new BABYLON.StandardMaterial(`${name}Material`, scene);
+	return mesh;
+}
+
+test('replays opaque meshes after their color pass and before transparent meshes', async () => {
+	const { engine, scene } = createScene();
 
 	const opaque = BABYLON.MeshBuilder.CreateBox('opaque', {}, scene);
 	opaque.material = new BABYLON.StandardMaterial('opaqueMaterial', scene);
@@ -25,6 +41,10 @@ test('replays opaque meshes after their color pass and before transparent meshes
 	transparent.onAfterRenderObservable.add(() => events.push('transparent'));
 
 	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
 		outlineRenderer: {
 			enabled: true,
 			zOffset: 1,
@@ -36,10 +56,315 @@ test('replays opaque meshes after their color pass and before transparent meshes
 	});
 
 	try {
-		await scene.whenReadyAsync();
-		scene.render();
+		await renderScene(scene);
 
 		expect(events).toEqual(['opaque', 'outline:opaque', 'transparent']);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('applies per-mesh outline overrides and exclusions', async () => {
+	const { engine, scene } = createScene();
+	const defaultMesh = createOpaqueBox('default', scene);
+	const styledMesh = createOpaqueBox('styled', scene);
+	const excludedMesh = createOpaqueBox('excluded', scene);
+	const draws: Array<{ name: string; width: number; color: number[] }> = [];
+	const outlineRenderer = {
+		enabled: true,
+		zOffset: 1,
+		zOffsetUnits: 4,
+		render(subMesh: BABYLON.SubMesh) {
+			const mesh = subMesh.getRenderingMesh();
+			draws.push({
+				name: mesh.name,
+				width: mesh.outlineWidth,
+				color: mesh.outlineColor.asArray(),
+			});
+		},
+	};
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: new BABYLON.Color3(0.1, 0.2, 0.3),
+		width: 3,
+	}, { outlineRenderer });
+
+	try {
+		renderer.setMeshOptions(styledMesh, {
+			color: new BABYLON.Color3(0.25, 0.5, 0.75),
+			width: 10,
+		});
+		renderer.excludeMesh(excludedMesh);
+		await renderScene(scene);
+
+		expect(draws).toEqual([
+			{ name: defaultMesh.name, width: 3, color: [0.1, 0.2, 0.3] },
+			{ name: styledMesh.name, width: 10, color: [0.25, 0.5, 0.75] },
+		]);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('can include a previously excluded mesh again', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('includedAgain', scene);
+	const draws: string[] = [];
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render(subMesh: BABYLON.SubMesh) {
+				draws.push(subMesh.getRenderingMesh().name);
+			},
+		},
+	});
+
+	try {
+		renderer.excludeMesh(mesh);
+		renderer.includeMesh(mesh);
+		await renderScene(scene);
+
+		expect(draws).toEqual(['includedAgain']);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('can clear mesh overrides back to the scene defaults', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('cleared', scene);
+	const draws: Array<{ width: number; color: number[] }> = [];
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: new BABYLON.Color3(0.1, 0.2, 0.3),
+		width: 2,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render(subMesh: BABYLON.SubMesh) {
+				const renderingMesh = subMesh.getRenderingMesh();
+				draws.push({
+					width: renderingMesh.outlineWidth,
+					color: renderingMesh.outlineColor.asArray(),
+				});
+			},
+		},
+	});
+
+	try {
+		renderer.setMeshOptions(mesh, {
+			color: BABYLON.Color3.White(),
+			width: 9,
+		});
+		renderer.clearMeshOptions(mesh);
+		await renderScene(scene);
+
+		expect(draws).toEqual([{ width: 2, color: [0.1, 0.2, 0.3] }]);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('replays a submesh only once when its material uses a depth prepass', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('depthPrepass', scene);
+	mesh.material!.needDepthPrePass = true;
+	let outlineDraws = 0;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				outlineDraws++;
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(outlineDraws).toBe(1);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('does not replay wireframe geometry as an inverted hull', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('wireframe', scene);
+	mesh.material!.wireframe = true;
+	let outlineDraws = 0;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				outlineDraws++;
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(outlineDraws).toBe(0);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('does not replay a triangle mesh without vertex normals', async () => {
+	const { engine, scene } = createScene();
+	const mesh = new BABYLON.Mesh('normalLess', scene);
+	mesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, [
+		-1, -1, 0,
+		1, -1, 0,
+		0, 1, 0,
+	]);
+	mesh.setIndices([0, 1, 2]);
+	mesh.material = new BABYLON.ShaderMaterial('positionOnlyMaterial', scene, {
+		vertexSource: `
+			precision highp float;
+			attribute vec3 position;
+			uniform mat4 worldViewProjection;
+			void main(void) {
+				gl_Position = worldViewProjection * vec4(position, 1.0);
+			}
+		`,
+		fragmentSource: `
+			precision highp float;
+			void main(void) {
+				gl_FragColor = vec4(1.0);
+			}
+		`,
+	}, {
+		attributes: [BABYLON.VertexBuffer.PositionKind],
+		uniforms: ['worldViewProjection'],
+	});
+	let outlineDraws = 0;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				outlineDraws++;
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(outlineDraws).toBe(0);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('replays alpha-test meshes in the outline pass', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('alphaTest', scene);
+	mesh.material!.transparencyMode = BABYLON.Material.MATERIAL_ALPHATEST;
+	let outlineDraws = 0;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				outlineDraws++;
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(outlineDraws).toBe(1);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('flushes the outline pass before particle rendering', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('withParticles', scene);
+	const events: string[] = [];
+	mesh.onAfterRenderObservable.add(() => events.push('opaque'));
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				events.push('outline');
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+		events.length = 0;
+		const particleSystem = new BABYLON.ParticleSystem('particles', 1, scene);
+		particleSystem.emitter = BABYLON.Vector3.Zero();
+		particleSystem.start();
+		const renderParticles = particleSystem.render.bind(particleSystem);
+		particleSystem.render = () => {
+			events.push('particles');
+			return renderParticles();
+		};
+		events.length = 0;
+		scene.render();
+		const eventsAfterOpaque = events.slice(events.indexOf('opaque'));
+
+		expect(eventsAfterOpaque).toEqual(['opaque', 'outline', 'particles']);
 	} finally {
 		renderer.dispose();
 		scene.dispose();
