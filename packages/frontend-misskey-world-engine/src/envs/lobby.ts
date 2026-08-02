@@ -584,7 +584,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		(decoPanel.material as BABYLON.StandardMaterial).disableLighting = true;
 		(decoPanel.material as BABYLON.StandardMaterial).useAlphaFromDiffuseTexture = true;
 		(decoPanel.material as BABYLON.StandardMaterial).backFaceCulling = false;
-		this.engine.gl!.addExcludedMesh(decoPanel);
+		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(decoPanel);
 
 		const screenMeshes = this.meshes.filter(m => m.name.includes('__SCREEN__'));
 		const screenMaterial = screenMeshes[0].material as BABYLON.PBRMaterial;
