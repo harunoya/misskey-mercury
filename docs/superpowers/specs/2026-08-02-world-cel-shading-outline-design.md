@@ -99,6 +99,14 @@ Before calling the low-level delegate, the scheduler temporarily sets the render
 
 Collection and replay occur only when `engine.currentRenderPassId` matches the active camera's output-target render pass or camera render pass. Babylon 9.19 assigns a dedicated render pass ID to the main camera instead of leaving the main scene on `Constants.RENDERPASS_MAIN`. Comparing against the active camera prevents outlines from leaking into `GlowLayer`, shadow maps, reflection probes, screenshots' auxiliary targets, or other object renderers. The renderer is installed before `SnapshotRenderingHelper.enableSnapshotRendering()` so its stable draw sequence can participate in the WebGPU snapshot capture. Existing World flows that disable snapshot rendering while adding or removing avatars continue to bracket those changes.
 
+### FAST Snapshot replay synchronization
+
+The renderer allocates one stable render-pass ID for the outline delegate's `SubMesh` draw wrappers and supplies it explicitly to every outline draw. FAST Snapshot Rendering records those draws once and later skips the normal mesh stages, so the renderer observes the main before-draw phase and updates existing outline wrappers without issuing additional draws. For every recorded wrapper it binds that wrapper's WebGPU `LeftOver` data buffer and writes the current `viewProjection`, effective `world`, local outline width, and resolved color before Babylon replays the GPU bundle. This mirrors Babylon's snapshot handling for effect-layer draw wrappers while keeping the cel-shading pass independent from `SnapshotRenderingHelper` internals.
+
+### Rendering-group hook ownership
+
+The transparent fallback is owned per `RenderingGroup` object, not per numeric rendering-group ID. A scene, GlowLayer, shadow/render target, or other `RenderingManager` can each own a different group object with the same ID. Keying only by ID would repeatedly wrap the callback when managers alternate and eventually create an unbounded callback chain. Object-identity ownership installs one wrapper per actual group, preserves that group's prior callback, and restores every still-owned callback during disposal.
+
 ### Lobby integration and lifecycle
 
 `WorldEngine` constructs and owns the renderer before loading `LobbyEnvManager`. This makes imported lobby meshes and player avatars eligible without per-loader registration. `WorldEngine.destroy()` disposes the renderer before the scene is disposed.

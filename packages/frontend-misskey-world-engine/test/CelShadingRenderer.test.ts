@@ -27,6 +27,25 @@ class StateTrackingNullEngine extends BABYLON.NullEngine {
 	}
 }
 
+class FastSnapshotNullEngine extends StateTrackingNullEngine {
+	public fastSnapshotRendering = false;
+
+	public override get snapshotRendering(): boolean {
+		return this.fastSnapshotRendering;
+	}
+
+	public override set snapshotRendering(value: boolean) {
+		this.fastSnapshotRendering = value;
+	}
+
+	public override get snapshotRenderingMode(): number {
+		return BABYLON.Constants.SNAPSHOTRENDERING_FAST;
+	}
+
+	public override set snapshotRenderingMode(_value: number) {
+	}
+}
+
 function createScene(engine: BABYLON.NullEngine = new BABYLON.NullEngine()) {
 	const scene = new BABYLON.Scene(engine);
 	const camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, 0, -10), scene);
@@ -63,6 +82,187 @@ function readEngineState(engine: BABYLON.NullEngine) {
 		cullBackFaces: engine.cullBackFaces,
 	};
 }
+
+function notifyBeforeRenderingGroup(scene: BABYLON.Scene, renderingManager: BABYLON.RenderingManager, renderingGroupId = 0): void {
+	scene.onBeforeRenderingGroupObservable.notifyObservers({
+		scene,
+		camera: scene.activeCamera,
+		renderingGroupId,
+		renderingManager,
+	});
+}
+
+test('does not rewrap rendering groups when different managers share the same group id', () => {
+	const { engine, scene } = createScene();
+	const mainRenderingManager = scene.renderingManager;
+	const auxiliaryRenderingManager = new BABYLON.RenderingManager(scene);
+	const mainGroup = mainRenderingManager.getRenderingGroup(0);
+	const auxiliaryGroup = auxiliaryRenderingManager.getRenderingGroup(0);
+	let mainCallbackCalls = 0;
+	let auxiliaryCallbackCalls = 0;
+	const mainCallback = () => mainCallbackCalls++;
+	const auxiliaryCallback = () => auxiliaryCallbackCalls++;
+	mainGroup.onBeforeTransparentRendering = mainCallback;
+	auxiliaryGroup.onBeforeTransparentRendering = auxiliaryCallback;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {},
+		},
+	});
+
+	try {
+		notifyBeforeRenderingGroup(scene, mainRenderingManager);
+		const installedMainCallback = mainGroup.onBeforeTransparentRendering;
+		notifyBeforeRenderingGroup(scene, auxiliaryRenderingManager);
+		const installedAuxiliaryCallback = auxiliaryGroup.onBeforeTransparentRendering;
+
+		notifyBeforeRenderingGroup(scene, mainRenderingManager);
+		notifyBeforeRenderingGroup(scene, auxiliaryRenderingManager);
+
+		expect(mainGroup.onBeforeTransparentRendering).toBe(installedMainCallback);
+		expect(auxiliaryGroup.onBeforeTransparentRendering).toBe(installedAuxiliaryCallback);
+		mainGroup.onBeforeTransparentRendering?.();
+		auxiliaryGroup.onBeforeTransparentRendering?.();
+		expect(mainCallbackCalls).toBe(1);
+		expect(auxiliaryCallbackCalls).toBe(1);
+	} finally {
+		renderer.dispose();
+		auxiliaryRenderingManager.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('owns a stable draw-wrapper render pass for outline draws', async () => {
+	const { engine, scene } = createScene();
+	createOpaqueBox('renderPassOwner', scene);
+	const observedRenderPassIds: Array<number | undefined> = [];
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render(subMesh, _batch, _useOverlay, renderPassId) {
+				observedRenderPassIds.push(renderPassId);
+				if (renderPassId !== undefined) subMesh._getDrawWrapper(renderPassId, true);
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(observedRenderPassIds).toHaveLength(1);
+		const renderPassId = observedRenderPassIds[0];
+		expect(renderPassId).toEqual(expect.any(Number));
+		expect(renderPassId).not.toBe(scene.activeCamera!.renderPassId);
+		renderer.dispose();
+		expect(scene.meshes[0].subMeshes?.[0]._getDrawWrapper(renderPassId)).toBeUndefined();
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('updates recorded outline uniforms before fast snapshot bundle replay', async () => {
+	const engine = new FastSnapshotNullEngine();
+	const { scene } = createScene(engine);
+	const mesh = createOpaqueBox('snapshotOutline', scene);
+	let outlineRenderPassId: number | undefined;
+	let snapshotSubMesh: BABYLON.SubMesh | undefined;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: new BABYLON.Color3(0.2, 0.3, 0.4),
+		width: 6,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render(_subMesh, _batch, _useOverlay, renderPassId) {
+				outlineRenderPassId = renderPassId;
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+		if (outlineRenderPassId === undefined) throw new Error('outline render pass was not created');
+		const subMesh = mesh.subMeshes![0];
+		snapshotSubMesh = subMesh;
+		const drawWrapper = subMesh._getDrawWrapper(outlineRenderPassId, true)!;
+		const dataBuffer = { name: 'outlineLeftOver' };
+		let boundDataBuffer: unknown;
+		let uniformBufferUpdates = 0;
+		const matrices = new Map<string, number[]>();
+		const floats = new Map<string, number>();
+		const colors = new Map<string, number[]>();
+		const effect = {
+			_pipelineContext: {
+				uniformBuffer: {
+					setDataBuffer(buffer: unknown) {
+						boundDataBuffer = buffer;
+						return true;
+					},
+					update() {
+						uniformBufferUpdates++;
+					},
+				},
+			},
+			setMatrix(name: string, matrix: BABYLON.Matrix) {
+				matrices.set(name, [...matrix.asArray()]);
+			},
+			setFloat(name: string, value: number) {
+				floats.set(name, value);
+			},
+			setColor4(name: string, color: BABYLON.Color3, alpha: number) {
+				colors.set(name, [...color.asArray(), alpha]);
+			},
+		};
+		(drawWrapper as unknown as { effect: typeof effect }).effect = effect;
+		(drawWrapper as unknown as { drawContext: { buffers: Record<string, unknown> } }).drawContext = {
+			buffers: { LeftOver: dataBuffer },
+		};
+
+		mesh.position.copyFromFloats(4, 2, 1);
+		mesh.scaling.copyFromFloats(2, 2, 2);
+		mesh.computeWorldMatrix(true);
+		scene.activeCamera!.position.copyFromFloats(3, 1, -12);
+		(scene.activeCamera as BABYLON.FreeCamera).setTarget(BABYLON.Vector3.Zero());
+		scene.updateTransformMatrix(true);
+		const expectedWorld = [...mesh.getWorldMatrix().asArray()];
+		const expectedViewProjection = [...scene.getTransformMatrix().asArray()];
+
+		engine.fastSnapshotRendering = true;
+		scene.onBeforeDrawPhaseObservable.notifyObservers(scene);
+
+		expect(boundDataBuffer).toBe(dataBuffer);
+		expect(uniformBufferUpdates).toBe(1);
+		expect(matrices.get('world')).toEqual(expectedWorld);
+		expect(matrices.get('viewProjection')).toEqual(expectedViewProjection);
+		expect(floats.get('offset')).toBe(3);
+		expect(colors.get('color')).toEqual([0.2, 0.3, 0.4, 1]);
+	} finally {
+		if (outlineRenderPassId !== undefined && snapshotSubMesh !== undefined) {
+			snapshotSubMesh._removeDrawWrapper(outlineRenderPassId, false);
+		}
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
 
 test('replays opaque meshes after their color pass and before transparent meshes', async () => {
 	const { engine, scene } = createScene();

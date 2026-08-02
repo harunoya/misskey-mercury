@@ -59,9 +59,11 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	public readonly scene: BABYLON.Scene;
 
 	private readonly outlineRenderer: CelShadingOutlineRenderer;
+	private readonly outlineRenderPassId: number;
 	private readonly defaultOptions: CelShadingOptions;
 	private readonly meshOptions = new WeakMap<BABYLON.Mesh, Partial<CelShadingOptions>>();
-	private readonly renderingGroupHooks = new Map<number, RenderingGroupHook>();
+	private readonly renderingGroupHooks = new Map<BABYLON.RenderingGroup, RenderingGroupHook>();
+	private readonly recordedOutlineSubMeshes = new Set<BABYLON.SubMesh>();
 	private readonly queuedSubMeshes: QueuedSubMesh[] = [];
 	private readonly queuedSubMeshSet = new Set<BABYLON.SubMesh>();
 	private readonly worldScale = new BABYLON.Vector3();
@@ -71,6 +73,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	private readonly beforeRenderingGroupObserver: BABYLON.Observer<BABYLON.RenderingGroupInfo>;
 	private readonly afterRenderingGroupObserver: BABYLON.Observer<BABYLON.RenderingGroupInfo>;
 	private readonly beforeParticlesRenderingObserver: BABYLON.Observer<BABYLON.Scene>;
+	private readonly beforeDrawPhaseObserver: BABYLON.Observer<BABYLON.Scene>;
 
 	public constructor(scene: BABYLON.Scene, options: CelShadingOptions, dependencies?: CelShadingRendererDependencies) {
 		this.scene = scene;
@@ -83,11 +86,13 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 		this.outlineRenderer.enabled = false;
 		this.outlineRenderer.zOffset = 0;
 		this.outlineRenderer.zOffsetUnits = 0;
+		this.outlineRenderPassId = this.scene.getEngine().createRenderPassId('Cel Shading Outline');
 
 		this.register();
 		this.beforeRenderingGroupObserver = this.scene.onBeforeRenderingGroupObservable.add(this.onBeforeRenderingGroup);
 		this.afterRenderingGroupObserver = this.scene.onAfterRenderingGroupObservable.add(this.onAfterRenderingGroup);
 		this.beforeParticlesRenderingObserver = this.scene.onBeforeParticlesRenderingObservable.add(this.onBeforeParticlesRendering);
+		this.beforeDrawPhaseObserver = this.scene.onBeforeDrawPhaseObservable.add(this.updateSnapshotOutlineUniforms);
 	}
 
 	public setMeshOptions(mesh: BABYLON.Mesh, options: Partial<CelShadingOptions>): void {
@@ -123,6 +128,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 		this.scene.onBeforeRenderingGroupObservable.remove(this.beforeRenderingGroupObserver);
 		this.scene.onAfterRenderingGroupObservable.remove(this.afterRenderingGroupObserver);
 		this.scene.onBeforeParticlesRenderingObservable.remove(this.beforeParticlesRenderingObserver);
+		this.scene.onBeforeDrawPhaseObservable.remove(this.beforeDrawPhaseObserver);
 		this.removeStageSteps();
 
 		for (const hook of this.renderingGroupHooks.values()) {
@@ -131,7 +137,9 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 			}
 		}
 		this.renderingGroupHooks.clear();
+		this.recordedOutlineSubMeshes.clear();
 		this.clearQueue();
+		this.scene.getEngine().releaseRenderPassId(this.outlineRenderPassId);
 	}
 
 	private readonly onBeforeRenderingGroup = (info: BABYLON.RenderingGroupInfo): void => {
@@ -147,6 +155,41 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 
 	private readonly onBeforeParticlesRendering = (): void => {
 		if (this.currentRenderingGroupId !== null) this.flush(this.currentRenderingGroupId);
+	};
+
+	private readonly updateSnapshotOutlineUniforms = (): void => {
+		const engine = this.scene.getEngine();
+		if (!engine.snapshotRendering || engine.snapshotRenderingMode !== BABYLON.Constants.SNAPSHOTRENDERING_FAST) {
+			this.recordedOutlineSubMeshes.clear();
+			return;
+		}
+
+		// FAST snapshot replay skips OutlineRenderer.render(), so its standalone uniforms must be updated directly.
+		const viewProjection = this.scene.getTransformMatrix();
+		for (const subMesh of this.recordedOutlineSubMeshes) {
+			const drawWrapper = subMesh._getDrawWrapper(this.outlineRenderPassId);
+			const effect = drawWrapper?.effect;
+			const dataBuffer = (drawWrapper?.drawContext as BABYLON.WebGPUDrawContext | undefined)?.buffers['LeftOver'];
+			const uniformBuffer = (effect?._pipelineContext as BABYLON.WebGPUPipelineContext | undefined)?.uniformBuffer;
+			if (effect == null || dataBuffer == null || uniformBuffer == null || !uniformBuffer.setDataBuffer(dataBuffer)) continue;
+
+			const material = subMesh.getMaterial();
+			if (material == null) continue;
+			const renderingMesh = subMesh.getRenderingMesh();
+			if (renderingMesh.isDisposed()) continue;
+			const ownerMesh = subMesh.getMesh();
+			const effectiveMesh = ownerMesh._internalAbstractMeshDataInfo._actAsRegularMesh ? ownerMesh : renderingMesh;
+			const options = this.resolveMeshOptions(renderingMesh);
+			const localWidth = options.enabled && Number.isFinite(options.width) && options.width > 0
+				? this.getLocalWidth(renderingMesh, options.width)
+				: 0;
+
+			effect.setMatrix('viewProjection', viewProjection);
+			effect.setMatrix('world', effectiveMesh.computeWorldMatrix());
+			effect.setFloat('offset', localWidth);
+			effect.setColor4('color', options.color, material.alpha);
+			uniformBuffer.update();
+		}
 	};
 
 	private collectSubMesh(mesh: BABYLON.Mesh, subMesh: BABYLON.SubMesh, batch: InstancesBatch): void {
@@ -180,8 +223,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	}
 
 	private installRenderingGroupHook(renderingGroupId: number, group: BABYLON.RenderingGroup): void {
-		const currentHook = this.renderingGroupHooks.get(renderingGroupId);
-		if (currentHook?.group === group && group.onBeforeTransparentRendering === currentHook.callback) return;
+		if (this.renderingGroupHooks.has(group)) return;
 
 		const previous = group.onBeforeTransparentRendering;
 		const callback = (): void => {
@@ -189,7 +231,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 			this.flush(renderingGroupId);
 		};
 		group.onBeforeTransparentRendering = callback;
-		this.renderingGroupHooks.set(renderingGroupId, { group, previous, callback });
+		this.renderingGroupHooks.set(group, { group, previous, callback });
 	}
 
 	private flush(renderingGroupId: number): void {
@@ -208,7 +250,8 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 				try {
 					entry.mesh.outlineWidth = localWidth;
 					entry.mesh.outlineColor = entry.options.color;
-					this.outlineRenderer.render(entry.subMesh, entry.batch, false);
+					this.outlineRenderer.render(entry.subMesh, entry.batch, false, this.outlineRenderPassId);
+					this.recordedOutlineSubMeshes.add(entry.subMesh);
 				} finally {
 					entry.mesh.outlineWidth = previousWidth;
 					entry.mesh.outlineColor = previousColor;
