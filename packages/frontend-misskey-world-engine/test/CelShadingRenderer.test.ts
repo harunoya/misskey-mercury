@@ -6,8 +6,28 @@
 import * as BABYLON from '@babylonjs/core';
 import { CelShadingRenderer } from '../src/CelShadingRenderer.js';
 
-function createScene() {
-	const engine = new BABYLON.NullEngine();
+class StateTrackingNullEngine extends BABYLON.NullEngine {
+	public lastRenderState: {
+		culling: boolean;
+		zOffset: number;
+		reverseSide: boolean;
+		cullBackFaces: boolean | undefined;
+		zOffsetUnits: number;
+	} | null = null;
+
+	public override setState(...args: Parameters<BABYLON.NullEngine['setState']>): void {
+		const [culling, zOffset = 0, , reverseSide = false, cullBackFaces, , zOffsetUnits = 0] = args;
+		this.lastRenderState = { culling, zOffset, reverseSide, cullBackFaces, zOffsetUnits };
+		this.depthCullingState.cull = culling;
+		this.depthCullingState.cullFace = (this.cullBackFaces ?? cullBackFaces ?? true) ? 1 : 2;
+		this.depthCullingState.frontFace = reverseSide ? 2 : 1;
+		this.depthCullingState.zOffset = zOffset;
+		this.depthCullingState.zOffsetUnits = zOffsetUnits;
+		super.setState(...args);
+	}
+}
+
+function createScene(engine: BABYLON.NullEngine = new BABYLON.NullEngine()) {
 	const scene = new BABYLON.Scene(engine);
 	const camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, 0, -10), scene);
 	camera.setTarget(BABYLON.Vector3.Zero());
@@ -24,6 +44,24 @@ function createOpaqueBox(name: string, scene: BABYLON.Scene): BABYLON.Mesh {
 	const mesh = BABYLON.MeshBuilder.CreateBox(name, {}, scene);
 	mesh.material = new BABYLON.StandardMaterial(`${name}Material`, scene);
 	return mesh;
+}
+
+function readEngineState(engine: BABYLON.NullEngine) {
+	const depth = engine.depthCullingState;
+	return {
+		depthTest: depth.depthTest,
+		depthMask: depth.depthMask,
+		depthFunc: depth.depthFunc,
+		cull: depth.cull,
+		cullFace: depth.cullFace,
+		frontFace: depth.frontFace,
+		zOffset: depth.zOffset,
+		zOffsetUnits: depth.zOffsetUnits,
+		alphaMode: engine.getAlphaMode(),
+		colorWrite: engine.getColorWrite(),
+		stencilBuffer: engine.getStencilBuffer(),
+		cullBackFaces: engine.cullBackFaces,
+	};
 }
 
 test('replays opaque meshes after their color pass and before transparent meshes', async () => {
@@ -365,6 +403,164 @@ test('flushes the outline pass before particle rendering', async () => {
 		const eventsAfterOpaque = events.slice(events.indexOf('opaque'));
 
 		expect(eventsAfterOpaque).toEqual(['opaque', 'outline', 'particles']);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('converts world outline width to the mesh local scale', async () => {
+	const { engine, scene } = createScene();
+	const mesh = createOpaqueBox('scaled', scene);
+	mesh.scaling.copyFromFloats(2, 4, 5);
+	let renderedWidth: number | null = null;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 10,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render(subMesh: BABYLON.SubMesh) {
+				renderedWidth = subMesh.getRenderingMesh().outlineWidth;
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(renderedWidth).toBe(2);
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('front-culls the inverted hull using the effective winding of a negative-scale mesh', async () => {
+	const engine = new StateTrackingNullEngine();
+	const { scene } = createScene(engine);
+	const mesh = createOpaqueBox('negativeScale', scene);
+	mesh.scaling.x = -1;
+	let outlineState: StateTrackingNullEngine['lastRenderState'] = null;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				outlineState = engine.lastRenderState == null ? null : { ...engine.lastRenderState };
+			},
+		},
+	});
+
+	try {
+		await renderScene(scene);
+
+		expect(outlineState).toEqual({
+			culling: true,
+			zOffset: 0,
+			reverseSide: true,
+			cullBackFaces: false,
+			zOffsetUnits: 0,
+		});
+	} finally {
+		renderer.dispose();
+		scene.dispose();
+		engine.dispose();
+	}
+});
+
+test('restores mesh and engine state when the outline draw throws', async () => {
+	const engine = new StateTrackingNullEngine();
+	const { scene } = createScene(engine);
+	const mesh = createOpaqueBox('throwingOutline', scene);
+	const previousColor = new BABYLON.Color3(0.8, 0.7, 0.6);
+	mesh.outlineColor = previousColor;
+	mesh.outlineWidth = 17;
+	const sentinelState = {
+		depthTest: false,
+		depthMask: true,
+		depthFunc: BABYLON.Constants.GREATER,
+		cull: false,
+		cullFace: 91,
+		frontFace: 92,
+		zOffset: 7,
+		zOffsetUnits: 8,
+		alphaMode: BABYLON.Constants.ALPHA_ADD,
+		colorWrite: false,
+		stencilBuffer: true,
+		cullBackFaces: true,
+	};
+	const group = scene.renderingManager.getRenderingGroup(0);
+	group.onBeforeTransparentRendering = () => {
+		engine.setAlphaMode(sentinelState.alphaMode);
+		engine.setColorWrite(sentinelState.colorWrite);
+		engine.setStencilBuffer(sentinelState.stencilBuffer);
+		engine.cullBackFaces = sentinelState.cullBackFaces;
+		const depth = engine.depthCullingState;
+		depth.depthTest = sentinelState.depthTest;
+		depth.depthMask = sentinelState.depthMask;
+		depth.depthFunc = sentinelState.depthFunc;
+		depth.cull = sentinelState.cull;
+		depth.cullFace = sentinelState.cullFace;
+		depth.frontFace = sentinelState.frontFace;
+		depth.zOffset = sentinelState.zOffset;
+		depth.zOffsetUnits = sentinelState.zOffsetUnits;
+	};
+	const drawError = new Error('outline draw failed');
+	let stateDuringOutline: ReturnType<typeof readEngineState> | null = null;
+	const renderer = new CelShadingRenderer(scene, {
+		enabled: true,
+		color: BABYLON.Color3.Black(),
+		width: 1,
+	}, {
+		outlineRenderer: {
+			enabled: true,
+			zOffset: 1,
+			zOffsetUnits: 4,
+			render() {
+				stateDuringOutline = readEngineState(engine);
+				throw drawError;
+			},
+		},
+	});
+
+	try {
+		await scene.whenReadyAsync();
+		let thrown: unknown = null;
+		try {
+			scene.render();
+		} catch (error) {
+			thrown = error;
+		}
+
+		expect(thrown).toBe(drawError);
+		expect(stateDuringOutline).toEqual({
+			depthTest: true,
+			depthMask: false,
+			depthFunc: BABYLON.Constants.LEQUAL,
+			cull: true,
+			cullFace: 2,
+			frontFace: 1,
+			zOffset: 0,
+			zOffsetUnits: 0,
+			alphaMode: BABYLON.Constants.ALPHA_DISABLE,
+			colorWrite: true,
+			stencilBuffer: false,
+			cullBackFaces: null,
+		});
+		expect(readEngineState(engine)).toEqual(sentinelState);
+		expect(mesh.outlineWidth).toBe(17);
+		expect(mesh.outlineColor).toBe(previousColor);
 	} finally {
 		renderer.dispose();
 		scene.dispose();

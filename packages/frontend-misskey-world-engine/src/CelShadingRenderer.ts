@@ -38,6 +38,22 @@ type RenderingGroupHook = {
 	callback: () => void;
 };
 
+type EngineState = {
+	depthTest: boolean;
+	depthMask: boolean;
+	depthFunc: BABYLON.Nullable<number>;
+	cull: BABYLON.Nullable<boolean>;
+	cullFace: BABYLON.Nullable<number>;
+	frontFace: BABYLON.Nullable<number>;
+	zOffset: number;
+	zOffsetUnits: number;
+	alphaMode: number;
+	colorWrite: boolean;
+	stencilBuffer: boolean;
+	stencilMaterial: BABYLON.IStencilState | undefined;
+	cullBackFaces: BABYLON.Nullable<boolean>;
+};
+
 export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	public readonly name = 'CelShadingRenderer';
 	public readonly scene: BABYLON.Scene;
@@ -48,6 +64,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	private readonly renderingGroupHooks = new Map<number, RenderingGroupHook>();
 	private readonly queuedSubMeshes: QueuedSubMesh[] = [];
 	private readonly queuedSubMeshSet = new Set<BABYLON.SubMesh>();
+	private readonly worldScale = new BABYLON.Vector3();
 	private currentRenderingGroupId: number | null = null;
 	private disposed = false;
 
@@ -175,19 +192,96 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 	private flush(renderingGroupId: number): void {
 		if (this.currentRenderingGroupId !== renderingGroupId) return;
 
-		for (const entry of this.queuedSubMeshes) {
-			const previousWidth = entry.mesh.outlineWidth;
-			const previousColor = entry.mesh.outlineColor;
-			try {
-				entry.mesh.outlineWidth = entry.options.width;
-				entry.mesh.outlineColor = entry.options.color;
-				this.outlineRenderer.render(entry.subMesh, entry.batch, false);
-			} finally {
-				entry.mesh.outlineWidth = previousWidth;
-				entry.mesh.outlineColor = previousColor;
+		const engine = this.scene.getEngine();
+		const previousEngineState = this.captureEngineState(engine);
+		try {
+			this.prepareEngineForOutline(engine);
+			for (const entry of this.queuedSubMeshes) {
+				const localWidth = this.getLocalWidth(entry.mesh, entry.options.width);
+				if (localWidth <= 0) continue;
+				this.setInvertedHullCulling(entry);
+				const previousWidth = entry.mesh.outlineWidth;
+				const previousColor = entry.mesh.outlineColor;
+				try {
+					entry.mesh.outlineWidth = localWidth;
+					entry.mesh.outlineColor = entry.options.color;
+					this.outlineRenderer.render(entry.subMesh, entry.batch, false);
+				} finally {
+					entry.mesh.outlineWidth = previousWidth;
+					entry.mesh.outlineColor = previousColor;
+				}
 			}
+		} finally {
+			this.restoreEngineState(engine, previousEngineState);
+			this.clearQueue();
 		}
-		this.clearQueue();
+	}
+
+	private captureEngineState(engine: BABYLON.AbstractEngine): EngineState {
+		const depth = engine.depthCullingState;
+		return {
+			depthTest: depth.depthTest,
+			depthMask: depth.depthMask,
+			depthFunc: depth.depthFunc,
+			cull: depth.cull,
+			cullFace: depth.cullFace,
+			frontFace: depth.frontFace,
+			zOffset: depth.zOffset,
+			zOffsetUnits: depth.zOffsetUnits,
+			alphaMode: engine.getAlphaMode(),
+			colorWrite: engine.getColorWrite(),
+			stencilBuffer: engine.getStencilBuffer(),
+			stencilMaterial: engine.stencilStateComposer.stencilMaterial,
+			cullBackFaces: engine.cullBackFaces,
+		};
+	}
+
+	private prepareEngineForOutline(engine: BABYLON.AbstractEngine): void {
+		engine.cullBackFaces = null;
+		engine.setAlphaMode(BABYLON.Constants.ALPHA_DISABLE);
+		engine.setColorWrite(true);
+		engine.setStencilBuffer(false);
+		const depth = engine.depthCullingState;
+		depth.depthTest = true;
+		depth.depthMask = false;
+		depth.depthFunc = engine.useReverseDepthBuffer ? BABYLON.Constants.GEQUAL : BABYLON.Constants.LEQUAL;
+		depth.zOffset = 0;
+		depth.zOffsetUnits = 0;
+	}
+
+	private restoreEngineState(engine: BABYLON.AbstractEngine, state: EngineState): void {
+		engine.cullBackFaces = state.cullBackFaces;
+		engine.setAlphaMode(state.alphaMode);
+		engine.setColorWrite(state.colorWrite);
+		engine.setStencilBuffer(state.stencilBuffer);
+		engine.stencilStateComposer.stencilMaterial = state.stencilMaterial;
+		const depth = engine.depthCullingState;
+		depth.depthTest = state.depthTest;
+		depth.depthMask = state.depthMask;
+		depth.depthFunc = state.depthFunc;
+		depth.cull = state.cull;
+		depth.cullFace = state.cullFace;
+		depth.frontFace = state.frontFace;
+		depth.zOffset = state.zOffset;
+		depth.zOffsetUnits = state.zOffsetUnits;
+	}
+
+	private setInvertedHullCulling(entry: QueuedSubMesh): void {
+		const material = entry.subMesh.getMaterial()!;
+		let orientation = material._getEffectiveOrientation(entry.mesh);
+		if (entry.mesh._getWorldMatrixDeterminant() < 0) {
+			orientation = orientation === BABYLON.Material.ClockWiseSideOrientation
+				? BABYLON.Material.CounterClockWiseSideOrientation
+				: BABYLON.Material.ClockWiseSideOrientation;
+		}
+		const reverseSide = orientation === BABYLON.Material.ClockWiseSideOrientation;
+		this.scene.getEngine().setState(true, 0, true, reverseSide, false, undefined, 0);
+	}
+
+	private getLocalWidth(mesh: BABYLON.Mesh, worldWidth: number): number {
+		if (!mesh.getWorldMatrix().decompose(this.worldScale)) return 0;
+		const maxWorldScale = Math.max(Math.abs(this.worldScale.x), Math.abs(this.worldScale.y), Math.abs(this.worldScale.z));
+		return maxWorldScale > BABYLON.Epsilon ? worldWidth / maxWorldScale : 0;
 	}
 
 	private clearQueue(): void {
