@@ -194,6 +194,9 @@ export class LobbyEnvManager extends WorldEnvManager {
 			varying vUV: vec2f;
 			uniform time: f32;
 			uniform divisions: f32;
+			uniform outlineWidth: f32;
+			uniform color: vec3f;
+			uniform outlineColor: vec3f;
 
 			fn modVec2f(a: vec2f, b: vec2f) -> vec2f {
 				return a - b * floor(a / b);
@@ -205,10 +208,6 @@ export class LobbyEnvManager extends WorldEnvManager {
 
 			fn getPixelatedUv(uv: vec2f, cellSize: vec2f) -> vec2f {
 				return (cellSize * floor(uv / cellSize)) + (cellSize / 2.0);
-			}
-
-			fn scaleUvToCoverGivenAspectRatio(uv: vec2f, aspectRatio: f32) -> vec2f {
-				return uv / vec2f(1.0, aspectRatio) * select(1.0, aspectRatio, 1.0 > aspectRatio);
 			}
 
 			fn hashU32(value: u32) -> u32 {
@@ -239,7 +238,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			fn getV(uv: vec2f) -> f32 {
 				let dutyCycleFactor = 0.25;
 				let dutyCycle = max(rand(uv), 0.1) * dutyCycleFactor;
-				let phase = fract(uniforms.time * 0.00015 * dutyCycle);
+				let phase = fract((uniforms.time - 1000.0) * 0.07 * dutyCycle);
 				return linearRisePulse(phase, dutyCycle);
 			}
 
@@ -261,7 +260,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 				let subDelay = 0.25;
 				let subFactor = 1.05;
 				let subPosOffset = vec2f(0.07, -0.07);
-				let subPosOffsetRotation = (rand(cellUv) * TWO_PI) + (uniforms.time * 0.0001);
+				let subPosOffsetRotation = (rand(cellUv) * TWO_PI) + ((uniforms.time - 1000.0) * 0.05);
 				let subPosOffsetRotated = vec2f(subPosOffset.x * cos(subPosOffsetRotation) - subPosOffset.y * sin(subPosOffsetRotation), subPosOffset.x * sin(subPosOffsetRotation) + subPosOffset.y * cos(subPosOffsetRotation));
 				let subDist = distance(modUv, (cellSize * 0.5) + (subPosOffsetRotated * (cellSize * 0.5)));
 				let radiusSub = (((v - subDelay) / (1.0 - subDelay)) * subFactor) + uniforms.outlineWidth;
@@ -281,6 +280,9 @@ export class LobbyEnvManager extends WorldEnvManager {
 				color.a = color.a * (1.0 - transparency);
 
 				fragmentOutputs.color = color;
+				//fragmentOutputs.color = vec4f(0.0, 1.0, 0.0, 1.0); // debug
+				//fragmentOutputs.color = vec4f(uv, 0.0, 1.0); // debug
+				//fragmentOutputs.color = vec4f(v, v, 0.0, 1.0); // debug
 			}
 		`;
 	}
@@ -293,7 +295,10 @@ export class LobbyEnvManager extends WorldEnvManager {
 		panelTexture.animate = true;
 		panelTexture.refreshRate = 1;
 		panelTexture.setFloat('time', 0);
-		panelTexture.setFloat('divisions', 16);
+		panelTexture.setFloat('divisions', 8);
+		panelTexture.setFloat('outlineWidth', 0.005);
+		panelTexture.setColor3('color', new BABYLON.Color3(0.9, 0.9, 0.9));
+		panelTexture.setColor3('outlineColor', new BABYLON.Color3(0.0, 0.0, 0.0));
 		panelTexture.hasAlpha = true;
 		panelTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
 		panelTexture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
@@ -305,7 +310,50 @@ export class LobbyEnvManager extends WorldEnvManager {
 		panelMaterial.useAlphaFromDiffuseTexture = true;
 		panelMaterial.backFaceCulling = true;
 
-		// TODO
+		const panelCount = 128;
+		const panelSize = cm(15000);
+		const panelDistance = cm(30000);
+		const textureGridSize = 4;
+		const textureCellSize = 1 / textureGridSize;
+		const panels: BABYLON.Mesh[] = [];
+
+		for (let i = 0; i < panelCount; i++) {
+			const panel = BABYLON.MeshBuilder.CreatePlane('', {
+				size: panelSize,
+				updatable: true,
+			}, this.engine.scene);
+
+			const y = randomRange(-1, 1);
+			const azimuth = Math.random() * Math.PI * 2;
+			const horizontalRadius = Math.sqrt(1 - (y * y));
+			const outwardDirection = new BABYLON.Vector3(
+				Math.cos(azimuth) * horizontalRadius,
+				y,
+				Math.sin(azimuth) * horizontalRadius,
+			);
+			panel.position = outwardDirection.scale(panelDistance);
+			// CreatePlane's front face points along local -Z, so point local +Z away from the world center.
+			panel.lookAt(panel.position.add(outwardDirection));
+
+			const cellX = Math.floor(Math.random() * textureGridSize);
+			const cellY = Math.floor(Math.random() * textureGridSize);
+			const uvs = panel.getVerticesData(BABYLON.VertexBuffer.UVKind)!;
+			for (let uvIndex = 0; uvIndex < uvs.length; uvIndex += 2) {
+				uvs[uvIndex] = (uvs[uvIndex] + cellX) * textureCellSize;
+				uvs[uvIndex + 1] = (uvs[uvIndex + 1] + cellY) * textureCellSize;
+			}
+			panel.updateVerticesData(BABYLON.VertexBuffer.UVKind, uvs);
+
+			panels.push(panel);
+		}
+
+		// merge meshes to reduce draw calls
+		const mergedPanels = BABYLON.Mesh.MergeMeshes(panels, true, false, undefined, false, false)!;
+		mergedPanels.name = 'moonPhaseDecoPanels';
+		mergedPanels.material = panelMaterial;
+		//mergedPanels.infiniteDistance = true;
+
+		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(mergedPanels);
 	}
 
 	private setupAnimatingCirclesDecoPanels() {
