@@ -238,7 +238,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			fn getV(uv: vec2f) -> f32 {
 				let dutyCycleFactor = 0.25;
 				let dutyCycle = max(rand(uv), 0.1) * dutyCycleFactor;
-				let phase = fract((uniforms.time - 1000.0) * 0.07 * dutyCycle);
+				let phase = fract((uniforms.time - 1000.0) * 0.06 * dutyCycle);
 				return linearRisePulse(phase, dutyCycle);
 			}
 
@@ -260,7 +260,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 				let subDelay = 0.25;
 				let subFactor = 1.05;
 				let subPosOffset = vec2f(0.07, -0.07);
-				let subPosOffsetRotation = (rand(cellUv) * TWO_PI) + ((uniforms.time - 1000.0) * 0.05);
+				let subPosOffsetRotation = (rand(cellUv) * TWO_PI) + ((uniforms.time - 1000.0) * 0.04);
 				let subPosOffsetRotated = vec2f(subPosOffset.x * cos(subPosOffsetRotation) - subPosOffset.y * sin(subPosOffsetRotation), subPosOffset.x * sin(subPosOffsetRotation) + subPosOffset.y * cos(subPosOffsetRotation));
 				let subDist = distance(modUv, (cellSize * 0.5) + (subPosOffsetRotated * (cellSize * 0.5)));
 				let radiusSub = (((v - subDelay) / (1.0 - subDelay)) * subFactor) + uniforms.outlineWidth;
@@ -288,7 +288,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 	}
 
 	private setupMoonPhaseDecoPanels() {
-		const panelTexture = new BABYLON.CustomProceduralTexture('', 'MoonPhases', this.engine.graphicsQuality >= GRAPHICS_QUALITY.HIGH ? 2048 : 1024, this.engine.scene, {
+		const panelTexture = new BABYLON.CustomProceduralTexture('', 'MoonPhases', this.engine.graphicsQuality >= GRAPHICS_QUALITY.MEDIUM ? 2048 : 1024, this.engine.scene, {
 			shaderLanguage: BABYLON.ShaderLanguage.WGSL,
 			skipJson: true,
 		});
@@ -296,9 +296,9 @@ export class LobbyEnvManager extends WorldEnvManager {
 		panelTexture.refreshRate = 1;
 		panelTexture.setFloat('time', 0);
 		panelTexture.setFloat('divisions', 8);
-		panelTexture.setFloat('outlineWidth', 0.005);
-		panelTexture.setColor3('color', new BABYLON.Color3(0.9, 0.9, 0.9));
-		panelTexture.setColor3('outlineColor', new BABYLON.Color3(0.0, 0.0, 0.0));
+		panelTexture.setFloat('outlineWidth', 0.0025);
+		panelTexture.setColor3('color', new BABYLON.Color3(0.6, 0.9, 1.0));
+		panelTexture.setColor3('outlineColor', new BABYLON.Color3(0.7, 0.85, 0.9));
 		panelTexture.hasAlpha = true;
 		panelTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
 		panelTexture.wrapV = BABYLON.Texture.MIRROR_ADDRESSMODE;
