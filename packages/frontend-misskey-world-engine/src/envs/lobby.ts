@@ -288,7 +288,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 	}
 
 	private setupMoonPhaseDecoPanels() {
-		const panelTexture = new BABYLON.CustomProceduralTexture('', 'MoonPhases', 1024, this.engine.scene, {
+		const panelTexture = new BABYLON.CustomProceduralTexture('', 'MoonPhases', this.engine.graphicsQuality >= GRAPHICS_QUALITY.HIGH ? 2048 : 1024, this.engine.scene, {
 			shaderLanguage: BABYLON.ShaderLanguage.WGSL,
 			skipJson: true,
 		});
