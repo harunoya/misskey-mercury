@@ -352,7 +352,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		const mergedPanels = BABYLON.Mesh.MergeMeshes(panels, true, false, undefined, false, false)!;
 		mergedPanels.name = 'moonPhaseDecoPanels';
 		mergedPanels.material = panelMaterial;
-		//mergedPanels.infiniteDistance = true;
+		mergedPanels.infiniteDistance = true;
 
 		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(mergedPanels);
 	}
@@ -395,7 +395,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 
 		this.engine.camera.position = new BABYLON.Vector3(cm(0), cm(250), cm(3000));
 
-		this.skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: cm(50000) }, this.engine.scene);
+		this.skybox = BABYLON.MeshBuilder.CreateBox('skybox', { size: cm(70000) }, this.engine.scene);
 		this.skyboxMat = new BABYLON.StandardMaterial('skyboxMat', this.engine.scene);
 		this.skyboxMat.backFaceCulling = false;
 		this.skyboxMat.disableLighting = true;
