@@ -5711,6 +5711,10 @@ export interface Locale extends ILocale {
      * 最終同期
      */
     "latestSyncAt": string;
+    /**
+     * ピクセルアート拡大モード
+     */
+    "pixelatedZoom": string;
     "_imageEditing": {
         "_vars": {
             /**
