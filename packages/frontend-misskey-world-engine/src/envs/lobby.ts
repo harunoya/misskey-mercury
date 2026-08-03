@@ -334,6 +334,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			panel.position = outwardDirection.scale(panelDistance);
 			// CreatePlane's front face points along local -Z, so point local +Z away from the world center.
 			panel.lookAt(panel.position.add(outwardDirection));
+			panel.rotate(BABYLON.Axis.Z, Math.random() * Math.PI * 2, BABYLON.Space.LOCAL);
 
 			const cellX = Math.floor(Math.random() * textureGridSize);
 			const cellY = Math.floor(Math.random() * textureGridSize);
