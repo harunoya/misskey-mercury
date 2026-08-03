@@ -37,6 +37,7 @@ export class Firework {
 
 		//const emitter = new BABYLON.TransformNode('emitter', this.engine.scene);
 		const emitter = BABYLON.MeshBuilder.CreateBox('emitter', { size: cm(10) }, this.engine.scene);
+		emitter.isVisible = false;
 		emitter.position = new BABYLON.Vector3(options.position[0], options.position[1], options.position[2]);
 		const ps = new BABYLON.ParticleSystem('', 32, this.engine.scene);
 		ps.particleTexture = texture;
