@@ -289,7 +289,7 @@ export class CelShadingRenderer implements BABYLON.ISceneComponent {
 		engine.setStencilBuffer(false);
 		const depth = engine.depthCullingState;
 		depth.depthTest = true;
-		depth.depthMask = false;
+		depth.depthMask = true;
 		depth.depthFunc = engine.useReverseDepthBuffer ? BABYLON.Constants.GEQUAL : BABYLON.Constants.LEQUAL;
 		depth.zOffset = 0;
 		depth.zOffsetUnits = 0;

@@ -746,7 +746,7 @@ test('restores mesh and engine state when the outline draw throws', async () => 
 		expect(thrown).toBe(drawError);
 		expect(stateDuringOutline).toEqual({
 			depthTest: true,
-			depthMask: false,
+			depthMask: true,
 			depthFunc: BABYLON.Constants.LEQUAL,
 			cull: true,
 			cullFace: 2,
