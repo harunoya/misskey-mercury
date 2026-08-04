@@ -402,6 +402,66 @@ export class LobbyEnvManager extends WorldEnvManager {
 		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(decoPanel);
 	}
 
+	private setupFloatingSphereDecorations() {
+		const spheres = [] as BABYLON.Mesh[];
+
+		for (let i = 0; i < 16; i++) {
+			const sphereRoot = new BABYLON.TransformNode('', this.engine.scene);
+			sphereRoot.position = new BABYLON.Vector3(cm(0), cm(1000 + (100 * i)), cm(0));
+			const rotation = Math.random() * Math.PI * 2;
+			const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(randomRange(50, 300)), segments: 16 }, this.engine.scene);
+			sphere.parent = sphereRoot;
+			sphere.position = new BABYLON.Vector3(cm(0), cm(0), cm(randomRange(2000, 7000)));
+			spheres.push(sphere);
+
+			const mat = new BABYLON.PBRMaterial('', this.engine.scene);
+			const color = tinycolor({ h: Math.random() * 360, s: 1, l: 0.5 }).toRgb();
+			mat.emissiveColor = new BABYLON.Color3(color.r / 255, color.g / 255, color.b / 255);
+			mat.disableLighting = true;
+			this.engine.gl?.addExcludedMesh(sphere);
+			sphere.material = mat;
+
+			const speed = randomRange(5000, 30000);
+			const anim = new BABYLON.Animation('', 'rotation.y', 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+			anim.setKeys([
+				{ frame: 0, value: rotation },
+				{ frame: speed, value: Math.random() < 0.5 ? rotation + (Math.PI * 2) : rotation - (Math.PI * 2) },
+			]);
+			sphereRoot.animations = [anim];
+			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
+		}
+
+		for (let i = 0; i < 64; i++) {
+			const sphereRoot = new BABYLON.TransformNode('', this.engine.scene);
+			sphereRoot.position = new BABYLON.Vector3(cm(0), cm(randomRange(-5000, 5000)), cm(0));
+			const rotation = Math.random() * Math.PI * 2;
+			const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(randomRange(500, 3000)), segments: 16 }, this.engine.scene);
+			sphere.parent = sphereRoot;
+			sphere.position = new BABYLON.Vector3(cm(0), cm(0), cm(randomRange(10000, 15000)));
+			spheres.push(sphere);
+
+			const mat = new BABYLON.PBRMaterial('', this.engine.scene);
+			const color = tinycolor({ h: Math.random() * 360, s: randomRange(0, 1), l: randomRange(0.75, 1) }).toRgb();
+			mat.emissiveColor = new BABYLON.Color3(color.r / 255, color.g / 255, color.b / 255);
+			mat.disableLighting = true;
+			this.engine.gl?.addExcludedMesh(sphere);
+			sphere.material = mat;
+
+			const speed = randomRange(10000, 100000);
+			const anim = new BABYLON.Animation('', 'rotation.y', 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+			anim.setKeys([
+				{ frame: 0, value: rotation },
+				{ frame: speed, value: Math.random() < 0.5 ? rotation + (Math.PI * 2) : rotation - (Math.PI * 2) },
+			]);
+			sphereRoot.animations = [anim];
+			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
+		}
+
+		this.engine.scene.onAfterAnimationsObservable.add(() => {
+			this.engine.sr.updateMesh(spheres, false);
+		});
+	}
+
 	public async load() {
 		this.registerShaders();
 
@@ -653,63 +713,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			}, 1000);
 		}
 
-		const spheres = [] as BABYLON.Mesh[];
-
-		for (let i = 0; i < 16; i++) {
-			const sphereRoot = new BABYLON.TransformNode('', this.engine.scene);
-			sphereRoot.position = new BABYLON.Vector3(cm(0), cm(1000 + (100 * i)), cm(0));
-			const rotation = Math.random() * Math.PI * 2;
-			const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(randomRange(50, 300)), segments: 16 }, this.engine.scene);
-			sphere.parent = sphereRoot;
-			sphere.position = new BABYLON.Vector3(cm(0), cm(0), cm(randomRange(2000, 7000)));
-			spheres.push(sphere);
-
-			const mat = new BABYLON.PBRMaterial('', this.engine.scene);
-			const color = tinycolor({ h: Math.random() * 360, s: 1, l: 0.5 }).toRgb();
-			mat.emissiveColor = new BABYLON.Color3(color.r / 255, color.g / 255, color.b / 255);
-			mat.disableLighting = true;
-			this.engine.gl?.addExcludedMesh(sphere);
-			sphere.material = mat;
-
-			const speed = randomRange(5000, 30000);
-			const anim = new BABYLON.Animation('', 'rotation.y', 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-			anim.setKeys([
-				{ frame: 0, value: rotation },
-				{ frame: speed, value: Math.random() < 0.5 ? rotation + (Math.PI * 2) : rotation - (Math.PI * 2) },
-			]);
-			sphereRoot.animations = [anim];
-			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
-		}
-
-		for (let i = 0; i < 64; i++) {
-			const sphereRoot = new BABYLON.TransformNode('', this.engine.scene);
-			sphereRoot.position = new BABYLON.Vector3(cm(0), cm(randomRange(-5000, 5000)), cm(0));
-			const rotation = Math.random() * Math.PI * 2;
-			const sphere = BABYLON.MeshBuilder.CreateSphere('', { diameter: cm(randomRange(500, 3000)), segments: 16 }, this.engine.scene);
-			sphere.parent = sphereRoot;
-			sphere.position = new BABYLON.Vector3(cm(0), cm(0), cm(randomRange(10000, 15000)));
-			spheres.push(sphere);
-
-			const mat = new BABYLON.PBRMaterial('', this.engine.scene);
-			const color = tinycolor({ h: Math.random() * 360, s: randomRange(0, 1), l: randomRange(0.75, 1) }).toRgb();
-			mat.emissiveColor = new BABYLON.Color3(color.r / 255, color.g / 255, color.b / 255);
-			mat.disableLighting = true;
-			this.engine.gl?.addExcludedMesh(sphere);
-			sphere.material = mat;
-
-			const speed = randomRange(10000, 100000);
-			const anim = new BABYLON.Animation('', 'rotation.y', 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-			anim.setKeys([
-				{ frame: 0, value: rotation },
-				{ frame: speed, value: Math.random() < 0.5 ? rotation + (Math.PI * 2) : rotation - (Math.PI * 2) },
-			]);
-			sphereRoot.animations = [anim];
-			this.engine.scene.beginAnimation(sphereRoot, 0, speed, true);
-		}
-
-		this.engine.scene.onAfterAnimationsObservable.add(() => {
-			this.engine.sr.updateMesh(spheres, false);
-		});
+		this.setupFloatingSphereDecorations();
 
 		/*
 		const adsCountCol = 4;
