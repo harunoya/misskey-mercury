@@ -701,6 +701,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			this.engine.sr.updateMesh(spheres, false);
 		});
 
+		/*
 		const adsCountCol = 4;
 		const adsCountRow = 2;
 		const adRoots = [] as BABYLON.TransformNode[];
@@ -734,6 +735,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		this.engine.scene.onAfterAnimationsObservable.add(() => {
 			this.engine.sr.updateMesh(adRoots.flatMap(adRoot => [...adRoot.getChildMeshes()]), false);
 		});
+		*/
 
 		const worldRingH = this.meshes.find(m => m.name.includes('__WORLD_RING_H__'));
 		const worldRingM = this.meshes.find(m => m.name.includes('__WORLD_RING_M__'));
