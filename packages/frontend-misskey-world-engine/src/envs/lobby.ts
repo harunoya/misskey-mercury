@@ -238,7 +238,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			}
 
 			fn getV(uv: vec2f) -> f32 {
-				let dutyCycleFactor = 0.25;
+				let dutyCycleFactor = 0.2;
 				let dutyCycle = max(rand(uv), 0.1) * dutyCycleFactor;
 				let phase = fract((uniforms.time - 1000.0) * 0.06 * dutyCycle);
 				return linearRisePulse(phase, dutyCycle);
@@ -313,7 +313,6 @@ export class LobbyEnvManager extends WorldEnvManager {
 		panelMaterial.backFaceCulling = true;
 
 		const panelCount = 128;
-		const panelSize = cm(15000);
 		const panelDistance = cm(30000);
 		const textureGridSize = 4;
 		const textureCellSize = 1 / textureGridSize;
@@ -321,7 +320,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 
 		for (let i = 0; i < panelCount; i++) {
 			const panel = BABYLON.MeshBuilder.CreatePlane('', {
-				size: panelSize,
+				size: randomRange(cm(15000), cm(20000)),
 				updatable: true,
 			}, this.engine.scene);
 
