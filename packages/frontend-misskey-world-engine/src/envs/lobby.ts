@@ -754,6 +754,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		const dome = this.meshes.find(m => m.name.includes('__DOME__'))!;
 		dome.setParent(null); // parentが存在するとinfiniteDistanceが効かない
 		dome.infiniteDistance = true;
+		dome.alphaIndex = 1;
 		const domeTexture = new BABYLON.CustomProceduralTexture('', '/client-assets/world/envs/lobby/shaders/bg', 4096, this.engine.scene);
 		domeTexture.hasAlpha = true;
 		domeTexture.wrapU = BABYLON.Texture.MIRROR_ADDRESSMODE;
