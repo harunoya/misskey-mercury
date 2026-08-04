@@ -353,6 +353,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		mergedPanels.name = 'moonPhaseDecoPanels';
 		mergedPanels.material = panelMaterial;
 		mergedPanels.infiniteDistance = true;
+		mergedPanels.alphaIndex = 0;
 
 		if (this.engine.gl != null) this.engine.gl.addExcludedMesh(mergedPanels);
 	}
