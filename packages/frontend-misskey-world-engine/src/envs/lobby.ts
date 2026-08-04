@@ -792,8 +792,8 @@ export class LobbyEnvManager extends WorldEnvManager {
 			const tex = new BABYLON.VideoTexture('', videoEl, this.engine.scene, true, true);
 			tex.level = 0.5;
 			tex.video.loop = true;
-			tex.video.volume = 0.25;
-			tex.video.muted = true;
+			tex.video.volume = 0.05;
+			tex.video.muted = false;
 			screenMaterial.albedoColor = new BABYLON.Color3(0, 0, 0);
 			screenMaterial.emissiveTexture = tex;
 			screenMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
