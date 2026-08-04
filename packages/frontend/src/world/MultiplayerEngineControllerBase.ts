@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { shallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 import { EngineControllerBase } from './EngineControllerBase.js';
 import type { EngineControllerBaseOptions } from './EngineControllerBase.js';
 import type { PlayerProfile, PlayerState } from 'misskey-world-engine/src/PlayerContainer.js';
@@ -27,6 +27,7 @@ export abstract class MultiplayerEngineControllerBase<T extends MultiplayEngineB
 		position: [0, 0, 0],
 		rotation: [0, 0, 0],
 	});
+	public isSitting = ref(false);
 
 	public sit() {
 		this.call('sit');

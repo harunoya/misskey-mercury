@@ -45,6 +45,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<div :class="$style.overlayBottom">
+		<div v-if="controller.isReady.value" :class="$style.overlayControls">
+			<MkButton v-if="controller.isSitting.value" @click="controller.standUp()">{{ i18n.ts._miWorld.standUp }} (Q)</MkButton>
+		</div>
+
 		<MkVirtualJoystick v-if="useVirtualJoystick && controller.isReady.value" :class="$style.joystick" @update="v => controller.setCameraJoystickMoveVector(v)"/>
 	</div>
 

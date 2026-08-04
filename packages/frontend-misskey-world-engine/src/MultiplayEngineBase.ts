@@ -14,6 +14,7 @@ const IN_WEB_WORKER = typeof window === 'undefined';
 export type MultiplayEngineBaseEvents = {
 	'loadingProgress': (ctx: { progress: number }) => void;
 	'contextlost': (ctx: { reason: string; message: string; }) => void;
+	'changeSittingState': (ctx: { isSitting: boolean }) => void;
 };
 
 export abstract class MultiplayEngineBase<EVs extends MultiplayEngineBaseEvents> extends EngineBase<EVs> {

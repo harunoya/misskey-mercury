@@ -32,7 +32,6 @@ export class RoomController extends MultiplayerEngineControllerBase<RoomEngine, 
 	'playerPointed': { playerId: string; };
 }> {
 	protected options: RoomControllerOptions;
-	public isSitting = ref(false);
 	public isEditMode = ref(false);
 	public isRoomLightOn = ref(true);
 	public grabbing = ref<{ forInstall: boolean } | null>(null);

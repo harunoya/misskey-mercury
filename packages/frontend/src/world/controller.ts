@@ -51,6 +51,10 @@ export class WorldEngineController extends MultiplayerEngineControllerBase<World
 			}),
 		});
 
+		engineEvents.on('changeSittingState', ({ isSitting }) => {
+			this.isSitting.value = isSitting;
+		});
+
 		engineEvents.on('changeMyPlayerState', (playerState) => {
 			this.myPlayerState.value = playerState;
 		});
