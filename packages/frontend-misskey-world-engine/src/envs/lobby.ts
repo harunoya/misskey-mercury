@@ -27,6 +27,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 	private translucentTextMaterial: BABYLON.StandardMaterial | null = null;
 	private timer: Timer = new Timer();
 	private tz = timezones.find((tz) => tz.abbrev === 'JST')!;
+	public EFFECT_RENDERING_GROUP = 1;
 
 	constructor(engine: WorldEngine) {
 		super(engine);
@@ -393,6 +394,12 @@ export class LobbyEnvManager extends WorldEnvManager {
 
 	public async load() {
 		this.registerShaders();
+
+		// パーティクルが背景よりも手前に描画されるようにするため
+		this.engine.scene.setRenderingAutoClearDepthStencil(
+			this.EFFECT_RENDERING_GROUP,
+			false,
+		);
 
 		this.engine.camera.position = new BABYLON.Vector3(cm(0), cm(250), cm(3000));
 
@@ -845,7 +852,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 		//ps.start();
 		//this.engine.sr.fixParticleSystem(ps);
 
-		const firework = new Firework(this.engine);
+		const firework = new Firework(this.engine, this.EFFECT_RENDERING_GROUP);
 		this.timer.setInterval(() => {
 			firework.launch({
 				position: [randomRange(cm(-5000), cm(5000)), cm(randomRange(1000, 3000)), randomRange(cm(-5000), cm(5000))],

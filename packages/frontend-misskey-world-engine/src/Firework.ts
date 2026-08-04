@@ -21,9 +21,11 @@ export class Firework {
 		{ path: '/client-assets/world/other/firework/flare-glow-7.png', color: new BABYLON.Color3(1.0, 1.0, 0.0) },
 		{ path: '/client-assets/world/other/firework/flare-glow-8.png', color: new BABYLON.Color3(0.5, 1.0, 0.0) },
 	];
+	private RENDERING_GROUP: number;
 
-	constructor(engine: EngineBase<any>) {
+	constructor(engine: EngineBase<any>, renderingGroup: number) {
 		this.engine = engine;
+		this.RENDERING_GROUP = renderingGroup;
 	}
 
 	public launch(options: {
@@ -40,6 +42,7 @@ export class Firework {
 		emitter.isVisible = false;
 		emitter.position = new BABYLON.Vector3(options.position[0], options.position[1], options.position[2]);
 		const ps = new BABYLON.ParticleSystem('', 32, this.engine.scene);
+		ps.renderingGroupId = this.RENDERING_GROUP;
 		ps.particleTexture = texture;
 		ps.emitter = emitter;
 		ps.minEmitPower = cm(100);
@@ -129,6 +132,7 @@ export class Firework {
 		this.engine.scene.beginAnimation(light, 0, 120, false, 1);
 
 		const ps = new BABYLON.ParticleSystem('', 128, this.engine.scene);
+		ps.renderingGroupId = this.RENDERING_GROUP;
 		ps.particleTexture = options.texture;
 		ps.emitter = pos;
 		ps.minEmitPower = cm(3700);
