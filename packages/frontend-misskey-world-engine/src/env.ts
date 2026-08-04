@@ -20,7 +20,7 @@ export abstract class WorldEnvManager {
 	}
 
 	abstract load(): Promise<void>;
-	abstract setTime(time: number): void;
+	abstract applyDayPeriod(dayPeriod: number): void;
 
 	protected registerShadowGenerator(shadowGenerator: BABYLON.ShadowGenerator) {
 		this.shadowGenerators.push(shadowGenerator);

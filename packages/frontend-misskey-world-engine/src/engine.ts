@@ -29,7 +29,7 @@ export class WorldEngine extends MultiplayEngineBase<{
 	'loadingProgress': (ctx: { progress: number }) => void;
 	'contextlost': (ctx: { reason: string; message: string; }) => void;
 }> {
-	private time: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
+	private dayPeriod: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
 	public lightContainer: BABYLON.ClusteredLightContainer;
 	public sr: BABYLON.SnapshotRenderingHelper;
 	public readonly celShadingRenderer: CelShadingRenderer;
@@ -79,7 +79,7 @@ export class WorldEngine extends MultiplayEngineBase<{
 		});
 		this.sr = new BABYLON.SnapshotRenderingHelper(this.scene);
 
-		this.time = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
+		this.dayPeriod = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
 		//this.time = TIME_MAP[12 as keyof typeof TIME_MAP];
 
 		this.scene.ambientColor = new BABYLON.Color3(0.9, 0.9, 0.9);
@@ -180,7 +180,7 @@ export class WorldEngine extends MultiplayEngineBase<{
 		const envManager = new LobbyEnvManager(this);
 
 		await envManager.load();
-		envManager.setTime(this.time);
+		envManager.applyDayPeriod(this.dayPeriod);
 
 		for (const mat of this.scene.materials) {
 			mat.unfreeze();

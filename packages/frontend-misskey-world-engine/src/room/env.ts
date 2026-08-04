@@ -21,7 +21,7 @@ export abstract class RoomEnvManager<T = any> {
 
 	abstract load(options: T): Promise<void>;
 	abstract applyOptions(options: T): void;
-	abstract setTime(time: number): void;
+	abstract applyDayPeriod(dayPeriod: number): void;
 	abstract applyRoomLight(): void;
 
 	public turnOnRoomLight() {

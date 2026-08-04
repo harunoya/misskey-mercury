@@ -147,7 +147,7 @@ export class RoomEngine extends MultiplayEngineBase<{
 		} });
 	}
 
-	private time: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
+	private dayPeriod: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
 	public roomState: RoomState;
 	public roomAttachments: RoomAttachments;
 
@@ -218,7 +218,7 @@ export class RoomEngine extends MultiplayEngineBase<{
 		this.roomAttachments = roomAttachments;
 		this.graphicsQuality = options.graphicsQuality;
 		this.useGlow = this.graphicsQuality >= GRAPHICS_QUALITY.MEDIUM;
-		this.time = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
+		this.dayPeriod = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
 
 		registerBuiltInLoaders();
 
@@ -532,7 +532,7 @@ export class RoomEngine extends MultiplayEngineBase<{
 		}
 
 		await envManager.load(this.roomState.env.options);
-		envManager.setTime(this.time);
+		envManager.applyDayPeriod(this.dayPeriod);
 
 		for (const mat of this.scene.materials) {
 			mat.unfreeze();

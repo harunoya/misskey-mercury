@@ -91,7 +91,7 @@ export class MuseumEnvManager extends RoomEnvManager<MuseumEnvOptions> {
 		await this.applyOptions(options);
 	}
 
-	public setTime(time: number) {
+	public applyDayPeriod(dayPeriod: number) {
 	}
 
 	public applyRoomLight(): void {

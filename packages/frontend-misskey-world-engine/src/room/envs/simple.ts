@@ -413,20 +413,20 @@ export class SimpleEnvManager extends RoomEnvManager<SimpleEnvOptions> {
 		this.registerMeshes(this.rootNode.getChildMeshes());
 	}
 
-	public setTime(time: number) {
+	public applyDayPeriod(dayPeriod: number) {
 		if (this.skyboxMat == null) return;
 
-		if (time === 0) {
+		if (dayPeriod === 0) {
 			this.skyboxMat.emissiveColor = new BABYLON.Color3(0.7, 0.9, 1.0);
-		} else if (time === 1) {
+		} else if (dayPeriod === 1) {
 			this.skyboxMat.emissiveColor = new BABYLON.Color3(0.8, 0.5, 0.3);
 		} else {
 			this.skyboxMat.emissiveColor = new BABYLON.Color3(0.05, 0.05, 0.2);
 		}
 
 		if (this.sunLight != null) {
-			this.sunLight.diffuse = time === 0 ? new BABYLON.Color3(1.0, 0.9, 0.8) : time === 1 ? new BABYLON.Color3(1.0, 0.8, 0.6) : new BABYLON.Color3(0.6, 0.8, 1.0);
-			this.sunLight.intensity = time === 0 ? 3 : time === 1 ? 1 : 0.25;
+			this.sunLight.diffuse = dayPeriod === 0 ? new BABYLON.Color3(1.0, 0.9, 0.8) : dayPeriod === 1 ? new BABYLON.Color3(1.0, 0.8, 0.6) : new BABYLON.Color3(0.6, 0.8, 1.0);
+			this.sunLight.intensity = dayPeriod === 0 ? 3 : dayPeriod === 1 ? 1 : 0.25;
 		}
 	}
 
