@@ -852,12 +852,12 @@ export class LobbyEnvManager extends WorldEnvManager {
 		//ps.start();
 		//this.engine.sr.fixParticleSystem(ps);
 
-		const firework = new Firework(this.engine, this.EFFECT_RENDERING_GROUP);
-		this.timer.setInterval(() => {
-			firework.launch({
-				position: [randomRange(cm(-5000), cm(5000)), cm(randomRange(1000, 3000)), randomRange(cm(-5000), cm(5000))],
-			});
-		}, 1000);
+		//const firework = new Firework(this.engine, this.EFFECT_RENDERING_GROUP);
+		//this.timer.setInterval(() => {
+		//	firework.launch({
+		//		position: [randomRange(cm(-5000), cm(5000)), cm(randomRange(1000, 3000)), randomRange(cm(-5000), cm(5000))],
+		//	});
+		//}, 1000);
 
 		this.registerMeshes(this.meshes);
 	}
