@@ -25,7 +25,7 @@ import { TIME_MAP, getMeshesBoundingBox, Timer, getYRotationDirection, FreeCamer
 import { MultiplayEngineBase } from '../MultiplayEngineBase.js';
 import { genId } from '../id.js';
 import { deepClone } from '../clone.js';
-import { PlayerContainer, type PlayerProfile, type PlayerState } from '../PlayerContainer.js';
+import { type PlayerState } from '../PlayerContainer.js';
 import { getFurnitureDef } from './furniture-defs.js';
 import { SYSTEM_MESH_NAMES } from './utility.js';
 import { SimpleEnvManager } from './envs/simple.js';
@@ -93,10 +93,6 @@ export class RoomEngine extends MultiplayEngineBase<{
 	'contextlost': (ctx: { reason: string; message: string; }) => void;
 }> {
 	private useGlow: boolean;
-	public camera: BABYLON.UniversalCamera;
-	private cameraHeight = cm(130);
-	private fov: number;
-	private fixedCamera: BABYLON.FreeCamera;
 	public furnitureContainers: Map<string, FurnitureContainer> = new Map();
 	private envManager: RoomEnvManager | null = null;
 
@@ -186,15 +182,6 @@ export class RoomEngine extends MultiplayEngineBase<{
 		this.ev('changeEditMode', { isEditMode: v });
 	}
 
-	private _isSitting = false;
-	get isSitting() {
-		return this._isSitting;
-	}
-	set isSitting(v) {
-		this._isSitting = v;
-		this.ev('changeSittingState', { isSitting: v });
-	}
-
 	public getEnvMap(): BABYLON.CubeTexture | null {
 		return this.envManager?.envMapIndoor ?? null;
 	}
@@ -214,6 +201,11 @@ export class RoomEngine extends MultiplayEngineBase<{
 		super({
 			babylonEngine: options.babylonEngine,
 			fps: options.fps,
+			fov: options.fov,
+			showUsernameOnAvatar: options.showUsernameOnAvatar,
+			show2dAvatarOnAvatar: options.show2dAvatarOnAvatar,
+			useVirtualJoystick: options.useVirtualJoystick ?? false,
+			fastMovement: false,
 		});
 
 		this.roomState = {
@@ -226,9 +218,6 @@ export class RoomEngine extends MultiplayEngineBase<{
 		this.roomAttachments = roomAttachments;
 		this.graphicsQuality = options.graphicsQuality;
 		this.useGlow = this.graphicsQuality >= GRAPHICS_QUALITY.MEDIUM;
-		this.fov = options.fov;
-		this.showUsernameOnAvatar = options.showUsernameOnAvatar;
-		this.show2dAvatarOnAvatar = options.show2dAvatarOnAvatar;
 		this.time = TIME_MAP[new Date().getHours() as keyof typeof TIME_MAP];
 
 		registerBuiltInLoaders();
@@ -244,39 +233,6 @@ export class RoomEngine extends MultiplayEngineBase<{
 		this.scene.collisionsEnabled = true;
 
 		this.sr = new BABYLON.SnapshotRenderingHelper(this.scene);
-
-		this.camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, this.cameraHeight, cm(0)), this.scene);
-		this.camera.minZ = cm(1);
-		this.camera.maxZ = cm(1000);
-		this.camera.fov = this.fov;
-		this.camera.ellipsoid = new BABYLON.Vector3(cm(15), cm(65), cm(15));
-		this.camera.checkCollisions = true;
-		this.camera.applyGravity = true;
-		this.camera.needMoveForGravity = true;
-		this.camera.inputs.clear();
-		if (options.useVirtualJoystick) {
-			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
-				moveSensitivity: 0.015 * WORLD_SCALE,
-				rotationSensitivity: 0.0007,
-			}));
-			this.camera.inertia = 0.75;
-		} else {
-			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
-				moveSensitivity: 0.002 * WORLD_SCALE,
-				rotationSensitivity: 0.0003,
-			}));
-		}
-
-		this.scene.activeCamera = this.camera;
-
-		this.fixedCamera = new BABYLON.FreeCamera('fixedCamera', new BABYLON.Vector3(0, cm(130), cm(0)), this.scene);
-		this.fixedCamera.minZ = cm(1);
-		this.fixedCamera.maxZ = cm(1000);
-		this.fixedCamera.inputs.clear();
-		this.fixedCamera.inputs.add(new FreeCameraManualInput(this.scene, {
-			moveSensitivity: 0.002 * WORLD_SCALE,
-			rotationSensitivity: 0.0003,
-		}));
 
 		this.lightContainer = new BABYLON.ClusteredLightContainer('clustered', [], this.scene);
 		this.lightContainer.maxRange = cm(1000);
@@ -1212,32 +1168,6 @@ export class RoomEngine extends MultiplayEngineBase<{
 		this.fixedCamera.rotation = new BABYLON.Vector3(0, 0, 0);
 		this.scene.activeCamera = this.fixedCamera;
 		this.selectFurniture(null);
-	}
-
-	public sit() {
-		this.isSitting = true;
-		this.sr.disableSnapshotRendering();
-		this.fixedCamera.parent = null;
-		this.fixedCamera.position = new BABYLON.Vector3(this.camera.position.x, cm(70), this.camera.position.z);
-		this.fixedCamera.rotation = new BABYLON.Vector3(this.camera.rotation.x, this.camera.rotation.y, this.camera.rotation.z);
-		this.scene.activeCamera = this.fixedCamera;
-		this.sr.enableSnapshotRendering();
-	}
-
-	public lyingDown() {
-		this.isSitting = true;
-		this.sr.disableSnapshotRendering();
-		this.fixedCamera.parent = null;
-		this.fixedCamera.position = new BABYLON.Vector3(this.camera.position.x, cm(20), this.camera.position.z);
-		this.fixedCamera.rotation = new BABYLON.Vector3(-(Math.PI / 2) + 0.001, this.camera.rotation.y, this.camera.rotation.z);
-		this.scene.activeCamera = this.fixedCamera;
-		this.sr.enableSnapshotRendering();
-	}
-
-	public standUp() {
-		this.isSitting = false;
-		this.scene.activeCamera = this.camera;
-		this.fixedCamera.parent = null;
 	}
 
 	public updateLightSettings(light: RoomState['light']) {

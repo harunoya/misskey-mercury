@@ -29,21 +29,16 @@ export class WorldEngine extends MultiplayEngineBase<{
 	'loadingProgress': (ctx: { progress: number }) => void;
 	'contextlost': (ctx: { reason: string; message: string; }) => void;
 }> {
-	public camera: BABYLON.UniversalCamera;
 	private time: 0 | 1 | 2 = 0; // 0: 昼, 1: 夕, 2: 夜
 	public lightContainer: BABYLON.ClusteredLightContainer;
 	public sr: BABYLON.SnapshotRenderingHelper;
 	public readonly celShadingRenderer: CelShadingRenderer;
 	public gl: BABYLON.GlowLayer | null = null;
 	public timer: Timer = new Timer();
-	public isSitting = false;
-	private cameraHeight = cm(130);
-	private fov: number;
 	private useGlow: boolean;
 	public graphicsQuality: number;
 	private envManager: WorldEnvManager | null = null;
 	private inited = false;
-	private isGodMode = false;
 
 	constructor(options: {
 		babylonEngine: BABYLON.WebGPUEngine;
@@ -58,13 +53,15 @@ export class WorldEngine extends MultiplayEngineBase<{
 		super({
 			babylonEngine: options.babylonEngine,
 			fps: options.fps,
+			showUsernameOnAvatar: options.showUsernameOnAvatar,
+			show2dAvatarOnAvatar: options.show2dAvatarOnAvatar,
+			useVirtualJoystick: options.useVirtualJoystick ?? false,
+			fov: options.fov,
+			fastMovement: true,
 		});
 
 		this.graphicsQuality = options.graphicsQuality;
 		this.useGlow = this.graphicsQuality >= GRAPHICS_QUALITY.MEDIUM;
-		this.fov = options.fov;
-		this.showUsernameOnAvatar = options.showUsernameOnAvatar;
-		this.show2dAvatarOnAvatar = options.show2dAvatarOnAvatar;
 
 		registerBuiltInLoaders();
 
@@ -86,34 +83,6 @@ export class WorldEngine extends MultiplayEngineBase<{
 		//this.time = TIME_MAP[12 as keyof typeof TIME_MAP];
 
 		this.scene.ambientColor = new BABYLON.Color3(0.9, 0.9, 0.9);
-
-		this.camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, this.cameraHeight, cm(0)), this.scene);
-		this.camera.minZ = cm(1);
-		this.camera.maxZ = cm(1000);
-		this.camera.fov = this.fov;
-		this.camera.ellipsoid = new BABYLON.Vector3(cm(15), cm(65), cm(15));
-		if (!this.isGodMode) {
-			this.camera.checkCollisions = true;
-			this.camera.applyGravity = true;
-			this.camera.needMoveForGravity = true;
-		}
-		this.camera.inputs.clear();
-		if (options.useVirtualJoystick) {
-			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
-				moveSensitivity: 0.02 * WORLD_SCALE,
-				rotationSensitivity: 0.0007,
-				isGodMode: this.isGodMode,
-			}));
-			this.camera.inertia = 0.75;
-		} else {
-			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
-				moveSensitivity: 0.003 * WORLD_SCALE,
-				rotationSensitivity: 0.0003,
-				isGodMode: this.isGodMode,
-			}));
-		}
-
-		this.scene.activeCamera = this.camera;
 
 		this.lightContainer = new BABYLON.ClusteredLightContainer('clustered', [], this.scene);
 		this.lightContainer.maxRange = cm(10000);

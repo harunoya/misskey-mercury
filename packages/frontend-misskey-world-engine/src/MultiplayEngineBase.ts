@@ -4,8 +4,10 @@
  */
 
 import * as BABYLON from '@babylonjs/core/pure.js';
+import { cm, WORLD_SCALE } from 'misskey-world/src/utility.js';
 import { EngineBase } from './EngineBase.js';
 import { PlayerContainer, type PlayerProfile, type PlayerState } from './PlayerContainer.js';
+import { FreeCameraManualInput } from './utility.js';
 
 const IN_WEB_WORKER = typeof window === 'undefined';
 
@@ -19,12 +21,29 @@ export abstract class MultiplayEngineBase<EVs extends MultiplayEngineBaseEvents>
 	protected playerContainers: PlayerContainer[] = [];
 	protected showUsernameOnAvatar: boolean;
 	protected show2dAvatarOnAvatar: boolean;
+	public camera: BABYLON.FreeCamera;
+	public fixedCamera: BABYLON.FreeCamera;
+	protected cameraHeight = cm(130);
+	protected fov: number;
+	protected isGodMode = false;
+
+	private _isSitting = false;
+	get isSitting() {
+		return this._isSitting;
+	}
+	set isSitting(v) {
+		this._isSitting = v;
+		this.ev('changeSittingState', { isSitting: v });
+	}
 
 	constructor(options: {
 		babylonEngine: BABYLON.WebGPUEngine;
 		fps: number | null;
 		showUsernameOnAvatar: boolean;
 		show2dAvatarOnAvatar: boolean;
+		useVirtualJoystick: boolean;
+		fov: number;
+		fastMovement: boolean;
 	}) {
 		super({
 			babylonEngine: options.babylonEngine,
@@ -33,6 +52,70 @@ export abstract class MultiplayEngineBase<EVs extends MultiplayEngineBaseEvents>
 
 		this.showUsernameOnAvatar = options.showUsernameOnAvatar;
 		this.show2dAvatarOnAvatar = options.show2dAvatarOnAvatar;
+		this.fov = options.fov;
+
+		this.camera = new BABYLON.FreeCamera('', new BABYLON.Vector3(0, this.cameraHeight, cm(0)), this.scene);
+		this.camera.minZ = cm(1);
+		this.camera.maxZ = cm(1000);
+		this.camera.fov = this.fov;
+		this.camera.ellipsoid = new BABYLON.Vector3(cm(15), cm(65), cm(15));
+		if (!this.isGodMode) {
+			this.camera.checkCollisions = true;
+			this.camera.applyGravity = true;
+			this.camera.needMoveForGravity = true;
+		}
+		this.camera.inputs.clear();
+		if (options.useVirtualJoystick) {
+			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
+				moveSensitivity: options.fastMovement ? 0.02 * WORLD_SCALE : 0.015 * WORLD_SCALE,
+				rotationSensitivity: 0.0007,
+				isGodMode: this.isGodMode,
+			}));
+			this.camera.inertia = 0.75;
+		} else {
+			this.camera.inputs.add(new FreeCameraManualInput(this.scene, {
+				moveSensitivity: options.fastMovement ? 0.003 * WORLD_SCALE : 0.002 * WORLD_SCALE,
+				rotationSensitivity: 0.0003,
+				isGodMode: this.isGodMode,
+			}));
+		}
+
+		this.scene.activeCamera = this.camera;
+
+		this.fixedCamera = new BABYLON.FreeCamera('', new BABYLON.Vector3(0, cm(130), cm(0)), this.scene);
+		this.fixedCamera.minZ = cm(1);
+		this.fixedCamera.maxZ = cm(1000);
+		this.fixedCamera.inputs.clear();
+		this.fixedCamera.inputs.add(new FreeCameraManualInput(this.scene, {
+			moveSensitivity: 0.002 * WORLD_SCALE,
+			rotationSensitivity: 0.0003,
+		}));
+	}
+
+	public sit() {
+		this.isSitting = true;
+		this.sr.disableSnapshotRendering();
+		this.fixedCamera.parent = null;
+		this.fixedCamera.position = new BABYLON.Vector3(this.camera.position.x, cm(70), this.camera.position.z);
+		this.fixedCamera.rotation = new BABYLON.Vector3(this.camera.rotation.x, this.camera.rotation.y, this.camera.rotation.z);
+		this.scene.activeCamera = this.fixedCamera;
+		this.sr.enableSnapshotRendering();
+	}
+
+	public lyingDown() {
+		this.isSitting = true;
+		this.sr.disableSnapshotRendering();
+		this.fixedCamera.parent = null;
+		this.fixedCamera.position = new BABYLON.Vector3(this.camera.position.x, cm(20), this.camera.position.z);
+		this.fixedCamera.rotation = new BABYLON.Vector3(-(Math.PI / 2) + 0.001, this.camera.rotation.y, this.camera.rotation.z);
+		this.scene.activeCamera = this.fixedCamera;
+		this.sr.enableSnapshotRendering();
+	}
+
+	public standUp() {
+		this.isSitting = false;
+		this.scene.activeCamera = this.camera;
+		this.fixedCamera.parent = null;
 	}
 
 	public updatePlayerProfiles(profiles: Record<string, PlayerProfile>) {
