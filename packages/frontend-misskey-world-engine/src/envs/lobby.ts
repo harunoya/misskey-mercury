@@ -238,7 +238,7 @@ export class LobbyEnvManager extends WorldEnvManager {
 			}
 
 			fn getV(uv: vec2f) -> f32 {
-				let dutyCycleFactor = 0.2;
+				let dutyCycleFactor = 0.15;
 				let dutyCycle = max(rand(uv), 0.1) * dutyCycleFactor;
 				let phase = fract((uniforms.time - 1000.0) * 0.06 * dutyCycle);
 				return linearRisePulse(phase, dutyCycle);
