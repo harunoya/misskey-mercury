@@ -99,6 +99,7 @@ export abstract class MultiplayEngineBase<EVs extends MultiplayEngineBaseEvents>
 		this.fixedCamera.parent = null;
 		this.fixedCamera.position = new BABYLON.Vector3(this.camera.position.x, cm(70), this.camera.position.z);
 		this.fixedCamera.rotation = new BABYLON.Vector3(this.camera.rotation.x, this.camera.rotation.y, this.camera.rotation.z);
+		this.fixedCamera.maxZ = this.camera.maxZ;
 		this.scene.activeCamera = this.fixedCamera;
 		this.sr.enableSnapshotRendering();
 	}
@@ -109,6 +110,7 @@ export abstract class MultiplayEngineBase<EVs extends MultiplayEngineBaseEvents>
 		this.fixedCamera.parent = null;
 		this.fixedCamera.position = new BABYLON.Vector3(this.camera.position.x, cm(20), this.camera.position.z);
 		this.fixedCamera.rotation = new BABYLON.Vector3(-(Math.PI / 2) + 0.001, this.camera.rotation.y, this.camera.rotation.z);
+		this.fixedCamera.maxZ = this.camera.maxZ;
 		this.scene.activeCamera = this.fixedCamera;
 		this.sr.enableSnapshotRendering();
 	}
