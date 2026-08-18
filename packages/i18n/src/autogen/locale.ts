@@ -5704,6 +5704,10 @@ export interface Locale extends ILocale {
      */
     "pixelatedZoom": string;
     /**
+     * スペシャルリアクション
+     */
+    "spReaction": string;
+    /**
      * スペシャルリアクションの残り使用可能回数がありません
      */
     "noRemainingUsesForSpReaction": string;
