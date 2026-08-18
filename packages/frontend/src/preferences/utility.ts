@@ -200,6 +200,11 @@ export async function cloudSync() {
 	const cloudProfile = await misskeyApi('i/registry/get', {
 		scope: ['client', 'preferences', 'backups'],
 		key: prefer.profile.name,
+	}).catch(err => {
+		if (err.code === 'NO_SUCH_KEY') {
+			return null;
+		}
+		throw err;
 	}) as PreferencesProfile | null;
 
 	if (cloudProfile == null) {
@@ -230,6 +235,11 @@ export async function cloudBackup() {
 	const backupedProfile = await misskeyApi('i/registry/get', {
 		scope: ['client', 'preferences', 'backups'],
 		key: prefer.profile.name,
+	}).catch(err => {
+		if (err.code === 'NO_SUCH_KEY') {
+			return null;
+		}
+		throw err;
 	}) as PreferencesProfile | null;
 
 	// 古い設定で新しいバックアップを上書きしないようにマージ
