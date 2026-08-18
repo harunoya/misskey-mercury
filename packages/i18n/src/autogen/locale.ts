@@ -5703,6 +5703,10 @@ export interface Locale extends ILocale {
      * ピクセルアート拡大モード
      */
     "pixelatedZoom": string;
+    /**
+     * スペシャルリアクションの残り使用可能回数がありません
+     */
+    "noRemainingUsesForSpReaction": string;
     "_imageEditing": {
         "_vars": {
             /**
