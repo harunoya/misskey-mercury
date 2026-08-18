@@ -425,6 +425,23 @@ export class ReactionService {
 			}
 		}
 
+		// Increment reactions count
+		const spReaction = `sp:${reaction}`;
+		if (this.meta.enableReactionsBuffering) {
+			await this.reactionsBufferingService.create(note.id, user.id, spReaction, note.reactionAndUserPairCache);
+		} else {
+			const sql = `jsonb_set("reactions", '{${spReaction}}', (COALESCE("reactions"->>'${spReaction}', '0')::int + 1)::text::jsonb)`;
+			await this.notesRepository.createQueryBuilder().update()
+				.set({
+					reactions: () => sql,
+					...(note.reactionAndUserPairCache.length < PER_NOTE_REACTION_USER_PAIR_CACHE_MAX ? {
+						reactionAndUserPairCache: () => `array_append("reactionAndUserPairCache", '${user.id}/${spReaction}')`,
+					} : {}),
+				})
+				.where('id = :id', { id: note.id })
+				.execute();
+		}
+
 		// increment monthly reactions count
 		const redisPipeline = this.redisClient.pipeline();
 		redisPipeline.incr(monthlySpReactionsCountMapKey);
