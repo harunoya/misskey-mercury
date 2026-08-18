@@ -2077,6 +2077,9 @@ declare namespace entities {
         NotesShowResponse,
         NotesShowPartialBulkRequest,
         NotesShowPartialBulkResponse,
+        NotesSpReactionsRequest,
+        NotesSpReactionsResponse,
+        NotesSpReactionsCreateRequest,
         NotesStateRequest,
         NotesStateResponse,
         NotesThreadMutingCreateRequest,
@@ -3097,6 +3100,15 @@ type NotesShowRequest = operations['notes___show']['requestBody']['content']['ap
 
 // @public (undocumented)
 type NotesShowResponse = operations['notes___show']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
+type NotesSpReactionsCreateRequest = operations['notes___sp-reactions___create']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type NotesSpReactionsRequest = operations['notes___sp-reactions']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type NotesSpReactionsResponse = operations['notes___sp-reactions']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
 type NotesStateRequest = operations['notes___state']['requestBody']['content']['application/json'];
