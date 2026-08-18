@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	@click="toggleReaction()"
 	@contextmenu.prevent.stop="menu"
 >
-	<MkReactionIcon style="pointer-events: none;" :class="[$style.icon, { [$style.limitWidth]: prefer.s.limitWidthOfReaction }]" :reaction="reaction" :emojiUrl="reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
+	<MkReactionIcon style="pointer-events: none;" :class="[$style.icon, { [$style.limitWidth]: prefer.s.limitWidthOfReaction }]" :reaction="unwrapSp(reaction)" :emojiUrl="reactionEmojis[unwrapSp(reaction).substring(1, unwrapSp(reaction).length - 1)]"/>
 	<span :class="$style.count">{{ count }}</span>
 </button>
 </template>
@@ -56,6 +56,13 @@ const emit = defineEmits<{
 }>();
 
 const buttonEl = useTemplateRef('buttonEl');
+
+function unwrapSp(reaction: string): string {
+	if (reaction.startsWith('sp:')) {
+		return reaction.substring(3);
+	}
+	return reaction;
+}
 
 const emojiName = computed(() => props.reaction.replace(/:/g, '').replace(/@\./, ''));
 
@@ -242,9 +249,9 @@ if (!mock) {
 	useTooltip(buttonEl, async (showing) => {
 		if (buttonEl.value == null) return;
 
-		const reactions = await misskeyApiGet('notes/reactions', {
+		const reactions = await misskeyApiGet('notes/sp-reactions', {
 			noteId: props.noteId,
-			type: props.reaction,
+			type: unwrapSp(props.reaction),
 			limit: 10,
 			_cacheKey_: props.count,
 		});
@@ -253,7 +260,7 @@ if (!mock) {
 
 		const { dispose } = os.popup(XDetails, {
 			showing,
-			reaction: props.reaction,
+			reaction: unwrapSp(props.reaction),
 			users,
 			count: props.count,
 			anchorElement: buttonEl.value,

@@ -2158,6 +2158,7 @@ _role:
     noteDraftLimit: "サーバーサイドのノートの下書きの作成可能数"
     scheduledNoteLimit: "予約投稿の同時作成可能数"
     watermarkAvailable: "ウォーターマーク機能の使用可否"
+    spReactionsMonthlyLimit: "スペシャルリアクションの月間送信上限"
   _condition:
     roleAssignedTo: "マニュアルロールにアサイン済み"
     isLocal: "ローカルユーザー"

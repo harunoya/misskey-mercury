@@ -8315,6 +8315,10 @@ export interface Locale extends ILocale {
              * ウォーターマーク機能の使用可否
              */
             "watermarkAvailable": string;
+            /**
+             * スペシャルリアクションの月間送信上限
+             */
+            "spReactionsMonthlyLimit": string;
         };
         "_condition": {
             /**
