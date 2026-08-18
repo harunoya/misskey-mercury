@@ -240,8 +240,8 @@ export function getNoteMenu(props: {
 		});
 	}
 
-	function spReaction(): void {
-		reactionPicker.show(null, appearNote, async (reaction) => {
+	function spReaction(ev: PointerEvent): void {
+		reactionPicker.show((ev.currentTarget ?? ev.target) as HTMLElement, appearNote, async (reaction) => {
 			misskeyApi('notes/sp-reactions/create', {
 				noteId: appearNote.id,
 				reaction: reaction,
@@ -445,7 +445,7 @@ export function getNoteMenu(props: {
 		menuItems.push({
 			icon: 'ti ti-sparkle-highlight',
 			text: i18n.ts.spReaction,
-			action: spReaction,
+			action: (ev) => spReaction(ev),
 		});
 
 		menuItems.push(statePromise.then(state => state.isMutedThread ? {
