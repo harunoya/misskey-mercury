@@ -287,12 +287,13 @@ if (!mock) {
 		box-shadow: 1px 1px 2px #fff inset !important;
 
 		> .count {
-			color: #fff !important;
-			text-shadow: 0 0 3px #000 !important;
+			color: #503600 !important;
+			text-shadow: 0 0 3px #fff !important;
 		}
 
 		> .icon {
-			filter: drop-shadow(0 0 3px #fff) !important;
+			filter: sepia(1) drop-shadow(0 0 3px #fff) !important;
+			mix-blend-mode: multiply !important;
 		}
 	}
 
