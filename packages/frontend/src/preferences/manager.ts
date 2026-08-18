@@ -402,7 +402,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			const record = this.getMatchedRecordOf(key);
 			if (record[2].sync && Object.hasOwn(cloudValues, key) && cloudValues[key] !== undefined) {
 				const cloudValue = cloudValues[key];
-				if (!deepEqual(cloudValue, record[1])) {
+				if (!deepEqual(cloudValue.value, record[1])) {
 					this.rewriteRawState(key, cloudValue.value);
 					record[1] = cloudValue.value;
 					record[2].modifiedAt = cloudValue.meta.modifiedAt;
