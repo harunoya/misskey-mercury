@@ -8,11 +8,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 	ref="buttonEl"
 	v-ripple="canToggle"
 	class="_button"
-	:class="[$style.root, { [$style.reacted]: myReaction == reaction, [$style.canToggle]: canToggle, [$style.small]: prefer.s.reactionsDisplaySize === 'small', [$style.large]: prefer.s.reactionsDisplaySize === 'large' }]"
+	:class="[$style.root, { [$style.reacted]: myReaction == reaction, [$style.canToggle]: canToggle, [$style.small]: prefer.s.reactionsDisplaySize === 'small', [$style.large]: prefer.s.reactionsDisplaySize === 'large', [$style.sp]: reaction.startsWith('sp:') }]"
 	@click="toggleReaction()"
 	@contextmenu.prevent.stop="menu"
 >
-	<MkReactionIcon style="pointer-events: none;" :class="prefer.s.limitWidthOfReaction ? $style.limitWidth : ''" :reaction="reaction" :emojiUrl="reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
+	<MkReactionIcon style="pointer-events: none;" :class="[$style.icon, { [$style.limitWidth]: prefer.s.limitWidthOfReaction }]" :reaction="reaction" :emojiUrl="reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
 	<span :class="$style.count">{{ count }}</span>
 </button>
 </template>
@@ -32,7 +32,6 @@ import { $i } from '@/i.js';
 import MkReactionEffect from '@/components/MkReactionEffect.vue';
 import { i18n } from '@/i18n.js';
 import * as sound from '@/utility/sound.js';
-import { checkReactionPermissions } from '@/utility/check-reaction-permissions.js';
 import { customEmojisMap } from '@/custom-emojis.js';
 import { prefer } from '@/preferences.js';
 import { DI } from '@/di.js';
@@ -274,6 +273,21 @@ if (!mock) {
 	border-radius: 6px;
 	align-items: center;
 	justify-content: center;
+
+	&.sp {
+		background: linear-gradient(319deg, #B67B03 0%, #DAAF08 45%, #FEE9A0 70%, #DAAF08 85%, #B67B03 90% 100%) !important;
+		border: solid 1px #B67B03 !important;
+		box-shadow: 1px 1px 2px #fff inset !important;
+
+		> .count {
+			color: #fff !important;
+			text-shadow: 0 0 3px #000 !important;
+		}
+
+		> .icon {
+			filter: drop-shadow(0 0 3px #fff) !important;
+		}
+	}
 
 	&.canToggle {
 		background: var(--MI_THEME-buttonBg);
