@@ -36,10 +36,16 @@ type Scope = Partial<{
 
 type ValueMeta = Partial<{
 	sync: boolean;
+	// TODO: デバイスの時計がずれていた場合に不具合のもとになるため、対策を考える
 	modifiedAt?: number; // 設定値を変更した日時。同期した日時などではない。つまり別のデバイスでA日に変更したものをB日に同期して取得したとしてもmodifiedAtはA日である必要がある
+	deleted: boolean; // 削除済みの設定値を同期時に他のデバイスに伝播させるためのtombstone
 }>;
 
 type PrefRecord<K extends keyof PREF> = [scope: Scope, value: ValueOf<K>, meta: ValueMeta];
+
+function isDeletedRecord(record: [scope: Scope, value: any, meta?: ValueMeta]): boolean {
+	return record[2]?.deleted === true;
+}
 
 function parseScope(scope: Scope): {
 	server: string | null;
@@ -141,7 +147,7 @@ function createEmptyProfile(): PossiblyNonNormalizedPreferencesProfile {
 }
 
 function normalizePreferences(preferences: PossiblyNonNormalizedPreferencesProfile['preferences'], account: { id: string } | null): PreferencesProfile['preferences'] {
-	const data = {} as Record<string, [scope: Scope, value: any, meta: ValueMeta][]>;
+	const data = { ...preferences } as Record<string, [scope: Scope, value: any, meta: ValueMeta][]>;
 	for (const key in PREF_DEF) {
 		const records = preferences[key];
 		if (records == null || records.length === 0) {
@@ -160,14 +166,14 @@ function normalizePreferences(preferences: PossiblyNonNormalizedPreferencesProfi
 			}
 			continue;
 		} else {
-			if (account && isAccountDependentKey(key as keyof typeof PREF_DEF) && !records.some(([scope]) => parseScope(scope).server === host && parseScope(scope).account === account.id)) {
+			if (account && isAccountDependentKey(key as keyof typeof PREF_DEF) && !records.some((record) => !isDeletedRecord(record) && parseScope(record[0]).server === host && parseScope(record[0]).account === account.id)) {
 				data[key] = records.concat([[makeScope({
 					server: host,
 					account: account.id,
 				}), getInitialPrefValue(key as keyof typeof PREF_DEF), {}]]);
 				continue;
 			}
-			if (account && isServerDependentKey(key as keyof typeof PREF_DEF) && !records.some(([scope]) => parseScope(scope).server === host)) {
+			if (account && isServerDependentKey(key as keyof typeof PREF_DEF) && !records.some((record) => !isDeletedRecord(record) && parseScope(record[0]).server === host)) {
 				data[key] = records.concat([[makeScope({
 					server: host,
 				}), getInitialPrefValue(key as keyof typeof PREF_DEF), {}]]);
@@ -190,10 +196,16 @@ export function mergeProfiles(a: PreferencesProfile, b: PreferencesProfile): Pre
 		preferences: {},
 	} as PreferencesProfile;
 
-	for (const _key in PREF_DEF) {
-		const key = _key as keyof PREF;
-		const aRecords = a.preferences[key];
-		const bRecords = b.preferences[key];
+	const keys = new Set([
+		...Object.keys(PREF_DEF),
+		...Object.keys(a.preferences),
+		...Object.keys(b.preferences),
+	]);
+	const mergedPreferences = merged.preferences as Record<string, [scope: Scope, value: any, meta: ValueMeta][]>;
+
+	for (const key of keys) {
+		const aRecords = (a.preferences as Record<string, [scope: Scope, value: any, meta: ValueMeta][]>)[key] ?? [];
+		const bRecords = (b.preferences as Record<string, [scope: Scope, value: any, meta: ValueMeta][]>)[key] ?? [];
 
 		const mergedRecords = [...aRecords];
 
@@ -203,13 +215,13 @@ export function mergeProfiles(a: PreferencesProfile, b: PreferencesProfile): Pre
 				mergedRecords.push(bRecord);
 			} else {
 				const aRecord = mergedRecords[existingIndex];
-				if ((bRecord[2].modifiedAt ?? 0) > (aRecord[2].modifiedAt ?? 0)) {
+				if ((bRecord[2]?.modifiedAt ?? 0) > (aRecord[2]?.modifiedAt ?? 0)) {
 					mergedRecords[existingIndex] = bRecord;
 				}
 			}
 		}
 
-		(merged.preferences[key] as PrefRecord<typeof key>[]) = mergedRecords;
+		mergedPreferences[key] = mergedRecords;
 	}
 
 	return merged;
@@ -405,7 +417,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 				if (!deepEqual(cloudValue.value, record[1])) {
 					this.rewriteRawState(key, cloudValue.value);
 					record[1] = cloudValue.value;
-					record[2].modifiedAt = cloudValue.meta.modifiedAt;
+					record[2].modifiedAt = cloudValue.meta?.modifiedAt;
 					modified = true;
 					if (_DEV_) console.log('cloud fetched', key, cloudValue);
 				}
@@ -429,7 +441,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 		const records = this.profile.preferences[key];
 
 		if (currentAccount == null) {
-			const record = records.find(([scope, v]) => parseScope(scope).account == null);
+			const record = records.find((record) => !isDeletedRecord(record) && parseScope(record[0]).account == null);
 
 			// 設計上あり得ないけどTSに怒られるため
 			if (record == null) throw new Error(`no record found for key: ${key}`);
@@ -437,13 +449,13 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			return record;
 		}
 
-		const accountOverrideRecord = records.find(([scope, v]) => parseScope(scope).server === host && parseScope(scope).account === currentAccount.id);
+		const accountOverrideRecord = records.find((record) => !isDeletedRecord(record) && parseScope(record[0]).server === host && parseScope(record[0]).account === currentAccount.id);
 		if (accountOverrideRecord) return accountOverrideRecord;
 
-		const serverOverrideRecord = records.find(([scope, v]) => parseScope(scope).server === host && parseScope(scope).account == null);
+		const serverOverrideRecord = records.find((record) => !isDeletedRecord(record) && parseScope(record[0]).server === host && parseScope(record[0]).account == null);
 		if (serverOverrideRecord) return serverOverrideRecord;
 
-		const record = records.find(([scope, v]) => parseScope(scope).account == null);
+		const record = records.find((record) => !isDeletedRecord(record) && parseScope(record[0]).account == null);
 
 		// 設計上あり得ないけどTSに怒られるため
 		if (record == null) throw new Error(`no record found for key: ${key}`);
@@ -454,7 +466,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 	public isAccountOverrided<K extends keyof PREF>(key: K): boolean {
 		const currentAccount = this.currentAccount; // TSを黙らせるため
 		if (currentAccount == null) return false;
-		return this.profile.preferences[key].some(([scope, v]) => parseScope(scope).server === host && parseScope(scope).account === currentAccount.id);
+		return this.profile.preferences[key].some((record) => !isDeletedRecord(record) && parseScope(record[0]).server === host && parseScope(record[0]).account === currentAccount.id);
 	}
 
 	public setAccountOverride<K extends keyof PREF>(key: K) {
@@ -464,10 +476,17 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 		if (this.isAccountOverrided(key)) return;
 
 		const records = this.profile.preferences[key];
-		records.push([makeScope({
+		const scope = makeScope({
 			server: host,
 			account: currentAccount.id,
-		}), this.s[key], {}]);
+		});
+		const deletedRecord = records.find((record) => isSameScope(record[0], scope));
+		if (deletedRecord) {
+			deletedRecord[1] = this.s[key];
+			deletedRecord[2] = { modifiedAt: Date.now() };
+		} else {
+			records.push([scope, this.s[key], { modifiedAt: Date.now() }]);
+		}
 
 		this.save();
 	}
@@ -482,7 +501,12 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 		const index = records.findIndex(([scope, v]) => parseScope(scope).server === host && parseScope(scope).account === currentAccount.id);
 		if (index === -1) return;
 
-		records.splice(index, 1);
+		const record = records[index];
+		record[2] = {
+			...record[2],
+			modifiedAt: Date.now(),
+			deleted: true,
+		};
 
 		this.rewriteRawState(key, this.getMatchedRecordOf(key)[1]);
 
@@ -547,7 +571,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			newValue = resolvedValue;
 		}
 
-		const commitedRecord = this.commit(key, newValue);
+		this.commit(key, newValue);
 
 		const done = os.waiting();
 

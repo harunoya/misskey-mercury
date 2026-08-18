@@ -59,7 +59,17 @@ export function getPreferencesProfileMenu(): MenuItem[] {
 				return;
 			}
 
-			store.set('enablePreferencesAutoCloudSync', true);
+			try {
+				await cloudSync();
+				store.set('enablePreferencesAutoCloudSync', true);
+			} catch (err) {
+				autoSyncEnabled.value = false;
+				os.alert({
+					type: 'error',
+					title: i18n.ts.somethingHappened,
+				});
+				console.error(err);
+			}
 		} else {
 			store.set('enablePreferencesAutoCloudSync', false);
 		}

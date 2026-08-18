@@ -41,7 +41,7 @@ const io: StorageProvider = {
 			if (target == null) return null;
 			return {
 				value: target[1],
-				meta: target[2],
+				meta: target[2] ?? {},
 			};
 		} catch (err: any) {
 			if (err.code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
