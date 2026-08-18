@@ -216,6 +216,7 @@ export async function cloudSync() {
 	store.set('latestPreferencesSyncAt', Date.now());
 }
 
+// TODO: Web Locks APIで良い感じにする
 export async function cloudBackup() {
 	if ($i == null) return;
 	if (!canAutoBackup()) {
