@@ -408,6 +408,7 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 		const cloudValues = await this.io.cloudGetBulk({ needs });
 
 		let modified = false;
+		const cloudUpdates: Promise<void>[] = [];
 
 		for (const _key in PREF_DEF) {
 			const key = _key as keyof PREF;
@@ -415,16 +416,31 @@ export class PreferencesManager extends EventEmitter<PreferencesManagerEvents> {
 			if (record[2].sync && Object.hasOwn(cloudValues, key) && cloudValues[key] !== undefined) {
 				const cloudValue = cloudValues[key];
 				if (!deepEqual(cloudValue.value, record[1])) {
-					this.rewriteRawState(key, cloudValue.value);
-					record[1] = cloudValue.value;
-					record[2].modifiedAt = cloudValue.meta?.modifiedAt;
-					modified = true;
-					if (_DEV_) console.log('cloud fetched', key, cloudValue);
+					const localModifiedAt = record[2].modifiedAt;
+					const cloudModifiedAt = cloudValue.meta?.modifiedAt;
+					const shouldApplyCloudValue = localModifiedAt == null || (cloudModifiedAt != null && cloudModifiedAt >= localModifiedAt);
+
+					if (shouldApplyCloudValue) {
+						this.rewriteRawState(key, cloudValue.value);
+						record[1] = cloudValue.value;
+						record[2].modifiedAt = cloudModifiedAt;
+						modified = true;
+						if (_DEV_) console.log('cloud fetched', key, cloudValue);
+					} else {
+						cloudUpdates.push(this.io.cloudSet({
+							key,
+							scope: record[0],
+							value: record[1],
+							meta: { modifiedAt: localModifiedAt },
+						}));
+						if (_DEV_) console.log('cloud updated', key, record);
+					}
 				}
 			}
 		}
 
 		if (modified) this.save();
+		await Promise.all(cloudUpdates);
 
 		if (_DEV_) console.log('cloud fetch completed');
 	}

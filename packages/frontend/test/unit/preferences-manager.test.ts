@@ -25,13 +25,17 @@ function createProfile(id: string): PossiblyNonNormalizedPreferencesProfile {
 	};
 }
 
-function createManager(profile: PossiblyNonNormalizedPreferencesProfile, cloudValues: Record<string, unknown> = {}) {
+function createManager(
+	profile: PossiblyNonNormalizedPreferencesProfile,
+	cloudValues: Record<string, unknown> = {},
+	cloudSet: (ctx: unknown) => Promise<void> = async () => {},
+) {
 	return new PreferencesManager({
 		load: () => structuredClone(profile),
 		save: () => {},
 		cloudGetBulk: async () => cloudValues as any,
 		cloudGet: async () => null,
-		cloudSet: async () => {},
+		cloudSet,
 	}, { id: 'user' });
 }
 
@@ -101,9 +105,49 @@ describe('PreferencesManager account overrides', () => {
 });
 
 describe('PreferencesManager cloud values', () => {
-	test('旧形式の metadata がないクラウド値も取得できる', async () => {
+	test('ローカル値の方が新しい場合は上書きせずクラウドへ送信する', async () => {
+		const profile = createProfile('local');
+		profile.preferences.accounts = [[{}, 'local', { sync: true, modifiedAt: 2 }]];
+		const cloudSets: unknown[] = [];
+		const manager = createManager(profile, {
+			accounts: {
+				value: 'remote',
+				meta: { modifiedAt: 1 },
+			},
+		}, async (ctx) => {
+			cloudSets.push(ctx);
+		});
+
+		await manager.cloudReady;
+
+		assert.strictEqual(manager.s.accounts, 'local');
+		assert.deepStrictEqual(cloudSets, [{
+			key: 'accounts',
+			scope: {},
+			value: 'local',
+			meta: { modifiedAt: 2 },
+		}]);
+	});
+
+	test('クラウド値の方が新しい場合はローカルへ適用する', async () => {
 		const profile = createProfile('local');
 		profile.preferences.accounts = [[{}, 'local', { sync: true, modifiedAt: 1 }]];
+		const manager = createManager(profile, {
+			accounts: {
+				value: 'remote',
+				meta: { modifiedAt: 2 },
+			},
+		});
+
+		await manager.cloudReady;
+
+		assert.strictEqual(manager.s.accounts, 'remote');
+		assert.strictEqual(manager.profile.preferences.accounts[0][2].modifiedAt, 2);
+	});
+
+	test('旧形式の metadata がないクラウド値も取得できる', async () => {
+		const profile = createProfile('local');
+		profile.preferences.accounts = [[{}, 'local', { sync: true }]];
 		const manager = createManager(profile, {
 			accounts: {
 				value: 'remote',
