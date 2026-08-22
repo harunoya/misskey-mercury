@@ -93,6 +93,7 @@ export default defineConfig((args) => {
 		/^@napi-rs\/.*/,
 		'mock-aws-s3',
 		'aws-sdk',
+		'argon2',
 		'nock',
 		'sharp',
 		'jsdom',
