@@ -1,0 +1,21 @@
+{
+	id: 'e7fe90a4-a452-47d4-b134-e80fb33c249c',
+
+	name: 'Mi Red Dark',
+	author: 'name@4otsu',
+
+	base: 'dark',
+
+	props: {
+		accent: '#DC143C',
+		bg: 'rgb(22, 22, 28)',
+		fg: 'rgb(236, 236, 240)',
+		fgOnWhite: '@accent',
+		panel: 'rgb(30, 30, 38)',
+		renote: ':lighten<15<@accent',
+		link: ':lighten<15<@accent',
+		mention: ':lighten<15<@accent',
+		hashtag: ':lighten<15<@accent',
+		divider: 'rgb(66, 48, 54)',
+	},
+}

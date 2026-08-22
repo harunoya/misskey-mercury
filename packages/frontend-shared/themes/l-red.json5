@@ -1,0 +1,22 @@
+{
+	id: 'edd7a779-16fa-46ba-998b-905bfb830aa8',
+
+	name: 'Mi Red Light',
+	author: 'name@4otsu',
+
+	base: 'light',
+
+	props: {
+		accent: '#DC143C',
+		bg: 'rgb(253, 245, 246)',
+		fg: 'rgb(58, 51, 53)',
+		fgOnWhite: '@accent',
+		panel: 'rgb(255, 255, 255)',
+		renote: '@accent',
+		link: '@accent',
+		mention: '@accent',
+		hashtag: '@accent',
+		divider: 'rgba(220, 20, 60, 0.1)',
+		inputBorderHover: 'rgb(248, 208, 216)',
+	},
+}
