@@ -1913,6 +1913,32 @@ export interface Locale extends ILocale {
      */
     "resetPassword": string;
     /**
+     * パスワードハッシュ方式
+     */
+    "passwordHashType": string;
+    "_passwordHashType": {
+        /**
+         * bcrypt
+         */
+        "bcrypt": string;
+        /**
+         * CherryPick
+         */
+        "legacy": string;
+        /**
+         * 不明な方式
+         */
+        "unknown": string;
+        /**
+         * 未設定
+         */
+        "none": string;
+        /**
+         * CherryPickのパスワードハッシュが使用されています。パスワードを再設定し、再ハッシュすることを推奨します。
+         */
+        "rehashRecommended": string;
+    };
+    /**
      * 新しいパスワードは「{password}」です
      */
     "newPasswordIs": ParameterizedString<"password">;

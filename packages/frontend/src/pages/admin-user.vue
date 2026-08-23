@@ -48,8 +48,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<template #key>{{ i18n.ts.email }}</template>
 						<template #value><span class="_monospace">{{ info.email }}</span></template>
 					</MkKeyValue>
+					<MkKeyValue v-if="info && user.host == null" oneline>
+						<template #key>{{ i18n.ts.passwordHashType }}</template>
+						<template #value>{{ i18n.ts._passwordHashType[info.passwordHashType] }}</template>
+					</MkKeyValue>
 				</template>
 			</div>
+			<MkInfo v-if="!isSystem && info && user.host == null && info.passwordHashType === 'legacy'" warn>{{ i18n.ts._passwordHashType.rehashRecommended }}</MkInfo>
 
 			<MkTextarea v-if="!isSystem" v-model="moderationNote" manualSave>
 				<template #label>{{ i18n.ts.moderationNote }}</template>

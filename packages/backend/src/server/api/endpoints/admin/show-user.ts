@@ -11,6 +11,7 @@ import { RoleService } from '@/core/RoleService.js';
 import { RoleEntityService } from '@/core/entities/RoleEntityService.js';
 import { IdService } from '@/core/IdService.js';
 import { notificationRecieveConfig } from '@/models/json-schema/user.js';
+import { getPasswordHashType } from '@/misc/password.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -23,6 +24,11 @@ export const meta = {
 		type: 'object',
 		nullable: false, optional: false,
 		properties: {
+			passwordHashType: {
+				type: 'string',
+				enum: ['bcrypt', 'legacy', 'unknown', 'none'],
+				optional: false, nullable: false,
+			},
 			email: {
 				type: 'string',
 				optional: false, nullable: true,
@@ -231,6 +237,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const roles = await this.roleService.getUserRoles(user.id);
 
 			return {
+				passwordHashType: getPasswordHashType(profile.password),
 				email: profile.email,
 				emailVerified: profile.emailVerified,
 				followedMessage: profile.followedMessage,

@@ -11834,6 +11834,8 @@ export interface operations {
                 };
                 content: {
                     'application/json': {
+                        /** @enum {string} */
+                        passwordHashType: 'bcrypt' | 'legacy' | 'unknown' | 'none';
                         email: string | null;
                         emailVerified: boolean;
                         followedMessage: string | null;
