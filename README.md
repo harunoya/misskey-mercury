@@ -37,7 +37,6 @@ CherryPickなどから一部機能をマージしているほか、マイグレ�
 
 ## Thanks
 
-<a href="https://kokonect.link/"><height="30" alt="Sentry" /></a>
 Thanks to [CherryPick](https://github.com/kokonect-link/cherrypick)
 
 <a href="https://sentry.io/"><img src="https://github.com/misskey-dev/misskey/assets/4439005/98576556-222f-467a-94be-e98dbda1d852" height="30" alt="Sentry" /></a>
