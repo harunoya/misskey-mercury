@@ -30,7 +30,15 @@
 
 </div>
 
+## このリポジトリについて
+MisskeyをもとにしたフォークからMIsskeyに戻すことを念頭に置いたフォークです。
+CherryPickなどから一部機能をマージしているほか、マイグレーションスクリプトを整備しています。
+注意:完全に"自分用"として維持しています。想定していないサーバーへのインストール後に起きたあらゆる事象には一切責任を負いません。
+
 ## Thanks
+
+<a href="https://kokonect.link/"><height="30" alt="Sentry" /></a>
+Thanks to [CherryPick](https://github.com/kokonect-link/cherrypick)
 
 <a href="https://sentry.io/"><img src="https://github.com/misskey-dev/misskey/assets/4439005/98576556-222f-467a-94be-e98dbda1d852" height="30" alt="Sentry" /></a>
 
@@ -53,11 +61,3 @@ Thanks to [Crowdin](https://crowdin.com/) for providing the localization platfor
 Thanks to [Docker](https://hub.docker.com/) for providing the container platform that helps us run Misskey in production.
 
 ---
-
-<div align="center">
-	
-Support us with a ⭐ !
-
-[![Star History Chart](https://api.star-history.com/svg?repos=misskey-dev/misskey&type=Date)](https://star-history.com/#misskey-dev/misskey&Date)
-
-</div>
