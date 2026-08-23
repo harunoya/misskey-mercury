@@ -3831,6 +3831,42 @@ export interface Locale extends ILocale {
      */
     "welcomeBackWithName": ParameterizedString<"name">;
     /**
+     * また会えましたね、{name}さん
+     */
+    "welcomeBackWithName2": ParameterizedString<"name">;
+    /**
+     * {name}さん、お待ちしていました
+     */
+    "welcomeBackWithName3": ParameterizedString<"name">;
+    /**
+     * 今日もよろしくお願いします、{name}さん
+     */
+    "welcomeBackWithName4": ParameterizedString<"name">;
+    /**
+     * {name}さん、戻ってきてくれてうれしいです
+     */
+    "welcomeBackWithName5": ParameterizedString<"name">;
+    /**
+     * ようこそ、{name}さん。続きを始めましょう
+     */
+    "welcomeBackWithName6": ParameterizedString<"name">;
+    /**
+     * {name}さん、今日もお疲れさまです
+     */
+    "welcomeBackWithName7": ParameterizedString<"name">;
+    /**
+     * おかえりなさいませ、{name}さん
+     */
+    "welcomeBackWithName8": ParameterizedString<"name">;
+    /**
+     * {name}さん、お会いできてうれしいです
+     */
+    "welcomeBackWithName9": ParameterizedString<"name">;
+    /**
+     * またここから始めましょう、{name}さん
+     */
+    "welcomeBackWithName10": ParameterizedString<"name">;
+    /**
      * [{ok}]を押して、メールアドレスの確認を完了してください。
      */
     "clickToFinishEmailVerification": ParameterizedString<"ok">;

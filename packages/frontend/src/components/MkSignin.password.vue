@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div class="_gaps" :class="$style.root">
 		<div :class="$style.avatar" :style="{ backgroundImage: user ? `url('${user.avatarUrl}')` : undefined }"></div>
 		<div :class="$style.welcomeBackMessage">
-			<I18n :src="i18n.ts.welcomeBackWithName" tag="span">
+			<I18n :src="welcomeBackMessage" tag="span">
 				<template #name><Mfm :text="user.name ?? user.username" :plain="true"/></template>
 			</I18n>
 		</div>
@@ -53,6 +53,7 @@ export type PwResponse = {
 <script setup lang="ts">
 import { ref, computed, useTemplateRef, defineAsyncComponent } from 'vue';
 import * as Misskey from 'misskey-js';
+import { lang } from '@@/js/config.js';
 
 import { instance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
@@ -72,6 +73,22 @@ const emit = defineEmits<{
 }>();
 
 const password = ref('');
+
+const welcomeBackMessages = lang === 'ja-JP'
+	? [
+		i18n.ts.welcomeBackWithName,
+		i18n.ts.welcomeBackWithName2,
+		i18n.ts.welcomeBackWithName3,
+		i18n.ts.welcomeBackWithName4,
+		i18n.ts.welcomeBackWithName5,
+		i18n.ts.welcomeBackWithName6,
+		i18n.ts.welcomeBackWithName7,
+		i18n.ts.welcomeBackWithName8,
+		i18n.ts.welcomeBackWithName9,
+		i18n.ts.welcomeBackWithName10,
+	]
+	: [i18n.ts.welcomeBackWithName];
+const welcomeBackMessage = welcomeBackMessages[Math.floor(Math.random() * welcomeBackMessages.length)];
 
 const hCaptcha = useTemplateRef('hcaptcha');
 const mCaptcha = useTemplateRef('mcaptcha');
