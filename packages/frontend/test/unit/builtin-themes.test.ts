@@ -14,6 +14,18 @@ const MI_RED_LIGHT_NAME = 'Mi Red Light';
 const MI_RED_DARK_NAME = 'Mi Red Dark';
 const MI_RED_ACCENT = '#DC143C';
 const WCAG_AA_NORMAL_TEXT_CONTRAST = 4.5;
+const METALLIC_THEME_NAMES = [
+	'Metal Silver Light',
+	'Metal Platinum Light',
+	'Metal Champagne Gold Light',
+	'Metal Rose Gold Light',
+	'Metal Titanium Light',
+	'Metal Gunmetal Dark',
+	'Metal Black Chrome Dark',
+	'Metal Copper Dark',
+	'Metal Bronze Dark',
+	'Metal Cobalt Steel Dark',
+] as const;
 
 const findBuiltinThemeByName = (themes: readonly Theme[], name: string): Theme => {
 	const theme = themes.find((candidate) => candidate.name === name);
@@ -129,5 +141,45 @@ describe('builtin themes: Mi Red Light / Mi Red Dark', () => {
 		assert.isAtLeast(contrastRatio(compiled.mention, compiled.bg), WCAG_AA_NORMAL_TEXT_CONTRAST);
 		assert.isAtLeast(contrastRatio(compiled.hashtag, compiled.bg), WCAG_AA_NORMAL_TEXT_CONTRAST);
 		assert.isAtLeast(contrastRatio(compiled.renote, compiled.bg), WCAG_AA_NORMAL_TEXT_CONTRAST);
+	});
+});
+
+describe('builtin themes: metallic collection', () => {
+	test('all ten metallic themes are registered, valid, and have unique ids', async () => {
+		const themes = await getBuiltinThemes();
+		const metallicThemes = METALLIC_THEME_NAMES.map(name => findBuiltinThemeByName(themes, name));
+
+		assert.strictEqual(metallicThemes.length, 10);
+		assert.strictEqual(new Set(metallicThemes.map(theme => theme.id)).size, metallicThemes.length);
+		assert.isTrue(metallicThemes.every(theme => validateTheme(theme)));
+		assert.strictEqual(metallicThemes.filter(theme => theme.base === 'light').length, 5);
+		assert.strictEqual(metallicThemes.filter(theme => theme.base === 'dark').length, 5);
+	});
+
+	test('metallic themes compile their header sheen and button gradient colors', async () => {
+		const themes = await getBuiltinThemes();
+
+		for (const name of METALLIC_THEME_NAMES) {
+			const compiled = compileWithBase(findBuiltinThemeByName(themes, name));
+
+			assert.match(compiled.panelHeaderBg, /^linear-gradient\(135deg,/);
+			assert.isTrue(tinycolor(compiled.buttonGradateA).isValid());
+			assert.isTrue(tinycolor(compiled.buttonGradateB).isValid());
+		}
+	});
+
+	test('metallic themes keep WCAG AA contrast for primary text and gradient buttons', async () => {
+		const themes = await getBuiltinThemes();
+
+		for (const name of METALLIC_THEME_NAMES) {
+			const compiled = compileWithBase(findBuiltinThemeByName(themes, name));
+
+			assert.isAtLeast(contrastRatio(compiled.fg, compiled.bg), WCAG_AA_NORMAL_TEXT_CONTRAST, `${name}: fg on bg`);
+			assert.isAtLeast(contrastRatio(compiled.fg, compiled.panel), WCAG_AA_NORMAL_TEXT_CONTRAST, `${name}: fg on panel`);
+			assert.isAtLeast(contrastRatio(compiled.accent, compiled.bg), WCAG_AA_NORMAL_TEXT_CONTRAST, `${name}: accent on bg`);
+			assert.isAtLeast(contrastRatio(compiled.fgOnAccent, compiled.accent), WCAG_AA_NORMAL_TEXT_CONTRAST, `${name}: fgOnAccent on accent`);
+			assert.isAtLeast(contrastRatio(compiled.fgOnAccent, compiled.buttonGradateA), WCAG_AA_NORMAL_TEXT_CONTRAST, `${name}: fgOnAccent on gradient start`);
+			assert.isAtLeast(contrastRatio(compiled.fgOnAccent, compiled.buttonGradateB), WCAG_AA_NORMAL_TEXT_CONTRAST, `${name}: fgOnAccent on gradient end`);
+		}
 	});
 });
