@@ -50,7 +50,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</FormLink>
 					</div>
 				</FormSection>
-				<FormSection v-if="instance.repositoryUrl !== MISSKEY_REPOSITORY_URL && instance.repositoryUrl !== MERCURY_REPOSITORY_URL">
+				<FormSection v-if="instance.repositoryUrl !== MERCURY_REPOSITORY_URL">
 					<div class="_gaps_s">
 						<MkInfo>
 							{{ i18n.tsx._aboutMisskey.thisIsModifiedVersion({ name: instance.name ?? host }) }}
