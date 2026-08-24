@@ -33,5 +33,5 @@ export async function buildTarball() {
 
 	await mkdirPromise;
 
-	pack.pipe(createWriteStream(resolve(cwd, 'built', 'tarball', `misskey-${resolveVersion(meta.version)}.tar.gz`)));
+	pack.pipe(createWriteStream(resolve(cwd, 'built', 'tarball', `misskey-${resolveVersion(meta.version, meta.mercuryVersion)}.tar.gz`)));
 }

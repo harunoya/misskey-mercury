@@ -69,7 +69,7 @@ function copyLocales(): void {
 async function writeFrontendLocalesJson(): Promise<void> {
 	// 動的 import でビルド済みモジュールから読み込み（循環参照回避）
 	const { writeFrontendLocalesJson: write } = await import('./built/index.js');
-	await write(_frontendLocalesDir, resolveVersion(_rootPackage.version));
+	await write(_frontendLocalesDir, resolveVersion(_rootPackage.version, _rootPackage.mercuryVersion));
 	console.log(`[${_package.name}] frontend locales JSON written to ${_frontendLocalesDir}`);
 }
 

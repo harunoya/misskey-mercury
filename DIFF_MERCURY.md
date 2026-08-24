@@ -124,12 +124,14 @@ CherryPickから移行したアカウントは、既存のArgon2idパスワー�
 
 ## バージョンとソースコードの表示
 
-サーバー管理者は、ビルド時に`MISSKEY_VERSION_SUFFIX`を指定してMercury用の接尾辞をバージョンへ追加できます。
+Mercuryは、上流Misskeyのバージョンとは別に、`package.json`の`mercuryVersion`で固有のベースバージョンを管理します。
 
-たとえば、元のバージョンが`2026.8.0-alpha.0`で接尾辞が`mercury`なら、表示されるバージョンは`2026.8.0-alpha.0-mercury`になります。
+初回プレリリースのMercury版は`0.1.0`です。上流版が`2026.8.0-alpha.0`なら、表示されるバージョンは`2026.8.0-alpha.0-mercury.0.1.0`になります。
+ビルド時に`MISSKEY_VERSION_SUFFIX=preview`を指定すると、`2026.8.0-alpha.0-mercury.0.1.0.preview`のように追加の配布識別子を付けられます。
+従来どおり`MISSKEY_VERSION_SUFFIX=mercury`を指定した場合も、`mercury`が重複しないよう互換処理されます。
 接尾辞には英数字、ピリオド、ハイフンを使用できます。
 
-「Misskeyについて」画面には、上流のMisskeyとMercuryのソースコードリンクを表示します。
+Aboutには、upstreamのMisskey、およびMercuryのソースコードリンクを表示します。
 インスタンスがMercury以外のリポジトリを指定している場合は、別の改変版としてそのソースコードも案内します。
 
 ## そのほかの表示変更
