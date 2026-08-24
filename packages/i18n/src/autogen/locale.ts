@@ -6156,6 +6156,104 @@ export interface Locale extends ILocale {
             "none": string;
         };
     };
+    "_matrix": {
+        /**
+         * Matrix
+         */
+        "title": string;
+        /**
+         * ホームサーバーURL
+         */
+        "homeserver": string;
+        /**
+         * MatrixのID またはユーザー名
+         */
+        "matrixId": string;
+        /**
+         * パスワード
+         */
+        "password": string;
+        /**
+         * Matrixに接続
+         */
+        "connect": string;
+        /**
+         * 接続中
+         */
+        "connecting": string;
+        /**
+         * ログアウト
+         */
+        "disconnect": string;
+        /**
+         * このMatrixアカウントからログアウトしますか？
+         */
+        "logoutConfirm": string;
+        /**
+         * サーバーを経由せず、このブラウザからMatrixホームサーバーへ直接接続します。ホームサーバー側でCORSが許可されている必要があります。
+         */
+        "directBrowserNotice": string;
+        /**
+         * アクセストークンはローカルストレージに保存されます。共有端末ではログアウトを推奨します。
+         */
+        "tokenStorageNotice": string;
+        /**
+         * {userId} として接続中
+         */
+        "loggedInAs": ParameterizedString<"userId">;
+        /**
+         * ルーム
+         */
+        "rooms": string;
+        /**
+         * 参加中のルームはありません
+         */
+        "noRooms": string;
+        /**
+         * 新しいDM
+         */
+        "newDirectMessage": string;
+        /**
+         * 相手のID
+         */
+        "directMessageUserId": string;
+        /**
+         * 同期
+         */
+        "sync": string;
+        /**
+         * 同期中
+         */
+        "syncing": string;
+        /**
+         * 表示できるメッセージはありません
+         */
+        "noMessages": string;
+        /**
+         * このルームは暗号化されています。現在は暗号化ルームの読み書きに対応していません。
+         */
+        "encryptedRoomUnsupported": string;
+        /**
+         * メッセージを送信
+         */
+        "messagePlaceholder": string;
+        /**
+         * 送信
+         */
+        "send": string;
+        /**
+         * サーバーへの接続に失敗しました。ホームサーバーURL、認証情報、CORS設定を確認してください。
+         */
+        "connectionError": string;
+        /**
+         * DMを作成できませんでした。
+         */
+        "createRoomError": string;
+        /**
+         * メッセージを送信できませんでした。
+         */
+        "sendError": string;
+    };
     "_emojiPalette": {
         /**
          * パレット
@@ -6860,7 +6958,7 @@ export interface Locale extends ILocale {
                      */
                     "cw": string;
                     /**
-                     * チョコのかかったドーナツを食べました🍩😋
+                     * よるにカップ麺、背徳😋
                      */
                     "note": string;
                 };

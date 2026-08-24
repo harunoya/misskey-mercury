@@ -28,6 +28,8 @@ export type Keys = (
 	'themeCachedVersion' |
 	'customCss' |
 	'chatMessageDrafts' |
+	'matrixSession' |
+	'matrixSessions' |
 	'scratchpad' |
 	'debug' |
 	'preferences' |

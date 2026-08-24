@@ -6,7 +6,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <PageWithHeader v-model:tab="tab" :actions="headerActions" :tabs="headerTabs" :swipable="true">
 	<MkPolkadots v-if="tab === 'home'" accented :height="200" style="margin-bottom: -200px;"/>
-	<div class="_spacer" style="--MI_SPACER-w: 700px;">
+	<div v-if="tab === 'matrix'" class="_spacer" style="--MI_SPACER-w: 1200px; --MI_SPACER-max: 12px; --MI_SPACER-min: 0px;">
+		<XMatrix/>
+	</div>
+	<div v-else class="_spacer" style="--MI_SPACER-w: 700px;">
 		<XHome v-if="tab === 'home'"/>
 		<XInvitations v-else-if="tab === 'invitations'"/>
 		<XJoiningRooms v-else-if="tab === 'joiningRooms'"/>
@@ -21,6 +24,7 @@ import XHome from './home.home.vue';
 import XInvitations from './home.invitations.vue';
 import XJoiningRooms from './home.joiningRooms.vue';
 import XOwnedRooms from './home.ownedRooms.vue';
+import XMatrix from './home.matrix.vue';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import MkPolkadots from '@/components/MkPolkadots.vue';
@@ -45,6 +49,10 @@ const headerTabs = computed(() => [{
 	key: 'ownedRooms',
 	title: i18n.ts._chat.yourRooms,
 	icon: 'ti ti-settings',
+}, {
+	key: 'matrix',
+	title: i18n.ts._matrix.title,
+	icon: 'ti ti-messages',
 }]);
 
 definePage(() => ({
