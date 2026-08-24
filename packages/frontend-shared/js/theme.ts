@@ -37,6 +37,7 @@ export const getBuiltinThemes = () => Promise.all(
 	[
 		'l-birdsite',
 		'l-byeolvit-polaris',
+		'l-cherrypick',
 		'l-mirerado',
 		'l-rosepinedawn',
 		'l-scone-color',
@@ -59,6 +60,7 @@ export const getBuiltinThemes = () => Promise.all(
 
 		'd-birdsite',
 		'd-byeolvit-noctiluca',
+		'd-cherrypick',
 		'd-mirerado',
 		'd-rosepine',
 		'd-rosepinemoon',
