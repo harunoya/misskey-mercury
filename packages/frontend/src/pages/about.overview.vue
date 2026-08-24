@@ -31,13 +31,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #icon><i class="ti ti-info-circle"></i></template>
 				{{ i18n.ts.aboutMisskey }}
 			</FormLink>
-			<FormLink v-if="instance.repositoryUrl || instance.providesTarball" :to="instance.repositoryUrl || `/tarball/misskey-${version}.tar.gz`" external>
+			<FormLink v-if="(instance.repositoryUrl || instance.providesTarball) && instance.repositoryUrl !== MERCURY_REPOSITORY_URL" :to="instance.repositoryUrl || `/tarball/misskey-${version}.tar.gz`" external>
 				<template #icon><i class="ti ti-code"></i></template>
 				{{ i18n.ts.sourceCode }}
 			</FormLink>
-			<MkInfo v-else warn>
-				{{ i18n.ts.sourceCodeIsNotYetProvided }}
-			</MkInfo>
+			<FormLink :to="MERCURY_REPOSITORY_URL" external>
+				<template #icon><i class="ti ti-code"></i></template>
+				{{ i18n.ts.sourceCode }} (Mercury)
+			</FormLink>
 		</div>
 	</FormSection>
 
@@ -127,6 +128,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { host, version } from '@@/js/config.js';
+import { MERCURY_REPOSITORY_URL } from '@@/js/const.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
 import number from '@/filters/number.js';
@@ -137,7 +139,6 @@ import FormSplit from '@/components/form/split.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import MkKeyValue from '@/components/MkKeyValue.vue';
 import MkLink from '@/components/MkLink.vue';
-import MkInfo from '@/components/MkInfo.vue';
 
 const initStats = () => misskeyApi('stats', {});
 </script>

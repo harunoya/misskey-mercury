@@ -6,6 +6,7 @@ import { promises as fsp } from 'fs';
 
 import locales from 'i18n';
 import meta from '../../package.json';
+import { resolveVersion } from '../../scripts/version.mjs';
 import packageInfo from './package.json' with { type: 'json' };
 import pluginJson5 from './lib/vite-plugin-json5.js';
 import { pluginRemoveUnrefI18n } from '../frontend-builder/rollup-plugin-remove-unref-i18n';
@@ -121,7 +122,7 @@ export function getConfig(): UserConfig {
 		},
 
 		define: {
-			_VERSION_: JSON.stringify(meta.version),
+			_VERSION_: JSON.stringify(resolveVersion(meta.version)),
 			_LANGS_: JSON.stringify(Object.entries(locales).map(([k, v]) => [k, v._lang_])),
 			_ENV_: JSON.stringify(process.env.NODE_ENV),
 			_DEV_: process.env.NODE_ENV !== 'production',

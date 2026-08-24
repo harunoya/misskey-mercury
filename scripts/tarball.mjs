@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import walk from 'ignore-walk';
 import { Pack } from 'tar/pack';
 import meta from '../package.json' with { type: "json" };
+import { resolveVersion } from './version.mjs';
 
 const cwd = fileURLToPath(new URL('..', import.meta.url));
 const ignore = [
@@ -32,5 +33,5 @@ export async function buildTarball() {
 
 	await mkdirPromise;
 
-	pack.pipe(createWriteStream(resolve(cwd, 'built', 'tarball', `misskey-${meta.version}.tar.gz`)));
+	pack.pipe(createWriteStream(resolve(cwd, 'built', 'tarball', `misskey-${resolveVersion(meta.version)}.tar.gz`)));
 }

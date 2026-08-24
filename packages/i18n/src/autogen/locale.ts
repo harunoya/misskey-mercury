@@ -1837,11 +1837,11 @@ export interface Locale extends ILocale {
      */
     "token": string;
     /**
-     * 二要素認証
+     * 二要素認証(2FA)
      */
     "2fa": string;
     /**
-     * 二要素認証のセットアップ
+     * 二要素認証(2FA)のセットアップ
      */
     "setupOf2fa": string;
     /**
@@ -2087,7 +2087,7 @@ export interface Locale extends ILocale {
      */
     "normalPassword": string;
     /**
-     * 強いパスワード
+     * 強めのパスワード
      */
     "strongPassword": string;
     /**
@@ -2607,7 +2607,7 @@ export interface Locale extends ILocale {
      */
     "relays": string;
     /**
-     * リレーの追加
+     * リレーを追加
      */
     "addRelay": string;
     /**
@@ -3751,7 +3751,7 @@ export interface Locale extends ILocale {
      */
     "off": string;
     /**
-     * アカウント登録にメールアドレスを必須にする
+     * 登録にメールアドレスを必須にする
      */
     "emailRequiredForSignup": string;
     /**

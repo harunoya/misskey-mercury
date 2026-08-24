@@ -10,6 +10,7 @@ import { watch as chokidarWatch } from 'chokidar';
 import * as esbuild from 'esbuild';
 import { build } from 'esbuild';
 import { execa } from 'execa';
+import { resolveVersion } from '../../scripts/version.mjs';
 import { generateLocaleInterface } from './scripts/generateLocaleInterface.js';
 import type { BuildOptions, BuildResult, Plugin, PluginBuild } from 'esbuild';
 
@@ -68,7 +69,7 @@ function copyLocales(): void {
 async function writeFrontendLocalesJson(): Promise<void> {
 	// 動的 import でビルド済みモジュールから読み込み（循環参照回避）
 	const { writeFrontendLocalesJson: write } = await import('./built/index.js');
-	await write(_frontendLocalesDir, _rootPackage.version);
+	await write(_frontendLocalesDir, resolveVersion(_rootPackage.version));
 	console.log(`[${_package.name}] frontend locales JSON written to ${_frontendLocalesDir}`);
 }
 
