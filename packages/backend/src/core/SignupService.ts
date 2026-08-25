@@ -55,8 +55,10 @@ export class SignupService {
 		passwordHash?: MiUserProfile['password'] | null;
 		host?: string | null;
 		ignorePreservedUsernames?: boolean;
+		reason?: string | null;
+		approved?: boolean;
 	}) {
-		const { username, password, passwordHash, host } = opts;
+		const { username, password, passwordHash, host, reason } = opts;
 		let hash = passwordHash;
 
 		// Validate username
@@ -118,6 +120,7 @@ export class SignupService {
 			));
 
 		let account!: MiUser;
+		const approved = opts.approved ?? true;
 
 		// Start transaction
 		await this.db.transaction(async transactionalEntityManager => {
@@ -134,6 +137,8 @@ export class SignupService {
 				usernameLower: username.toLowerCase(),
 				host: this.utilityService.toPunyNullable(host),
 				token: secret,
+				approved,
+				signupReason: reason,
 			}));
 
 			await transactionalEntityManager.save(new MiUserKeypair({

@@ -747,6 +747,11 @@ export class MiMeta {
 	})
 	public showRoleBadgesOfRemoteUsers: boolean;
 
+	@Column('boolean', {
+		default: false,
+	})
+	public approvalRequiredForSignup: boolean;
+
 	@Column('jsonb', {
 		default: { },
 	})

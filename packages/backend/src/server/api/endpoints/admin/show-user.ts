@@ -132,6 +132,14 @@ export const meta = {
 				type: 'boolean',
 				optional: false, nullable: false,
 			},
+			approved: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
+			signupReason: {
+				type: 'string',
+				optional: false, nullable: true,
+			},
 			isHibernated: {
 				type: 'boolean',
 				optional: false, nullable: false,
@@ -255,6 +263,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				isModerator: isModerator,
 				isSilenced: isSilenced,
 				isSuspended: user.isSuspended,
+				approved: user.approved,
+				signupReason: user.signupReason,
 				isHibernated: user.isHibernated,
 				lastActiveDate: user.lastActiveDate ? user.lastActiveDate.toISOString() : null,
 				moderationNote: profile.moderationNote ?? '',

@@ -141,6 +141,18 @@ export class SigninApiService {
 			});
 		}
 
+		if (!user.approved && this.meta.approvalRequiredForSignup) {
+			return error(403, {
+				id: '22d05606-fbcf-421a-a2db-b32241fa8f1b',
+			});
+		}
+
+		const approveIfApprovalIsDisabled = async () => {
+			if (!this.meta.approvalRequiredForSignup && !user.approved) {
+				await this.usersRepository.update(user.id, { approved: true });
+			}
+		};
+
 		const profile = await this.userProfilesRepository.findOneByOrFail({ userId: user.id });
 		const securityKeysAvailable = await this.userSecurityKeysRepository.countBy({ userId: user.id }).then(result => result >= 1);
 
@@ -214,6 +226,7 @@ export class SigninApiService {
 			}
 
 			if (same) {
+				await approveIfApprovalIsDisabled();
 				return this.signinService.signin(request, reply, user);
 			} else {
 				return await fail(403, {
@@ -237,6 +250,7 @@ export class SigninApiService {
 				});
 			}
 
+			await approveIfApprovalIsDisabled();
 			return this.signinService.signin(request, reply, user);
 		} else if (body.credential) {
 			if (!same && !profile.usePasswordLessLogin) {
@@ -248,6 +262,7 @@ export class SigninApiService {
 			const authorized = await this.webAuthnService.verifyAuthentication(user.id, body.credential);
 
 			if (authorized) {
+				await approveIfApprovalIsDisabled();
 				return this.signinService.signin(request, reply, user);
 			} else {
 				return await fail(403, {

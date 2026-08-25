@@ -499,6 +499,10 @@ export const ROUTE_DEF = [{
 		name: 'invites',
 		component: page(() => import('@/pages/admin/invites.vue')),
 	}, {
+		path: '/approvals',
+		name: 'approvals',
+		component: page(() => import('@/pages/admin/approvals.vue')),
+	}, {
 		path: '/abuse-report-notification-recipient',
 		name: 'abuse-report-notification-recipient',
 		component: page(() => import('@/pages/admin/abuse-report/notification-recipient.vue')),

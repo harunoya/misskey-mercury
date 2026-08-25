@@ -8,6 +8,54 @@ export interface Locale extends ILocale {
      */
     "_lang_": string;
     /**
+     * この登録申請を承認しますか？
+     */
+    "approveConfirm": string;
+    /**
+     * 新規登録を承認制にする
+     */
+    "approvalRequiredForSignup": string;
+    /**
+     * 承認する
+     */
+    "approveAccount": string;
+    /**
+     * 却下して削除
+     */
+    "denyAccount": string;
+    /**
+     * 承認済み
+     */
+    "approved": string;
+    /**
+     * 承認待ち
+     */
+    "notApproved": string;
+    /**
+     * 承認状況
+     */
+    "approvalStatus": string;
+    /**
+     * このサーバーでは、登録理由を添えて申請し、管理者またはモデレーターの承認を受ける必要があります。
+     */
+    "approvalRequiredToRegister": string;
+    /**
+     * 承認待ちの登録申請があります。
+     */
+    "pendingUserApprovals": string;
+    /**
+     * 登録申請
+     */
+    "approvals": string;
+    /**
+     * この登録申請を却下し、アカウントを削除しますか？
+     */
+    "deleteThisAccountConfirm": string;
+    /**
+     * 登録理由
+     */
+    "signupReason": string;
+    /**
      * ノートでつながるネットワーク
      */
     "headlineMisskey": string;
@@ -8652,6 +8700,14 @@ export interface Locale extends ILocale {
          * 入力されたメールアドレス({email})宛に確認のメールが送信されました。メールに記載されたリンクにアクセスすると、アカウントの作成が完了します。メールに記載されているリンクの有効期限は30分です。
          */
         "emailSent": ParameterizedString<"email">;
+        /**
+         * 登録申請を受け付けました。承認されるまでログインできません。
+         */
+        "approvalPending": string;
+        /**
+         * このサーバーへの登録を希望する理由を入力してください。管理者とモデレーターだけが確認できます。
+         */
+        "reasonInfo": string;
     };
     "_accountDelete": {
         /**
@@ -9934,6 +9990,14 @@ export interface Locale extends ILocale {
          * ダイレクトメッセージを閲覧する
          */
         "read:chat": string;
+        /**
+         * 登録申請を承認する
+         */
+        "write:admin:approve-user": string;
+        /**
+         * 登録申請を却下する
+         */
+        "write:admin:decline-user": string;
     };
     "_auth": {
         /**
@@ -11820,6 +11884,14 @@ export interface Locale extends ILocale {
          * プロキシアカウントの説明を更新
          */
         "updateProxyAccountDescription": string;
+        /**
+         * 登録申請を承認
+         */
+        "approve": string;
+        /**
+         * 登録申請を却下
+         */
+        "decline": string;
     };
     "_fileViewer": {
         /**

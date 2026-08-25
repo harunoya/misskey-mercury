@@ -31,4 +31,15 @@ export class MiUserPending {
 		length: 128,
 	})
 	public password: string;
+
+	@Column('varchar', {
+		length: 1000,
+		nullable: true,
+	})
+	public reason: string | null;
+
+	@Column('boolean', {
+		default: false,
+	})
+	public approvalRequired: boolean;
 }

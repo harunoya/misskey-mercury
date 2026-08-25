@@ -160,6 +160,15 @@ export type paths = {
          */
         post: operations['admin___announcements___update'];
     };
+    '/admin/approve-user': {
+        /**
+         * admin/approve-user
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:approve-user*
+         */
+        post: operations['admin___approve-user'];
+    };
     '/admin/avatar-decorations/create': {
         /**
          * admin/avatar-decorations/create
@@ -213,6 +222,15 @@ export type paths = {
          *     **Credential required**: *Yes* / **Permission**: *write:admin:meta*
          */
         post: operations['admin___captcha___save'];
+    };
+    '/admin/decline-user': {
+        /**
+         * admin/decline-user
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:decline-user*
+         */
+        post: operations['admin___decline-user'];
     };
     '/admin/delete-account': {
         /**
@@ -5564,6 +5582,7 @@ export type components = {
             maxFileSize: number;
             /** @enum {string} */
             federation: 'all' | 'specified' | 'none';
+            approvalRequiredForSignup: boolean;
         };
         MetaDetailedOnly: {
             features?: {
@@ -7002,6 +7021,69 @@ export interface operations {
             };
         };
     };
+    'admin___approve-user': {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** Format: misskey:id */
+                    userId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (without any results) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
     'admin___avatar-decorations___create': {
         requestBody: {
             content: {
@@ -7391,6 +7473,69 @@ export interface operations {
                     sitekey?: string | null;
                     secret?: string | null;
                     instanceUrl?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (without any results) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    'admin___decline-user': {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** Format: misskey:id */
+                    userId: string;
                 };
             };
         };
@@ -9575,6 +9720,7 @@ export interface operations {
                         remoteNotesCleaningExpiryDaysForEachNotes: number;
                         remoteNotesCleaningMaxProcessingDurationInMinutes: number;
                         showRoleBadgesOfRemoteUsers: boolean;
+                        approvalRequiredForSignup: boolean;
                     };
                 };
             };
@@ -12007,6 +12153,8 @@ export interface operations {
                         isModerator: boolean;
                         isSilenced: boolean;
                         isSuspended: boolean;
+                        approved: boolean;
+                        signupReason: string | null;
                         isHibernated: boolean;
                         lastActiveDate: string | null;
                         moderationNote: string;
@@ -12082,7 +12230,7 @@ export interface operations {
                      * @default all
                      * @enum {string}
                      */
-                    state?: 'all' | 'alive' | 'available' | 'admin' | 'moderator' | 'adminOrModerator' | 'suspended';
+                    state?: 'all' | 'alive' | 'available' | 'admin' | 'moderator' | 'adminOrModerator' | 'suspended' | 'pending';
                     /**
                      * @default combined
                      * @enum {string}
@@ -13097,6 +13245,7 @@ export interface operations {
                     remoteNotesCleaningExpiryDaysForEachNotes?: number;
                     remoteNotesCleaningMaxProcessingDurationInMinutes?: number;
                     showRoleBadgesOfRemoteUsers?: boolean;
+                    approvalRequiredForSignup?: boolean;
                 };
             };
         };
