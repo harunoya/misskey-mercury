@@ -21,7 +21,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<!-- FirefoxのTabフォーカスが想定外の挙動となるためtabindex="-1"を追加 https://github.com/misskey-dev/misskey/issues/10744 -->
 	<div ref="emojisEl" class="emojis" tabindex="-1">
 		<section class="result">
-			<div v-if="searchResultCustom.length > 0" class="body">
+			<template v-if="asReactionPicker">
+				<template v-for="group in searchResultCustomByCategory" :key="`result:${group.category}`">
+					<header class="_acrylic resultCategory">{{ group.category }}</header>
+					<div class="body">
+						<button
+							v-for="emoji in group.emojis"
+							:key="emoji.name"
+							class="_button item"
+							:title="emoji.name"
+							tabindex="0"
+							@click="chosen(emoji, $event)"
+						>
+							<MkCustomEmoji class="emoji" :name="emoji.name" :fallbackToImage="true"/>
+						</button>
+					</div>
+				</template>
+			</template>
+			<div v-else-if="searchResultCustom.length > 0" class="body">
 				<button
 					v-for="emoji in searchResultCustom"
 					:key="emoji.name"
@@ -34,6 +51,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkCustomEmoji class="emoji" :name="emoji.name" :fallbackToImage="true"/>
 				</button>
 			</div>
+			<header v-if="asReactionPicker && searchResultUnicode.length > 0" class="_acrylic resultCategory">{{ i18n.ts.emoji }}</header>
 			<div v-if="searchResultUnicode.length > 0" class="body">
 				<button
 					v-for="emoji in searchResultUnicode"
@@ -46,6 +64,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkEmoji class="emoji" :emoji="emoji.char"/>
 				</button>
 			</div>
+			<div v-if="asReactionPicker && hasNoSearchResult" class="empty">{{ i18n.ts.notFound }}</div>
 		</section>
 
 		<div v-if="tab === 'index'" class="group index">
@@ -300,6 +319,19 @@ watch(q, () => {
 					if (matches.size >= max) break;
 				}
 			}
+			if (matches.size >= max) return matches;
+
+			// Last resort, and reaction-picker only: pull in a whole category by its name. Someone
+			// who remembers "it was one of the party ones" can get there without knowing any of the
+			// individual names. Ranked last so it never displaces a name or alias hit.
+			if (props.asReactionPicker) {
+				for (const emoji of emojis) {
+					if (emoji.category != null && emoji.category.toLowerCase().includes(newQ)) {
+						matches.add(emoji);
+						if (matches.size >= max) break;
+					}
+				}
+			}
 		}
 
 		return matches;
@@ -371,9 +403,40 @@ watch(q, () => {
 		return matches;
 	};
 
-	searchResultCustom.value = Array.from(searchCustom());
+	const custom = Array.from(searchCustom());
+
+	// As a reaction picker, an emoji the role cannot use is pure noise: it can never be the thing
+	// the user is hunting for, and it pushes the usable matches further down the list.
+	searchResultCustom.value = props.asReactionPicker ? custom.filter(canReact) : custom;
 	searchResultUnicode.value = Array.from(searchUnicode());
 });
+
+/**
+ * Custom emoji search results, grouped under the category each emoji belongs to.
+ *
+ * A flat grid of results tells you nothing about where a match came from, which is the hard part
+ * when an instance has thousands of custom emojis whose names look alike. Only the reaction picker
+ * uses this — the composition picker keeps its denser flat list.
+ */
+const searchResultCustomByCategory = computed(() => {
+	const groups = new Map<string, Misskey.entities.EmojiSimple[]>();
+
+	for (const emoji of searchResultCustom.value) {
+		const category = (emoji.category == null || emoji.category === 'null' || emoji.category === '')
+			? i18n.ts.other
+			: emoji.category;
+		const group = groups.get(category);
+		if (group) group.push(emoji);
+		else groups.set(category, [emoji]);
+	}
+
+	return Array.from(groups, ([category, emojis]) => ({ category, emojis }));
+});
+
+const hasSearchQuery = computed(() => q.value !== '');
+const hasNoSearchResult = computed(() => hasSearchQuery.value
+	&& searchResultCustom.value.length === 0
+	&& searchResultUnicode.value.length === 0);
 
 function canReact(emoji: Misskey.entities.EmojiSimple | UnicodeEmojiDef | string): boolean {
 	return !props.targetNote || checkReactionPermissions($i!, props.targetNote, emoji);
@@ -795,6 +858,24 @@ defineExpose({
 
 				&:empty {
 					display: none;
+				}
+
+				// Labels which category a run of matches came from. Unlike the collapsible section
+				// headers this rule sits next to, it is not interactive.
+				> .resultCategory {
+					cursor: default;
+					opacity: 0.7;
+
+					&:hover {
+						color: inherit;
+					}
+				}
+
+				> .empty {
+					padding: 16px 8px;
+					text-align: center;
+					font-size: 0.9em;
+					opacity: 0.7;
 				}
 			}
 		}
