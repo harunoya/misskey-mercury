@@ -231,6 +231,12 @@ try {
 		stderr: process.stderr,
 	});
 
+	startChildProcess('pnpm', ['--filter', 'frontend-v11', 'watch'], {
+		cwd: _dirname + '/../',
+		stdout: process.stdout,
+		stderr: process.stderr,
+	});
+
 	startChildProcess('pnpm', ['--filter', 'frontend-embed', 'watch'], {
 		cwd: _dirname + '/../',
 		stdout: process.stdout,

@@ -31,6 +31,20 @@ import { unisonReload } from '@/utility/unison-reload.js';
 import { isBirthday } from '@/utility/is-birthday.js';
 
 export async function mainBoot() {
+	const requestedUi = new URLSearchParams(window.location.search).get('ui');
+	if (requestedUi === 'v11' || (requestedUi == null && ui === 'v11')) {
+		// v11 has no guest experience here: it reads the session from `account` and would bounce
+		// straight back. Drop a signed-out visitor onto the current UI instead of ping-ponging.
+		if ($i == null) {
+			if (ui === 'v11') miLocalStorage.setItem('ui', 'default');
+		} else {
+			const returnUi = ui === 'deck' ? 'deck' : 'default';
+			window.sessionStorage.setItem('mercury:v11:return-ui', returnUi);
+			window.location.replace(requestedUi === 'v11' ? '/v11/?temporary=1' : '/v11/');
+			return;
+		}
+	}
+
 	const { isClientUpdated, lastVersion } = await common(async () => {
 		let uiStyle = ui;
 		const searchParams = new URLSearchParams(window.location.search);

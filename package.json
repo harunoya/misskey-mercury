@@ -12,6 +12,7 @@
 		"packages/backend",
 		"packages/frontend-shared",
 		"packages/frontend",
+		"packages/frontend-v11",
 		"packages/frontend-builder",
 		"packages/frontend-embed",
 		"packages/i18n",
@@ -75,5 +76,8 @@
 		"pnpm": "11.21.0",
 		"start-server-and-test": "3.0.12",
 		"typescript": "npm:@typescript/typescript6@6.0.2"
+	},
+	"volta": {
+		"node": "22.22.2"
 	}
 }

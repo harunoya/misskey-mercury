@@ -2,6 +2,7 @@ packages:
   - packages/backend
   - packages/frontend-shared
   - packages/frontend
+  - packages/frontend-v11
   - packages/frontend-builder
   - packages/frontend-embed
   - packages/i18n
@@ -33,6 +34,8 @@ allowBuilds:
   vue-demi: true
   exifreader: false
   protobufjs: false
+  '@fortawesome/fontawesome-common-types': false
+  bootstrap-vue: false
 minimumReleaseAge: 10080 # delay 7days to mitigate supply-chain attack
 minimumReleaseAgeExclude:
   - '@misskey-dev/*'
