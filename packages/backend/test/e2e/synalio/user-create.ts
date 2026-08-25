@@ -105,7 +105,7 @@ describe('[シナリオ] ユーザ作成', () => {
 
 			let alice: any = null;
 			const webhookBody = await captureWebhook(async () => {
-				alice = await signup({ username: 'alice' });
+				alice = await signup({ username: 'alice_not_allowed' });
 			}).catch(e => e.message);
 
 			expect(webhookBody).toBe('timeout');
@@ -120,7 +120,7 @@ describe('[シナリオ] ユーザ作成', () => {
 
 			let alice: any = null;
 			const webhookBody = await captureWebhook(async () => {
-				alice = await signup({ username: 'alice' });
+				alice = await signup({ username: 'alice_inactive' });
 			}).catch(e => e.message);
 
 			expect(webhookBody).toBe('timeout');
