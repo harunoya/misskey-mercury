@@ -35,7 +35,9 @@ export default {
 	},
 	module: {
 		rules: [
-			{ test: /[\\/]vendor[\\/]misskey-11\.37\.1[\\/]src[\\/]client[\\/].*\.(?:ts|js|vue)$/, enforce: 'pre', use: resolve(packageRoot, 'scripts/legacy-transform-loader.cjs') },
+			// Covers all of `src`, not just `src/client`: the MFM parser under `src/mfm` also needs a
+			// compatibility patch, and it is shared with the server-side code v11 built from here.
+			{ test: /[\\/]vendor[\\/]misskey-11\.37\.1[\\/]src[\\/].*\.(?:ts|js|vue)$/, enforce: 'pre', use: resolve(packageRoot, 'scripts/legacy-transform-loader.cjs') },
 			{ test: /\.vue$/, use: ['vue-loader', 'vue-svg-inline-loader'] },
 			{ test: /\.ts$/, use: { loader: 'ts-loader', options: { transpileOnly: true, configFile: resolve(vendorRoot, 'src/client/app/tsconfig.json'), appendTsSuffixTo: [/\.vue$/] } } },
 			// BUILD_COMPAT: 17 v11 components use `<style module>` and reference `$style.*`.
