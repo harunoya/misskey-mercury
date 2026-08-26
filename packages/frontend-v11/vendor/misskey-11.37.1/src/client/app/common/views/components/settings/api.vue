@@ -14,10 +14,10 @@
 
 	<section>
 		<header><fa icon="terminal"/> {{ $t('console.title') }}</header>
-		<ui-input v-model="endpoint" :datalist="endpoints" @change="onEndpointChange()">
+		<ui-input :value="endpoint" @input="endpoint = $event" :datalist="endpoints" @change="onEndpointChange()">
 			<span>{{ $t('console.endpoint') }}</span>
 		</ui-input>
-		<ui-textarea v-model="body">
+		<ui-textarea :value="body" @input="body = $event">
 			<span>{{ $t('console.parameter') }} (JSON or JSON5)</span>
 			<template #desc>{{ $t('console.credential-info') }}</template>
 		</ui-textarea>
@@ -25,7 +25,7 @@
 			<template v-if="sending">{{ $t('console.sending') }}</template>
 			<template v-else><fa icon="paper-plane"/> {{ $t('console.send') }}</template>
 		</ui-button>
-		<ui-textarea v-if="res" v-model="res" readonly tall>
+		<ui-textarea v-if="res" :value="res" @input="res = $event" readonly tall>
 			<span>{{ $t('console.response') }}</span>
 		</ui-textarea>
 	</section>
@@ -33,11 +33,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import * as JSON5 from 'json5';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/api-settings.vue'),
 
 	data() {

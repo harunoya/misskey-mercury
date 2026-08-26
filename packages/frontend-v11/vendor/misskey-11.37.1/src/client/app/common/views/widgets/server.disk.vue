@@ -3,18 +3,18 @@
 	<x-pie class="pie" :value="usage"/>
 	<div>
 		<p><fa :icon="['far', 'hdd']"/>Storage</p>
-		<p>Total: {{ total | bytes(1) }}</p>
-		<p>Free: {{ available | bytes(1) }}</p>
-		<p>Used: {{ used | bytes(1) }}</p>
+		<p>Total: {{ bytes(total, 1) }}</p>
+		<p>Free: {{ bytes(available, 1) }}</p>
+		<p>Used: {{ bytes(used, 1) }}</p>
 	</div>
 </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import XPie from './server.pie.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
 		XPie
 	},
@@ -30,7 +30,7 @@ export default Vue.extend({
 	mounted() {
 		this.connection.on('stats', this.onStats);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.off('stats', this.onStats);
 	},
 	methods: {

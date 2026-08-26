@@ -1,7 +1,8 @@
+import Vue from 'vue';
 export default {
 	install(Vue) {
 		Vue.directive('size', {
-			inserted(el, binding) {
+			mounted(el, binding) {
 				const query = binding.value;
 				const width = el.clientWidth;
 				for (const q of query) {

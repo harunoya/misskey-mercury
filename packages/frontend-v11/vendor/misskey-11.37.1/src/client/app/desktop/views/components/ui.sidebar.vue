@@ -1,5 +1,5 @@
 <template>
-<div class="header" :class="navbar" :data-shadow="$store.state.device.useShadow">
+<div class="header" :class="navbar" :data-shadow="($store.state.device.useShadow) || null">
 	<div class="body">
 		<div class="post">
 			<button @click="post" :title="$t('title')"><fa icon="pencil-alt"/></button>
@@ -62,7 +62,7 @@
 	</div>
 
 	<transition :name="`slide-${navbar}`">
-		<div class="notifications" v-if="showNotifications" ref="notifications" :class="navbar" :data-shadow="$store.state.device.useShadow">
+		<div class="notifications" v-if="showNotifications" ref="notifications" :class="navbar" :data-shadow="($store.state.device.useShadow) || null">
 			<mk-notifications/>
 		</div>
 	</transition>
@@ -70,7 +70,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import MkSettingsWindow from './settings-window.vue';
 import MkDriveWindow from './drive-window.vue';
@@ -79,7 +79,7 @@ import MkGameWindow from './game-window.vue';
 import contains from '../../../common/scripts/contains';
 import { faNewspaper, faHashtag } from '@fortawesome/free-solid-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/ui.sidebar.vue'),
 	data() {
 		return {
@@ -109,7 +109,7 @@ export default Vue.extend({
 		}
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.$store.getters.isSignedIn) {
 			this.connection.dispose();
 		}
@@ -346,7 +346,7 @@ export default Vue.extend({
 	transition: all 0.2s ease;
 }
 
-.slide-left-enter, .slide-left-leave-to {
+.slide-left-enter-from, .slide-left-leave-to {
 	transform: translateX(-16px);
 	opacity: 0;
 }
@@ -356,7 +356,7 @@ export default Vue.extend({
 	transition: all 0.2s ease;
 }
 
-.slide-right-enter, .slide-right-leave-to {
+.slide-right-enter-from, .slide-right-leave-to {
 	transform: translateX(16px);
 	opacity: 0;
 }

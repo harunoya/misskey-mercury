@@ -25,12 +25,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import i18n from '../../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['remove', 'toggle'],
 	i18n: i18n('pages'),
 
 	props: {
@@ -103,7 +104,7 @@ export default Vue.extend({
 			color var(--faceHeaderText)
 			box-shadow 0 1px rgba(#000, 0.07)
 
-			> [data-icon]
+			> [data-icon], > :slotted([data-icon])
 				margin-right 6px
 
 			&:empty
@@ -115,7 +116,7 @@ export default Vue.extend({
 			top 0
 			right 0
 
-			> button
+			> button, > :slotted(button)
 				padding 0
 				width 42px
 				font-size 0.9em

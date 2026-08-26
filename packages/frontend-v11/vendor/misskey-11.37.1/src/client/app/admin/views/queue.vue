@@ -33,14 +33,14 @@
 		<template #title><fa :icon="faTasks"/> {{ $t('jobs') }}</template>
 		<section class="fit-top">
 			<ui-horizon-group inputs>
-				<ui-select v-model="domain">
+				<ui-select :value="domain" @input="domain = $event">
 					<template #label>{{ $t('queue') }}</template>
 					<option value="deliver">{{ $t('domains.deliver') }}</option>
 					<option value="inbox">{{ $t('domains.inbox') }}</option>
 					<option value="db">{{ $t('domains.db') }}</option>
 					<option value="objectStorage">{{ $t('domains.objectStorage') }}</option>
 				</ui-select>
-				<ui-select v-model="state">
+				<ui-select :value="state" @input="state = $event">
 					<template #label>{{ $t('state') }}</template>
 					<option value="active">{{ $t('states.active') }}</option>
 					<option value="waiting">{{ $t('states.waiting') }}</option>
@@ -66,13 +66,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { faTasks, faInbox, faDatabase, faCloud } from '@fortawesome/free-solid-svg-icons';
 import { faPaperPlane, faChartBar } from '@fortawesome/free-regular-svg-icons';
 import i18n from '../../i18n';
 import XChart from './queue.chart.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/queue.vue'),
 
 	components: {

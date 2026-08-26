@@ -25,12 +25,13 @@ export function readMercuryToken(): string | null {
 }
 
 /**
- * Hands the visitor back to the UI they came from. `ui` has to be cleared first: main-boot sends
- * every `ui === 'v11'` visit straight back to `/v11/`, so leaving it set would bounce the two
- * boot scripts against each other forever.
+ * Hands the reader back to the current client, on the page they are already on.
+ *
+ * The switch is made the way the UI menu makes it — write `ui`, reload — so the URL never carries
+ * a marker for which client is showing. The value comes from what they were using before v11, not
+ * a hardcoded `default`, or picking v11 from a deck would quietly demote them to the default UI.
  */
 export function leaveToCurrentUi(): void {
-	const returnUi = window.sessionStorage.getItem('mercury:v11:return-ui');
-	setUnscopedItem('ui', returnUi === 'deck' ? 'deck' : 'default');
-	window.location.replace('/');
+	setUnscopedItem('ui', getUnscopedItem('mercury:v11:previousUi') ?? 'default');
+	window.location.reload();
 }

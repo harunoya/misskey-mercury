@@ -1,7 +1,7 @@
 <template>
 <div class="vfcitkilproprqtbnpoertpsziierwzi">
 	<div v-for="timeline in timelines" class="timeline" :key="timeline.id">
-		<ui-input v-model="timeline.title" @change="save">
+		<ui-input :value="timeline.title" @input="timeline.title = $event" @change="save">
 			<span>{{ $t('title') }}</span>
 		</ui-input>
 		<ui-textarea :value="timeline.query ? timeline.query.map(tags => tags.join(' ')).join('\n') : ''" :pre="true" @input="onQueryChange(timeline, $event)">
@@ -14,11 +14,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { v4 as uuid } from 'uuid';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/settings.tags.vue'),
 	data() {
 		return {

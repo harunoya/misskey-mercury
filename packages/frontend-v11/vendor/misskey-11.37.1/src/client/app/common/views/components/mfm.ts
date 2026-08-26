@@ -1,4 +1,6 @@
 import Vue, { VNode } from 'vue';
+// Vue 3's `render()` takes no factory argument; this is the Vue 2 `createElement` it replaced.
+import createElement from '@compat/create-element';
 import { length } from 'stringz';
 import { MfmForest } from '../../../../../mfm/types';
 import { parse, parsePlain } from '../../../../../mfm/parse';
@@ -47,7 +49,7 @@ export default Vue.component('misskey-flavored-markdown', {
 		},
 	},
 
-	render(createElement) {
+	render() {
 		if (this.text == null || this.text == '') return;
 
 		const ast = (this.plain ? parsePlain : parse)(this.text);

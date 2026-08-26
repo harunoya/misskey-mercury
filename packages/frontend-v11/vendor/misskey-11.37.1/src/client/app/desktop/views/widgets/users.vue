@@ -15,8 +15,8 @@
 				<div class="user" v-for="_user in users">
 					<mk-avatar class="avatar" :user="_user"/>
 					<div class="body">
-						<router-link class="name" :to="_user | userPage" v-user-preview="_user.id"><mk-user-name :user="_user"/></router-link>
-						<p class="username">@{{ _user | acct }}</p>
+						<router-link class="name" :to="userPage(_user)" v-user-preview="_user.id"><mk-user-name :user="_user"/></router-link>
+						<p class="username">@{{ acct(_user) }}</p>
 					</div>
 				</div>
 			</template>
@@ -27,17 +27,20 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
 const limit = 3;
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'users',
 	props: () => ({
 		compact: false
 	})
-}).extend({
+}),
+
 	i18n: i18n('desktop/views/widgets/users.vue'),
 	data() {
 		return {

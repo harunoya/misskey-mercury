@@ -15,12 +15,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import MkNotify from './notify.vue';
 import XHeader from './ui.header.vue';
 import XNav from './ui.nav.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
 		XHeader,
 		XNav
@@ -68,7 +68,7 @@ export default Vue.extend({
 		}
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.$store.getters.isSignedIn) {
 			this.connection.dispose();
 		}

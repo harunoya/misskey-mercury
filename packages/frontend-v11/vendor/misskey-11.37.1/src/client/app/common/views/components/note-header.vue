@@ -1,7 +1,7 @@
 <template>
 <header class="bvonvjxbwzaiskogyhbwgyxvcgserpmu">
 	<mk-avatar class="avatar" :user="note.user" v-if="$store.state.device.postStyle == 'smart'"/>
-	<router-link class="name" :to="note.user | userPage" v-user-preview="note.user.id">
+	<router-link class="name" :to="userPage(note.user)" v-user-preview="note.user.id">
 		<mk-user-name :user="note.user"/>
 	</router-link>
 	<span class="is-admin" v-if="note.user.isAdmin">admin</span>
@@ -11,7 +11,7 @@
 	<div class="info">
 		<span class="app" v-if="note.app && !mini && $store.state.settings.showVia">via <b>{{ note.app.name }}</b></span>
 		<span class="mobile" v-if="note.viaMobile"><fa icon="mobile-alt"/></span>
-		<router-link class="created-at" :to="note | notePage">
+		<router-link class="created-at" :to="notePage(note)">
 			<mk-time :time="note.createdAt"/>
 		</router-link>
 		<span class="visibility" v-if="note.visibility != 'public'">
@@ -25,10 +25,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	props: {
 		note: {

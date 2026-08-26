@@ -1,5 +1,5 @@
 <template>
-<div class="mkw-slideshow" :data-mobile="platform == 'mobile'">
+<div class="mkw-slideshow" :data-mobile="(platform == 'mobile') || null">
 	<div @click="choose">
 		<p v-if="props.folder === undefined">
 			<template v-if="isCustomizeMode">{{ $t('folder-customize-mode') }}</template>
@@ -13,17 +13,20 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import anime from 'animejs';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'slideshow',
 	props: () => ({
 		folder: undefined,
 		size: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/slideshow.vue'),
 
 	data() {
@@ -44,7 +47,7 @@ export default define({
 
 		this.clock = setInterval(this.change, 10000);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearInterval(this.clock);
 	},
 	methods: {

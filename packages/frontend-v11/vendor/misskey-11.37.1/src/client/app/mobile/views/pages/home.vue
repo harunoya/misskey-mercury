@@ -30,19 +30,19 @@
 			<div class="pointer"></div>
 			<div class="body">
 				<div>
-					<span :data-active="src == 'home'" @click="src = 'home'"><fa icon="home"/> {{ $t('home') }}</span>
-					<span :data-active="src == 'local'" @click="src = 'local'" v-if="enableLocalTimeline"><fa :icon="['far', 'comments']"/> {{ $t('local') }}</span>
-					<span :data-active="src == 'hybrid'" @click="src = 'hybrid'" v-if="enableLocalTimeline"><fa icon="share-alt"/> {{ $t('hybrid') }}</span>
-					<span :data-active="src == 'global'" @click="src = 'global'" v-if="enableGlobalTimeline"><fa icon="globe"/> {{ $t('global') }}</span>
+					<span :data-active="(src == 'home') || null" @click="src = 'home'"><fa icon="home"/> {{ $t('home') }}</span>
+					<span :data-active="(src == 'local') || null" @click="src = 'local'" v-if="enableLocalTimeline"><fa :icon="['far', 'comments']"/> {{ $t('local') }}</span>
+					<span :data-active="(src == 'hybrid') || null" @click="src = 'hybrid'" v-if="enableLocalTimeline"><fa icon="share-alt"/> {{ $t('hybrid') }}</span>
+					<span :data-active="(src == 'global') || null" @click="src = 'global'" v-if="enableGlobalTimeline"><fa icon="globe"/> {{ $t('global') }}</span>
 					<div class="hr"></div>
-					<span :data-active="src == 'mentions'" @click="src = 'mentions'"><fa icon="at"/> {{ $t('mentions') }}<i class="badge" v-if="$store.state.i.hasUnreadMentions"><fa icon="circle"/></i></span>
-					<span :data-active="src == 'messages'" @click="src = 'messages'"><fa :icon="['far', 'envelope']"/> {{ $t('messages') }}<i class="badge" v-if="$store.state.i.hasUnreadSpecifiedNotes"><fa icon="circle"/></i></span>
+					<span :data-active="(src == 'mentions') || null" @click="src = 'mentions'"><fa icon="at"/> {{ $t('mentions') }}<i class="badge" v-if="$store.state.i.hasUnreadMentions"><fa icon="circle"/></i></span>
+					<span :data-active="(src == 'messages') || null" @click="src = 'messages'"><fa :icon="['far', 'envelope']"/> {{ $t('messages') }}<i class="badge" v-if="$store.state.i.hasUnreadSpecifiedNotes"><fa icon="circle"/></i></span>
 					<template v-if="lists">
 						<div class="hr" v-if="lists.length > 0"></div>
-						<span v-for="l in lists" :data-active="src == 'list' && list == l" @click="src = 'list'; list = l" :key="l.id"><fa icon="list"/> {{ l.name }}</span>
+						<span v-for="l in lists" :data-active="(src == 'list' && list == l) || null" @click="src = 'list'; list = l" :key="l.id"><fa icon="list"/> {{ l.name }}</span>
 					</template>
 					<div class="hr" v-if="$store.state.settings.tagTimelines && $store.state.settings.tagTimelines.length > 0"></div>
-					<span v-for="tl in $store.state.settings.tagTimelines" :data-active="src == 'tag' && tagTl == tl" @click="src = 'tag'; tagTl = tl" :key="tl.id"><fa icon="hashtag"/> {{ tl.title }}</span>
+					<span v-for="tl in $store.state.settings.tagTimelines" :data-active="(src == 'tag' && tagTl == tl) || null" @click="src = 'tag'; tagTl = tl" :key="tl.id"><fa icon="hashtag"/> {{ tl.title }}</span>
 				</div>
 			</div>
 		</div>
@@ -62,12 +62,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import Progress from '../../../common/scripts/loading';
 import XTl from './home.timeline.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/home.vue'),
 
 	components: {

@@ -20,7 +20,7 @@
 			<router-link v-for="image in images"
 				:style="`background-image: url(${image.thumbnailUrl})`"
 				:key="`${image.id}:${image._note.id}`"
-				:to="image._note | notePage"
+				:to="notePage(image._note)"
 				:title="`${image.name}\n${(new Date(image.createdAt)).toLocaleString()}`"
 			></router-link>
 		</div>
@@ -43,18 +43,18 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import XNotes from './deck.notes.vue';
 import { concat } from '../../../../../prelude/array';
 import ApexCharts from 'apexcharts';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('deck/deck.user-column.vue'),
 
 	components: {
 		XNotes,
-		XPage: () => import('../../../common/views/components/page/page.vue').then(m => m.default),
+		XPage: defineAsyncComponent(() => import('../../../common/views/components/page/page.vue').then(m => m.default)),
 	},
 
 	props: {

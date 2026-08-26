@@ -232,24 +232,25 @@ export class ClientServerService {
 					immutable: true,
 					decorateReply: false,
 				});
+				// Assets only. v11 has no page of its own: it shares the current UI's URL space and
+				// the current UI loads `v11-boot.js` into the document when the reader prefers v11.
 				fastify.register(fastifyStatic, {
 					root: this.frontendV11Out,
 					prefix: '/v11/',
 					cacheControl: false,
 					decorateReply: false,
 					setHeaders: (reply, path) => {
-						// The entry document names the content-hashed bundle, so caching it would pin
-						// clients to a stale build across deploys. Hashed bundles never change content.
+						// The boot entry names the content-hashed chunks, so caching it would pin
+						// clients to a stale build across deploys. Hashed chunks never change content.
 						if (/\.[0-9a-f]{8}\.(?:js|css)$/.test(path)) {
 							reply.header('Cache-Control', `public, max-age=${Math.floor(ms('30 days') / 1000)}, immutable`);
-						} else if (path.endsWith('.html')) {
+						} else if (path.endsWith('v11-boot.js')) {
 							reply.header('Cache-Control', 'no-cache');
 						} else {
 							reply.header('Cache-Control', `public, max-age=${Math.floor(ms('1 hour') / 1000)}`);
 						}
 					},
 				});
-				fastify.get('/v11', async (request, reply) => reply.redirect('/v11/'));
 				fastify.addHook('onRequest', handleRequestRedirectToOmitSearch);
 				done();
 			});

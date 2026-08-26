@@ -3,11 +3,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
-		XCode: () => import('./code-core.vue').then(m => m.default)
+		XCode: defineAsyncComponent(() => import('./code-core.vue').then(m => m.default))
 	},
 
 	props: {

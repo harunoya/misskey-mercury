@@ -1,14 +1,14 @@
 <template>
 <div>
 	<div>{{ script.interpolate(value.title) }}</div>
-	<ui-radio v-for="x in value.values" v-model="v" :value="x" :key="x">{{ x }}</ui-radio>
+	<ui-radio v-for="x in value.values" :model="v" @change="v = $event" :value="x" :key="x">{{ x }}</ui-radio>
 </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		value: {
 			required: true

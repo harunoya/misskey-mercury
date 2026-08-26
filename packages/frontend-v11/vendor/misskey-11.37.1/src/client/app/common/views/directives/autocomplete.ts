@@ -1,14 +1,15 @@
+import { createDetachedComponent } from '@compat/detached';
 import * as getCaretCoordinates from 'textarea-caret';
 import { toASCII } from 'punycode';
 
 export default {
-	bind(el, binding, vn) {
+	beforeMount(el, binding, vn) {
 		const self = el._autoCompleteDirective_ = {} as any;
-		self.x = new Autocomplete(el, vn.context, binding.value);
+		self.x = new Autocomplete(el, binding.instance, binding.value);
 		self.x.attach();
 	},
 
-	unbind(el, binding, vn) {
+	unmounted(el, binding, vn) {
 		const self = el._autoCompleteDirective_;
 		self.x.detach();
 	}
@@ -153,9 +154,7 @@ class Autocomplete {
 			const MkAutocomplete = await import('../components/autocomplete.vue').then(m => m.default);
 
 			// サジェスト要素作成
-			this.suggestion = new MkAutocomplete({
-				parent: this.vm,
-				propsData: {
+			this.suggestion = createDetachedComponent(MkAutocomplete, {
 					textarea: this.textarea,
 					complete: this.complete,
 					close: this.close,
@@ -163,8 +162,7 @@ class Autocomplete {
 					q: q,
 					x,
 					y
-				}
-			}).$mount();
+				}).$mount();
 
 			// 要素追加
 			document.body.appendChild(this.suggestion.$el);

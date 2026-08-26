@@ -3,13 +3,13 @@
 	<ui-card>
 		<template #title><fa :icon="faBroadcastTower"/> {{ $t('announcements') }}</template>
 		<section v-for="(announcement, i) in announcements" class="fit-top">
-			<ui-input v-model="announcement.title" @change="save">
+			<ui-input :value="announcement.title" @input="announcement.title = $event" @change="save">
 				<span>{{ $t('title') }}</span>
 			</ui-input>
-			<ui-textarea v-model="announcement.text">
+			<ui-textarea :value="announcement.text" @input="announcement.text = $event">
 				<span>{{ $t('text') }}</span>
 			</ui-textarea>
-			<ui-input v-model="announcement.image">
+			<ui-input :value="announcement.image" @input="announcement.image = $event">
 				<span>{{ $t('image-url') }}</span>
 			</ui-input>
 			<ui-horizon-group class="fit-bottom">
@@ -25,11 +25,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faBroadcastTower, faPlus } from '@fortawesome/free-solid-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/announcements.vue'),
 	data() {
 		return {

@@ -28,7 +28,7 @@
 				</div>
 			</div>
 
-			<ui-switch v-model="usePasswordLessLogin" @change="updatePasswordLessLogin" v-if="$store.state.i.securityKeysList.length > 0">
+			<ui-switch :value="usePasswordLessLogin" v-if="$store.state.i.securityKeysList.length > 0" @change="usePasswordLessLogin = $event; updatePasswordLessLogin">
 				{{ $t('use-password-less-login') }}
 			</ui-switch>
 
@@ -42,7 +42,7 @@
 				</li>
 				<li v-if="registration.stage >= 1">
 					<ui-form :disabled="registration.stage != 1 || registration.saving">
-						<ui-input v-model="keyName" :max="30">
+						<ui-input :value="keyName" @input="keyName = $event" :max="30">
 							<span>{{ $t('security-key-name') }}</span>
 						</ui-input>
 						<ui-button @click="registerKey" :disabled="this.keyName.length == 0">
@@ -59,7 +59,7 @@
 			<li>{{ $t('authenticator') }}<a href="https://support.google.com/accounts/answer/1066447" rel="noopener" target="_blank">{{ $t('howtoinstall') }}</a></li>
 			<li>{{ $t('scan') }}<br><img :src="data.qr"></li>
 			<li>{{ $t('done') }}<br>
-				<ui-input v-model="token">{{ $t('token') }}</ui-input>
+				<ui-input :value="token" @input="token = $event">{{ $t('token') }}</ui-input>
 				<ui-button primary @click="submit">{{ $t('submit') }}</ui-button>
 			</li>
 		</ol>
@@ -69,7 +69,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { hostname } from '../../../../config';
 import { hexifyAB } from '../../../scripts/2fa';
@@ -78,7 +78,7 @@ function stringifyAB(buffer) {
 	return String.fromCharCode.apply(null, new Uint8Array(buffer));
 }
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/settings.2fa.vue'),
 	data() {
 		return {

@@ -5,11 +5,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
-		XReversi: () => import('../../../../common/views/components/games/reversi/reversi.vue').then(m => m.default)
+		XReversi: defineAsyncComponent(() => import('../../../../common/views/components/games/reversi/reversi.vue').then(m => m.default))
 	},
 	props: {
 		ui: {

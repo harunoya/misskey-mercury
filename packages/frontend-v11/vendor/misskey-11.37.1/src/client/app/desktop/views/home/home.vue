@@ -1,6 +1,6 @@
 <template>
 <component :is="customize ? 'mk-dummy' : 'mk-ui'" v-hotkey.global="keymap" v-if="$store.getters.isSignedIn || $route.name != 'index'">
-	<div class="wqsofvpm" :data-customize="customize">
+	<div class="wqsofvpm" :data-customize="(customize) || null">
 		<div class="customize" v-if="customize">
 			<a @click="done()"><fa icon="check"/>{{ $t('done') }}</a>
 			<div>
@@ -76,13 +76,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import * as XDraggable from 'vuedraggable';
 import { v4 as uuid } from 'uuid';
 import XWelcome from '../pages/welcome.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/home.vue'),
 
 	components: {
@@ -194,7 +194,7 @@ export default Vue.extend({
 		this.connection = this.$root.stream.useSharedConnection('main');
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 

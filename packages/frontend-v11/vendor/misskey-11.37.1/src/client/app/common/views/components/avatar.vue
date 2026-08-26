@@ -1,23 +1,24 @@
 <template>
-	<span class="mk-avatar" :style="style" :class="{ cat }" :title="user | acct" v-if="disableLink && !disablePreview" v-user-preview="user.id" @click="onClick" v-once>
+	<span class="mk-avatar" :style="style" :class="{ cat }" :title="acct(user)" v-if="disableLink && !disablePreview" v-user-preview="user.id" @click="onClick" v-once>
 		<span class="inner" :style="icon"></span>
 	</span>
-	<span class="mk-avatar" :style="style" :class="{ cat }" :title="user | acct" v-else-if="disableLink && disablePreview" @click="onClick" v-once>
+	<span class="mk-avatar" :style="style" :class="{ cat }" :title="acct(user)" v-else-if="disableLink && disablePreview" @click="onClick" v-once>
 		<span class="inner" :style="icon"></span>
 	</span>
-	<router-link class="mk-avatar" :style="style" :class="{ cat }" :to="user | userPage" :title="user | acct" :target="target" v-else-if="!disableLink && !disablePreview" v-user-preview="user.id" v-once>
+	<router-link class="mk-avatar" :style="style" :class="{ cat }" :to="userPage(user)" :title="acct(user)" :target="target" v-else-if="!disableLink && !disablePreview" v-user-preview="user.id" v-once>
 		<span class="inner" :style="icon"></span>
 	</router-link>
-	<router-link class="mk-avatar" :style="style" :class="{ cat }" :to="user | userPage" :title="user | acct" :target="target" v-else-if="!disableLink && disablePreview" v-once>
+	<router-link class="mk-avatar" :style="style" :class="{ cat }" :to="userPage(user)" :title="acct(user)" :target="target" v-else-if="!disableLink && disablePreview" v-once>
 		<span class="inner" :style="icon"></span>
 	</router-link>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { getStaticImageUrl } from '../../../common/scripts/get-static-image-url';
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['click'],
 	props: {
 		user: {
 			type: Object,

@@ -5,13 +5,16 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import anime from 'animejs';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'tips'
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/tips.vue'),
 
 	data() {
@@ -52,7 +55,7 @@ export default define({
 
 		this.clock = setInterval(this.change, 20000);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearInterval(this.clock);
 	},
 	methods: {

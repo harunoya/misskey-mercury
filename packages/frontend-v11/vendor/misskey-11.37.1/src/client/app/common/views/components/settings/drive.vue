@@ -4,7 +4,7 @@
 
 	<section v-if="!fetching" class="juakhbxthdewydyreaphkepoxgxvfogn">
 		<div class="meter"><div :style="meterStyle"></div></div>
-		<p>{{ $t('max') }}: <b>{{ capacity | bytes }}</b> {{ $t('in-use') }}: <b>{{ usage | bytes }}</b></p>
+		<p>{{ $t('max') }}: <b>{{ bytes(capacity) }}</b> {{ $t('in-use') }}: <b>{{ bytes(usage) }}</b></p>
 	</section>
 
 	<section>
@@ -14,19 +14,19 @@
 
 	<section>
 		<header>{{ $t('default-upload-folder') }}</header>
-		<ui-input v-model="uploadFolderName" readonly>{{ $t('default-upload-folder-name') }}</ui-input>
+		<ui-input :value="uploadFolderName" @input="uploadFolderName = $event" readonly>{{ $t('default-upload-folder-name') }}</ui-input>
 		<ui-button @click="chooseUploadFolder()">{{ $t('change-default-upload-folder') }}</ui-button>
 	</section>
 </ui-card>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import * as tinycolor from 'tinycolor2';
 import ApexCharts from 'apexcharts';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/drive-settings.vue'),
 	data() {
 		return {

@@ -12,15 +12,18 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'memo',
 	props: () => ({
 		compact: false
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/memo.vue'),
 	data() {
 		return {

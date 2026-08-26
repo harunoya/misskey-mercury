@@ -1,10 +1,9 @@
-import Vue from 'vue';
-
+import Vue, { defineComponent } from 'vue';
 export default function <T extends object>(data: {
 	name: string;
 	props?: () => T;
 }) {
-	return Vue.extend({
+	return defineComponent({
 		props: {
 			widget: {
 				type: Object

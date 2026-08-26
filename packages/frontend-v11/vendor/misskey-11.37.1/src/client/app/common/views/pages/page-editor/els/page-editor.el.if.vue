@@ -8,7 +8,7 @@
 	</template>
 
 	<section class="romcojzs">
-		<ui-select v-model="value.var">
+		<ui-select :value="value.var" @input="value.var = $event">
 			<template #label>{{ $t('blocks._if.variable') }}</template>
 			<option v-for="v in aiScript.getVarsByType('boolean')" :value="v.name">{{ v.name }}</option>
 			<optgroup :label="$t('script.pageVariables')">
@@ -19,19 +19,19 @@
 			</optgroup>
 		</ui-select>
 
-		<x-blocks class="children" v-model="value.children" :ai-script="aiScript"/>
+		<x-blocks class="children" :value="value.children" @input="value.children = $event" :ai-script="aiScript"/>
 	</section>
 </x-container>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import { v4 as uuid } from 'uuid';
 import { faPlus, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../../../i18n';
 import XContainer from '../page-editor.container.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

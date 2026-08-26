@@ -32,7 +32,7 @@
 
 	<section>
 		<header>{{ $t('word-mute') }}</header>
-		<ui-textarea v-model="mutedWords">
+		<ui-textarea :value="mutedWords" @input="mutedWords = $event">
 			{{ $t('muted-words') }}<template #desc>{{ $t('muted-words-description') }}</template>
 		</ui-textarea>
 		<ui-button @click="save">{{ $t('save') }}</ui-button>
@@ -41,13 +41,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import XUser from './mute-and-block.user.vue';
 
 const fetchLimit = 30;
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/mute-and-block.vue'),
 
 	components: {

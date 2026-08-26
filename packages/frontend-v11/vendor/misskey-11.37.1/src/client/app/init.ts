@@ -2,7 +2,8 @@
  * App initializer
  */
 
-import Vue from 'vue';
+import Vue, { VueApp } from 'vue';
+import { createDetachedComponent, destroyDetached } from '@compat/detached';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import VAnimateCss from 'v-animate-css';
@@ -313,9 +314,10 @@ require('./common/views/filters');
 Vue.mixin({
 	methods: {
 		destroyDom() {
-			this.$destroy();
+			// Unmounting the detached app also removes its element, so there is nothing left to do.
+			if (destroyDetached(this)) return;
 
-			if (this.$el.parentNode) {
+			if (this.$el && this.$el.parentNode) {
 				this.$el.parentNode.removeChild(this.$el);
 			}
 		}
@@ -433,7 +435,7 @@ export default (callback: (launch: (router: VueRouter) => [Vue, MiOS], os: MiOS)
 				}
 			}, { passive: true });
 
-			const app = new Vue({
+			const app = new VueApp({
 				i18n: i18n(),
 				store: os.store,
 				data() {
@@ -451,20 +453,16 @@ export default (callback: (launch: (router: VueRouter) => [Vue, MiOS], os: MiOS)
 					getMetaSync: os.getMetaSync,
 					signout: os.signout,
 					new(vm, props) {
-						const x = new vm({
-							parent: this,
-							propsData: props
-						}).$mount();
+						// Vue 3 has no component constructor; the compat factory gives each detached
+						// component its own app wired into this one's context.
+						const x = createDetachedComponent(vm, props).$mount();
 						document.body.appendChild(x.$el);
 						return x;
 					},
 					newAsync(vm, props) {
 						return new Promise((res) => {
 							vm().then(vm => {
-								const x = new vm({
-									parent: this,
-									propsData: props
-								}).$mount();
+								const x = createDetachedComponent(vm, props).$mount();
 								document.body.appendChild(x.$el);
 								res(x);
 							});

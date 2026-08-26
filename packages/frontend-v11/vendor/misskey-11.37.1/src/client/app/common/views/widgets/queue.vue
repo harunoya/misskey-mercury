@@ -6,12 +6,12 @@
 		<div class="mntrproz">
 			<div>
 				<b>In</b>
-				<span v-if="latestStats">{{ latestStats.inbox.activeSincePrevTick | number }} / {{ latestStats.inbox.delayed | number }}</span>
+				<span v-if="latestStats">{{ number(latestStats.inbox.activeSincePrevTick) }} / {{ number(latestStats.inbox.delayed) }}</span>
 				<div ref="in"></div>
 			</div>
 			<div>
 				<b>Out</b>
-				<span v-if="latestStats">{{ latestStats.deliver.activeSincePrevTick | number }} / {{ latestStats.deliver.delayed | number }}</span>
+				<span v-if="latestStats">{{ number(latestStats.deliver.activeSincePrevTick) }} / {{ number(latestStats.deliver.delayed) }}</span>
 				<div ref="out"></div>
 			</div>
 		</div>
@@ -20,16 +20,19 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../define-widget';
 import { faTasks } from '@fortawesome/free-solid-svg-icons';
 import ApexCharts from 'apexcharts';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'queue',
 	props: () => ({
 		compact: false
 	})
-}).extend({
+}),
+
 	data() {
 		return {
 			stats: [],

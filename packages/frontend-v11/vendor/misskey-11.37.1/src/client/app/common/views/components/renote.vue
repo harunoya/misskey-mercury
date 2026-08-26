@@ -3,7 +3,7 @@
 	<mk-avatar class="avatar" :user="note.user"/>
 	<fa icon="retweet"/>
 	<i18n path="@.renoted-by" tag="span">
-		<router-link class="name" :to="note.user | userPage" v-user-preview="note.userId" place="user">
+		<router-link class="name" :to="userPage(note.user)" v-user-preview="note.userId" place="user">
 			<mk-user-name :user="note.user"/>
 		</router-link>
 	</i18n>
@@ -21,10 +21,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	props: {
 		note: {

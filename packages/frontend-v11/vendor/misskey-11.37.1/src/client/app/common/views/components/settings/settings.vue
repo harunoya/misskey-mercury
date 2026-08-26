@@ -12,7 +12,7 @@
 			<template #title><fa icon="desktop"/> {{ $t('@._settings.appearance') }}</template>
 
 			<section v-if="!$root.isMobile">
-				<ui-switch v-model="showPostFormOnTopOfTl">{{ $t('@._settings.post-form-on-timeline') }}</ui-switch>
+				<ui-switch :value="showPostFormOnTopOfTl" @change="showPostFormOnTopOfTl = $event">{{ $t('@._settings.post-form-on-timeline') }}</ui-switch>
 				<ui-button @click="customizeHome">{{ $t('@.customize-home') }}</ui-button>
 			</section>
 			<section v-if="!$root.isMobile">
@@ -24,72 +24,72 @@
 			</section>
 			<section v-if="!$root.isMobile">
 				<header>{{ $t('@._settings.navbar-position') }}</header>
-				<ui-radio v-model="navbar" value="top">{{ $t('@._settings.navbar-position-top') }}</ui-radio>
-				<ui-radio v-model="navbar" value="left">{{ $t('@._settings.navbar-position-left') }}</ui-radio>
-				<ui-radio v-model="navbar" value="right">{{ $t('@._settings.navbar-position-right') }}</ui-radio>
+				<ui-radio :model="navbar" @change="navbar = $event" value="top">{{ $t('@._settings.navbar-position-top') }}</ui-radio>
+				<ui-radio :model="navbar" @change="navbar = $event" value="left">{{ $t('@._settings.navbar-position-left') }}</ui-radio>
+				<ui-radio :model="navbar" @change="navbar = $event" value="right">{{ $t('@._settings.navbar-position-right') }}</ui-radio>
 			</section>
 			<section>
-				<ui-switch v-model="useShadow">{{ $t('@._settings.use-shadow') }}</ui-switch>
-				<ui-switch v-model="roundedCorners">{{ $t('@._settings.rounded-corners') }}</ui-switch>
-				<ui-switch v-model="circleIcons">{{ $t('@._settings.circle-icons') }}</ui-switch>
-				<ui-switch v-model="reduceMotion">{{ $t('@._settings.reduce-motion') }}</ui-switch>
-				<ui-switch v-model="contrastedAcct">{{ $t('@._settings.contrasted-acct') }}</ui-switch>
-				<ui-switch v-model="showFullAcct">{{ $t('@._settings.show-full-acct') }}</ui-switch>
-				<ui-switch v-model="showVia">{{ $t('@._settings.show-via') }}</ui-switch>
-				<ui-switch v-model="useOsDefaultEmojis">{{ $t('@._settings.use-os-default-emojis') }}</ui-switch>
-				<ui-switch v-model="iLikeSushi">{{ $t('@._settings.i-like-sushi') }}</ui-switch>
+				<ui-switch :value="useShadow" @change="useShadow = $event">{{ $t('@._settings.use-shadow') }}</ui-switch>
+				<ui-switch :value="roundedCorners" @change="roundedCorners = $event">{{ $t('@._settings.rounded-corners') }}</ui-switch>
+				<ui-switch :value="circleIcons" @change="circleIcons = $event">{{ $t('@._settings.circle-icons') }}</ui-switch>
+				<ui-switch :value="reduceMotion" @change="reduceMotion = $event">{{ $t('@._settings.reduce-motion') }}</ui-switch>
+				<ui-switch :value="contrastedAcct" @change="contrastedAcct = $event">{{ $t('@._settings.contrasted-acct') }}</ui-switch>
+				<ui-switch :value="showFullAcct" @change="showFullAcct = $event">{{ $t('@._settings.show-full-acct') }}</ui-switch>
+				<ui-switch :value="showVia" @change="showVia = $event">{{ $t('@._settings.show-via') }}</ui-switch>
+				<ui-switch :value="useOsDefaultEmojis" @change="useOsDefaultEmojis = $event">{{ $t('@._settings.use-os-default-emojis') }}</ui-switch>
+				<ui-switch :value="iLikeSushi" @change="iLikeSushi = $event">{{ $t('@._settings.i-like-sushi') }}</ui-switch>
 			</section>
 			<section>
-				<ui-switch v-model="suggestRecentHashtags">{{ $t('@._settings.suggest-recent-hashtags') }}</ui-switch>
-				<ui-switch v-model="showClockOnHeader" v-if="!$root.isMobile">{{ $t('@._settings.show-clock-on-header') }}</ui-switch>
-				<ui-switch v-model="alwaysShowNsfw">{{ $t('@._settings.always-show-nsfw') }}</ui-switch>
-				<ui-switch v-model="showReplyTarget">{{ $t('@._settings.show-reply-target') }}</ui-switch>
-				<ui-switch v-model="disableAnimatedMfm">{{ $t('@._settings.disable-animated-mfm') }}</ui-switch>
-				<ui-switch v-model="disableShowingAnimatedImages">{{ $t('@._settings.disable-showing-animated-images') }}</ui-switch>
-				<ui-switch v-model="remainDeletedNote">{{ $t('@._settings.remain-deleted-note') }}</ui-switch>
-				<ui-switch v-model="enableMobileQuickNotificationView">{{ $t('@._settings.enable-quick-notification-view') }}</ui-switch>
+				<ui-switch :value="suggestRecentHashtags" @change="suggestRecentHashtags = $event">{{ $t('@._settings.suggest-recent-hashtags') }}</ui-switch>
+				<ui-switch :value="showClockOnHeader" @change="showClockOnHeader = $event" v-if="!$root.isMobile">{{ $t('@._settings.show-clock-on-header') }}</ui-switch>
+				<ui-switch :value="alwaysShowNsfw" @change="alwaysShowNsfw = $event">{{ $t('@._settings.always-show-nsfw') }}</ui-switch>
+				<ui-switch :value="showReplyTarget" @change="showReplyTarget = $event">{{ $t('@._settings.show-reply-target') }}</ui-switch>
+				<ui-switch :value="disableAnimatedMfm" @change="disableAnimatedMfm = $event">{{ $t('@._settings.disable-animated-mfm') }}</ui-switch>
+				<ui-switch :value="disableShowingAnimatedImages" @change="disableShowingAnimatedImages = $event">{{ $t('@._settings.disable-showing-animated-images') }}</ui-switch>
+				<ui-switch :value="remainDeletedNote" @change="remainDeletedNote = $event">{{ $t('@._settings.remain-deleted-note') }}</ui-switch>
+				<ui-switch :value="enableMobileQuickNotificationView" @change="enableMobileQuickNotificationView = $event">{{ $t('@._settings.enable-quick-notification-view') }}</ui-switch>
 			</section>
 			<section>
 				<header>{{ $t('@._settings.line-width') }}</header>
-				<ui-radio v-model="lineWidth" :value="0.5">{{ $t('@._settings.line-width-thin') }}</ui-radio>
-				<ui-radio v-model="lineWidth" :value="1">{{ $t('@._settings.line-width-normal') }}</ui-radio>
-				<ui-radio v-model="lineWidth" :value="2">{{ $t('@._settings.line-width-thick') }}</ui-radio>
+				<ui-radio :model="lineWidth" @change="lineWidth = $event" :value="0.5">{{ $t('@._settings.line-width-thin') }}</ui-radio>
+				<ui-radio :model="lineWidth" @change="lineWidth = $event" :value="1">{{ $t('@._settings.line-width-normal') }}</ui-radio>
+				<ui-radio :model="lineWidth" @change="lineWidth = $event" :value="2">{{ $t('@._settings.line-width-thick') }}</ui-radio>
 			</section>
 			<section>
 				<header>{{ $t('@._settings.font-size') }}</header>
-				<ui-radio v-model="fontSize" :value="-2">{{ $t('@._settings.font-size-x-small') }}</ui-radio>
-				<ui-radio v-model="fontSize" :value="-1">{{ $t('@._settings.font-size-small') }}</ui-radio>
-				<ui-radio v-model="fontSize" :value="0">{{ $t('@._settings.font-size-medium') }}</ui-radio>
-				<ui-radio v-model="fontSize" :value="1">{{ $t('@._settings.font-size-large') }}</ui-radio>
-				<ui-radio v-model="fontSize" :value="2">{{ $t('@._settings.font-size-x-large') }}</ui-radio>
+				<ui-radio :model="fontSize" @change="fontSize = $event" :value="-2">{{ $t('@._settings.font-size-x-small') }}</ui-radio>
+				<ui-radio :model="fontSize" @change="fontSize = $event" :value="-1">{{ $t('@._settings.font-size-small') }}</ui-radio>
+				<ui-radio :model="fontSize" @change="fontSize = $event" :value="0">{{ $t('@._settings.font-size-medium') }}</ui-radio>
+				<ui-radio :model="fontSize" @change="fontSize = $event" :value="1">{{ $t('@._settings.font-size-large') }}</ui-radio>
+				<ui-radio :model="fontSize" @change="fontSize = $event" :value="2">{{ $t('@._settings.font-size-x-large') }}</ui-radio>
 			</section>
 			<section v-if="$root.isMobile">
 				<header>{{ $t('@._settings.post-style') }}</header>
-				<ui-radio v-model="postStyle" value="standard">{{ $t('@._settings.post-style-standard') }}</ui-radio>
-				<ui-radio v-model="postStyle" value="smart">{{ $t('@._settings.post-style-smart') }}</ui-radio>
+				<ui-radio :model="postStyle" @change="postStyle = $event" value="standard">{{ $t('@._settings.post-style-standard') }}</ui-radio>
+				<ui-radio :model="postStyle" @change="postStyle = $event" value="smart">{{ $t('@._settings.post-style-smart') }}</ui-radio>
 			</section>
 			<section v-if="$root.isMobile">
 				<header>{{ $t('@._settings.notification-position') }}</header>
-				<ui-radio v-model="mobileNotificationPosition" value="bottom">{{ $t('@._settings.notification-position-bottom') }}</ui-radio>
-				<ui-radio v-model="mobileNotificationPosition" value="top">{{ $t('@._settings.notification-position-top') }}</ui-radio>
+				<ui-radio :model="mobileNotificationPosition" @change="mobileNotificationPosition = $event" value="bottom">{{ $t('@._settings.notification-position-bottom') }}</ui-radio>
+				<ui-radio :model="mobileNotificationPosition" @change="mobileNotificationPosition = $event" value="top">{{ $t('@._settings.notification-position-top') }}</ui-radio>
 			</section>
 			<section>
 				<header>{{ $t('@._settings.deck-column-align') }}</header>
-				<ui-radio v-model="deckColumnAlign" value="center">{{ $t('@._settings.deck-column-align-center') }}</ui-radio>
-				<ui-radio v-model="deckColumnAlign" value="left">{{ $t('@._settings.deck-column-align-left') }}</ui-radio>
-				<ui-radio v-model="deckColumnAlign" value="flexible">{{ $t('@._settings.deck-column-align-flexible') }}</ui-radio>
+				<ui-radio :model="deckColumnAlign" @change="deckColumnAlign = $event" value="center">{{ $t('@._settings.deck-column-align-center') }}</ui-radio>
+				<ui-radio :model="deckColumnAlign" @change="deckColumnAlign = $event" value="left">{{ $t('@._settings.deck-column-align-left') }}</ui-radio>
+				<ui-radio :model="deckColumnAlign" @change="deckColumnAlign = $event" value="flexible">{{ $t('@._settings.deck-column-align-flexible') }}</ui-radio>
 			</section>
 			<section>
 				<header>{{ $t('@._settings.deck-column-width') }}</header>
-				<ui-radio v-model="deckColumnWidth" value="narrow">{{ $t('@._settings.deck-column-width-narrow') }}</ui-radio>
-				<ui-radio v-model="deckColumnWidth" value="narrower">{{ $t('@._settings.deck-column-width-narrower') }}</ui-radio>
-				<ui-radio v-model="deckColumnWidth" value="normal">{{ $t('@._settings.deck-column-width-normal') }}</ui-radio>
-				<ui-radio v-model="deckColumnWidth" value="wider">{{ $t('@._settings.deck-column-width-wider') }}</ui-radio>
-				<ui-radio v-model="deckColumnWidth" value="wide">{{ $t('@._settings.deck-column-width-wide') }}</ui-radio>
+				<ui-radio :model="deckColumnWidth" @change="deckColumnWidth = $event" value="narrow">{{ $t('@._settings.deck-column-width-narrow') }}</ui-radio>
+				<ui-radio :model="deckColumnWidth" @change="deckColumnWidth = $event" value="narrower">{{ $t('@._settings.deck-column-width-narrower') }}</ui-radio>
+				<ui-radio :model="deckColumnWidth" @change="deckColumnWidth = $event" value="normal">{{ $t('@._settings.deck-column-width-normal') }}</ui-radio>
+				<ui-radio :model="deckColumnWidth" @change="deckColumnWidth = $event" value="wider">{{ $t('@._settings.deck-column-width-wider') }}</ui-radio>
+				<ui-radio :model="deckColumnWidth" @change="deckColumnWidth = $event" value="wide">{{ $t('@._settings.deck-column-width-wide') }}</ui-radio>
 			</section>
 			<section>
-				<ui-switch v-model="games_reversi_showBoardLabels">{{ $t('@._settings.show-reversi-board-labels') }}</ui-switch>
-				<ui-switch v-model="games_reversi_useAvatarStones">{{ $t('@._settings.use-avatar-reversi-stones') }}</ui-switch>
+				<ui-switch :value="games_reversi_showBoardLabels" @change="games_reversi_showBoardLabels = $event">{{ $t('@._settings.show-reversi-board-labels') }}</ui-switch>
+				<ui-switch :value="games_reversi_useAvatarStones" @change="games_reversi_useAvatarStones = $event">{{ $t('@._settings.use-avatar-reversi-stones') }}</ui-switch>
 			</section>
 		</ui-card>
 	</template>
@@ -99,18 +99,18 @@
 			<template #title><fa icon="sliders-h"/> {{ $t('@._settings.behavior') }}</template>
 
 			<section>
-				<ui-switch v-model="fetchOnScroll">{{ $t('@._settings.fetch-on-scroll') }}
+				<ui-switch :value="fetchOnScroll" @change="fetchOnScroll = $event">{{ $t('@._settings.fetch-on-scroll') }}
 					<template #desc>{{ $t('@._settings.fetch-on-scroll-desc') }}</template>
 				</ui-switch>
-				<ui-switch v-model="keepCw">{{ $t('@._settings.keep-cw') }}
+				<ui-switch :value="keepCw" @change="keepCw = $event">{{ $t('@._settings.keep-cw') }}
 					<template #desc>{{ $t('@._settings.keep-cw-desc') }}</template>
 				</ui-switch>
-				<ui-switch v-if="$root.isMobile" v-model="disableViaMobile">{{ $t('@._settings.disable-via-mobile') }}</ui-switch>
+				<ui-switch v-if="$root.isMobile" :value="disableViaMobile" @change="disableViaMobile = $event">{{ $t('@._settings.disable-via-mobile') }}</ui-switch>
 			</section>
 
 			<section>
 				<header>{{ $t('@._settings.reactions') }}</header>
-				<ui-textarea v-model="reactions">
+				<ui-textarea :value="reactions" @input="reactions = $event">
 					{{ $t('@._settings.reactions') }}<template #desc>{{ $t('@._settings.reactions-description') }}</template>
 				</ui-textarea>
 				<ui-horizon-group>
@@ -121,17 +121,17 @@
 
 			<section>
 				<header>{{ $t('@._settings.timeline') }}</header>
-				<ui-switch v-model="showMyRenotes">{{ $t('@._settings.show-my-renotes') }}</ui-switch>
-				<ui-switch v-model="showRenotedMyNotes">{{ $t('@._settings.show-renoted-my-notes') }}</ui-switch>
-				<ui-switch v-model="showLocalRenotes">{{ $t('@._settings.show-local-renotes') }}</ui-switch>
+				<ui-switch :value="showMyRenotes" @change="showMyRenotes = $event">{{ $t('@._settings.show-my-renotes') }}</ui-switch>
+				<ui-switch :value="showRenotedMyNotes" @change="showRenotedMyNotes = $event">{{ $t('@._settings.show-renoted-my-notes') }}</ui-switch>
+				<ui-switch :value="showLocalRenotes" @change="showLocalRenotes = $event">{{ $t('@._settings.show-local-renotes') }}</ui-switch>
 			</section>
 
 			<section>
 				<header>{{ $t('@._settings.note-visibility') }}</header>
-				<ui-switch v-model="rememberNoteVisibility">{{ $t('@._settings.remember-note-visibility') }}</ui-switch>
+				<ui-switch :value="rememberNoteVisibility" @change="rememberNoteVisibility = $event">{{ $t('@._settings.remember-note-visibility') }}</ui-switch>
 				<section>
 					<header>{{ $t('@._settings.default-note-visibility') }}</header>
-					<ui-select v-model="defaultNoteVisibility">
+					<ui-select :value="defaultNoteVisibility" @input="defaultNoteVisibility = $event">
 						<option value="public">{{ $t('@.note-visibility.public') }}</option>
 						<option value="home">{{ $t('@.note-visibility.home') }}</option>
 						<option value="followers">{{ $t('@.note-visibility.followers') }}</option>
@@ -145,14 +145,14 @@
 
 			<section>
 				<header>{{ $t('@._settings.sync') }}</header>
-				<ui-input v-if="$root.isMobile" v-model="mobileHomeProfile" :datalist="Object.keys($store.state.settings.mobileHomeProfiles)">{{ $t('@._settings.home-profile') }}</ui-input>
-				<ui-input v-else v-model="homeProfile" :datalist="Object.keys($store.state.settings.homeProfiles)">{{ $t('@._settings.home-profile') }}</ui-input>
-				<ui-input v-model="deckProfile" :datalist="Object.keys($store.state.settings.deckProfiles)">{{ $t('@._settings.deck-profile') }}</ui-input>
+				<ui-input v-if="$root.isMobile" :value="mobileHomeProfile" @input="mobileHomeProfile = $event" :datalist="Object.keys($store.state.settings.mobileHomeProfiles)">{{ $t('@._settings.home-profile') }}</ui-input>
+				<ui-input v-else :value="homeProfile" @input="homeProfile = $event" :datalist="Object.keys($store.state.settings.homeProfiles)">{{ $t('@._settings.home-profile') }}</ui-input>
+				<ui-input :value="deckProfile" @input="deckProfile = $event" :datalist="Object.keys($store.state.settings.deckProfiles)">{{ $t('@._settings.deck-profile') }}</ui-input>
 			</section>
 
 			<section>
 				<header>{{ $t('@._settings.web-search-engine') }}</header>
-				<ui-input v-model="webSearchEngine">{{ $t('@._settings.web-search-engine') }}
+				<ui-input :value="webSearchEngine" @input="webSearchEngine = $event">{{ $t('@._settings.web-search-engine') }}
 					<template #desc>{{ $t('@._settings.web-search-engine-desc') }}</template>
 				</ui-input>
 				<ui-button @click="save('webSearchEngine', webSearchEngine)"><fa :icon="faSave"/> {{ $t('@._settings.save') }}</ui-button>
@@ -160,20 +160,20 @@
 
 			<section v-if="!$root.isMobile">
 				<header>{{ $t('@._settings.paste') }}</header>
-				<ui-input v-model="pastedFileName">{{ $t('@._settings.pasted-file-name') }}
+				<ui-input :value="pastedFileName" @input="pastedFileName = $event">{{ $t('@._settings.pasted-file-name') }}
 					<template v-if="pastedFileName === this.$store.state.settings.pastedFileName" #desc>{{ $t('@._settings.pasted-file-name-desc') }}</template>
 					<template v-else #desc>{{ pastedFileNamePreview() }}</template>
 				</ui-input>
 				<ui-button @click="save('pastedFileName', pastedFileName)"><fa :icon="faSave"/> {{ $t('@._settings.save') }}</ui-button>
 
-				<ui-switch v-model="pasteDialog">{{ $t('@._settings.paste-dialog') }}
+				<ui-switch :value="pasteDialog" @change="pasteDialog = $event">{{ $t('@._settings.paste-dialog') }}
 					<template #desc>{{ $t('@._settings.paste-dialog-desc') }}</template>
 				</ui-switch>
 			</section>
 
 			<section>
 				<header>{{ $t('@._settings.room') }}</header>
-				<ui-select v-model="roomGraphicsQuality">
+				<ui-select :value="roomGraphicsQuality" @input="roomGraphicsQuality = $event">
 					<template #label>{{ $t('@._settings._room.graphicsQuality') }}</template>
 					<option value="ultra">{{ $t('@._settings._room._graphicsQuality.ultra') }}</option>
 					<option value="high">{{ $t('@._settings._room._graphicsQuality.high') }}</option>
@@ -181,7 +181,7 @@
 					<option value="low">{{ $t('@._settings._room._graphicsQuality.low') }}</option>
 					<option value="cheep">{{ $t('@._settings._room._graphicsQuality.cheep') }}</option>
 				</ui-select>
-				<ui-switch v-model="roomUseOrthographicCamera">{{ $t('@._settings._room.useOrthographicCamera') }}</ui-switch>
+				<ui-switch :value="roomUseOrthographicCamera" @change="roomUseOrthographicCamera = $event">{{ $t('@._settings._room.useOrthographicCamera') }}</ui-switch>
 			</section>
 		</ui-card>
 
@@ -189,7 +189,7 @@
 			<template #title><fa icon="volume-up"/> {{ $t('@._settings.sound') }}</template>
 
 			<section>
-				<ui-switch v-model="enableSounds">{{ $t('@._settings.enable-sounds') }}
+				<ui-switch :value="enableSounds" @change="enableSounds = $event">{{ $t('@._settings.enable-sounds') }}
 					<template #desc>{{ $t('@._settings.enable-sounds-desc') }}</template>
 				</ui-switch>
 				<label>{{ $t('@._settings.volume') }}</label>
@@ -289,7 +289,7 @@
 		<ui-card>
 			<template #title><fa icon="cogs"/> {{ $t('@._settings.advanced-settings') }}</template>
 			<section>
-				<ui-switch v-model="debug">
+				<ui-switch :value="debug" @change="debug = $event">
 					{{ $t('@._settings.debug-mode') }}<template #desc>{{ $t('@._settings.debug-mode-desc') }}</template>
 				</ui-switch>
 			</section>
@@ -299,7 +299,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import X2fa from './2fa.vue';
 import XApps from './apps.vue';
@@ -322,7 +322,7 @@ import checkForUpdate from '../../../scripts/check-for-update';
 import { formatTimeString } from '../../../../../../misc/format-time-string';
 import { faSave, faEye } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	components: {
 		X2fa,

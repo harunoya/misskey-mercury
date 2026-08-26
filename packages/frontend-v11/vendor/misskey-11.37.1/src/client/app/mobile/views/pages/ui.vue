@@ -3,19 +3,28 @@
 	<template #header><span style="margin-right:4px;" v-if="icon"><fa :icon="icon"/></span>{{ title }}</template>
 
 	<main>
-		<component :is="component" @init="init" v-bind="$attrs"/>
+		<component :is="resolvedComponent" @init="init" v-bind="$attrs"/>
 	</main>
 </mk-ui>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
+import { asAsyncComponent } from '@compat/async-component';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		component: {
 			required: true
 		}
+	},
+
+	computed: {
+		// The route hands this down as a `() => import(...)` loader, which Vue 3 only
+		// understands once wrapped as an async component.
+		resolvedComponent() {
+			return asAsyncComponent(this.component);
+		},
 	},
 
 	data() {

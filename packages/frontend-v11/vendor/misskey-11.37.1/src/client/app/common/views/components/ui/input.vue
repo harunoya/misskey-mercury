@@ -1,5 +1,5 @@
 <template>
-<div class="ui-input" :class="[{ focused, filled, inline, disabled }, styl]">
+<div class="ui-input" :class="[{ focused, filled, inline: isInline, disabled }, styl]">
 	<div class="icon" ref="icon"><slot name="icon"></slot></div>
 	<div class="input">
 		<div class="password-meter" v-if="withPasswordMeter" v-show="passwordStrength != ''" :data-strength="passwordStrength">
@@ -75,11 +75,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import debounce from 'v-debounce';
 const getPasswordStrength = require('syuilo-password-strength');
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['change', 'enter', 'input', 'keydown'],
 	directives: {
 		debounce
 	},
@@ -147,9 +148,9 @@ export default Vue.extend({
 		inline: {
 			type: Boolean,
 			required: false,
-			default(): boolean {
-				return this.horizonGrouped;
-			}
+			// `null` means "unset", leaving the horizon-group injection to decide. Vue 3 calls a
+			// prop default factory without an instance, so that lookup lives in `isInline`.
+			default: null
 		},
 		styl: {
 			type: String,
@@ -167,6 +168,10 @@ export default Vue.extend({
 		};
 	},
 	computed: {
+		isInline(): boolean {
+			return this.inline ?? this.horizonGrouped;
+		},
+
 		filled(): boolean {
 			return this.v != '' && this.v != null;
 		},

@@ -1,6 +1,6 @@
 <template>
 <div class="account" v-hotkey.global="keymap">
-	<button class="header" :data-active="isOpen" @click="toggle">
+	<button class="header" :data-active="(isOpen) || null" @click="toggle">
 		<span class="username">{{ $store.state.i.username }}<template v-if="!isOpen"><fa icon="angle-down"/></template><template v-if="isOpen"><fa icon="angle-up"/></template></span>
 		<mk-avatar class="avatar" :user="$store.state.i"/>
 	</button>
@@ -108,7 +108,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 // import MkSettingsWindow from './settings-window.vue';
 import MkDriveWindow from './drive-window.vue';
@@ -116,7 +116,7 @@ import contains from '../../../common/scripts/contains';
 import { faHome, faColumns, faUsers, faDoorOpen } from '@fortawesome/free-solid-svg-icons';
 import { faMoon, faSun, faStickyNote } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/ui.header.account.vue'),
 	data() {
 		return {
@@ -131,7 +131,7 @@ export default Vue.extend({
 			};
 		}
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.close();
 	},
 	methods: {

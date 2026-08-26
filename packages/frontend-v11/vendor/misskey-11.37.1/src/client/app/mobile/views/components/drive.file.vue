@@ -1,5 +1,5 @@
 <template>
-<a class="vupkuhvjnjyqaqhsiogfbywvjxynrgsm" @click.prevent="onClick" :href="`/i/drive/file/${ file.id }`" :data-is-selected="isSelected">
+<a class="vupkuhvjnjyqaqhsiogfbywvjxynrgsm" @click.prevent="onClick" :href="`/i/drive/file/${ file.id }`" :data-is-selected="(isSelected) || null">
 	<div class="container">
 		<x-file-thumbnail class="thumbnail" :file="file" fit="cover"/>
 		<div class="body">
@@ -10,7 +10,7 @@
 			<footer>
 				<span class="type"><mk-file-type-icon :type="file.type"/>{{ file.type }}</span>
 				<span class="separator"></span>
-				<span class="data-size">{{ file.size | bytes }}</span>
+				<span class="data-size">{{ bytes(file.size) }}</span>
 				<span class="separator"></span>
 				<span class="created-at"><fa :icon="['far', 'clock']"/><mk-time :time="file.createdAt"/></span>
 				<template v-if="file.isSensitive">
@@ -24,11 +24,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import XFileThumbnail from '../../../common/views/components/drive-file-thumbnail.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/components/drive.file.vue'),
 	props: ['file'],
 	components: {
@@ -49,7 +49,7 @@ export default Vue.extend({
 
 		this.browser.$on('change-selection', this.onBrowserChangeSelection);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.browser.$off('change-selection', this.onBrowserChangeSelection);
 	},
 	methods: {

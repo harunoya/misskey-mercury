@@ -9,9 +9,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: ['list'],
 	data() {
 		return {
@@ -40,7 +40,7 @@ export default Vue.extend({
 			this.$root.$off('warp', this.warp);
 		});
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 	methods: {

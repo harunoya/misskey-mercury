@@ -12,8 +12,8 @@
 			<mk-avatar class="avatar" :user="user"/>
 			<div class="body" v-if="!iconOnly">
 				<div class="name">
-					<router-link class="name" :to="user | userPage" v-user-preview="user.id"><mk-user-name :user="user"/></router-link>
-					<p class="username">@{{ user | acct }}</p>
+					<router-link class="name" :to="userPage(user)" v-user-preview="user.id"><mk-user-name :user="user"/></router-link>
+					<p class="username">@{{ acct(user) }}</p>
 				</div>
 				<div class="description" v-if="user.description" :title="user.description">
 					<mfm :text="user.description" :is-note="false" :author="user" :i="$store.state.i" :custom-emojis="user.emojis" :plain="true" :nowrap="true"/>
@@ -29,11 +29,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import paging from '../../../common/scripts/paging';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/user-list.vue'),
 
 	mixins: [

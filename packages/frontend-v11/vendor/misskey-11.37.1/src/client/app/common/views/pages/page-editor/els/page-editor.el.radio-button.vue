@@ -3,21 +3,21 @@
 	<template #header><fa :icon="faBolt"/> {{ $t('blocks.radioButton') }}</template>
 
 	<section style="padding: 0 16px 16px 16px;">
-		<ui-input v-model="value.name"><template #prefix><fa :icon="faMagic"/></template><span>{{ $t('blocks._radioButton.name') }}</span></ui-input>
-		<ui-input v-model="value.title"><span>{{ $t('blocks._radioButton.title') }}</span></ui-input>
-		<ui-textarea v-model="values"><span>{{ $t('blocks._radioButton.values') }}</span></ui-textarea>
-		<ui-input v-model="value.default"><span>{{ $t('blocks._radioButton.default') }}</span></ui-input>
+		<ui-input :value="value.name" @input="value.name = $event"><template #prefix><fa :icon="faMagic"/></template><span>{{ $t('blocks._radioButton.name') }}</span></ui-input>
+		<ui-input :value="value.title" @input="value.title = $event"><span>{{ $t('blocks._radioButton.title') }}</span></ui-input>
+		<ui-textarea :value="values" @input="values = $event"><span>{{ $t('blocks._radioButton.values') }}</span></ui-textarea>
+		<ui-input :value="value.default" @input="value.default = $event"><span>{{ $t('blocks._radioButton.default') }}</span></ui-input>
 	</section>
 </x-container>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import { faBolt, faMagic } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../../../i18n';
 import XContainer from '../page-editor.container.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

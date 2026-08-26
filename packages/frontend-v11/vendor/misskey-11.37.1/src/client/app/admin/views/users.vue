@@ -3,7 +3,7 @@
 	<ui-card>
 		<template #title><fa :icon="faTerminal"/> {{ $t('operation') }}</template>
 		<section class="fit-top">
-			<ui-input class="target" v-model="target" type="text" @enter="showUser">
+			<ui-input class="target" :value="target" @input="target = $event" type="text" @enter="showUser">
 				<span>{{ $t('username-or-userid') }}</span>
 			</ui-input>
 			<ui-button @click="showUser"><fa :icon="faSearch"/> {{ $t('lookup') }}</ui-button>
@@ -22,7 +22,7 @@
 						<ui-button @click="unsuspendUser" :disabled="unsuspending">{{ $t('unsuspend') }}</ui-button>
 					</ui-horizon-group>
 					<ui-button @click="deleteAllFiles"><fa :icon="faTrashAlt"/> {{ $t('delete-all-files') }}</ui-button>
-					<ui-textarea v-if="user" :value="user | json5" readonly tall style="margin-top:16px;"></ui-textarea>
+					<ui-textarea v-if="user" :value="json5(user)" readonly tall style="margin-top:16px;"></ui-textarea>
 				</div>
 			</div>
 		</section>
@@ -32,14 +32,14 @@
 		<template #title><fa :icon="faUsers"/> {{ $t('users.title') }}</template>
 		<section class="fit-top">
 			<ui-horizon-group inputs>
-				<ui-select v-model="sort">
+				<ui-select :value="sort" @input="sort = $event">
 					<template #label>{{ $t('users.sort.title') }}</template>
 					<option value="-createdAt">{{ $t('users.sort.createdAtAsc') }}</option>
 					<option value="+createdAt">{{ $t('users.sort.createdAtDesc') }}</option>
 					<option value="-updatedAt">{{ $t('users.sort.updatedAtAsc') }}</option>
 					<option value="+updatedAt">{{ $t('users.sort.updatedAtDesc') }}</option>
 				</ui-select>
-				<ui-select v-model="state">
+				<ui-select :value="state" @input="state = $event">
 					<template #label>{{ $t('users.state.title') }}</template>
 					<option value="all">{{ $t('users.state.all') }}</option>
 					<option value="available">{{ $t('users.state.available') }}</option>
@@ -48,7 +48,7 @@
 					<option value="silenced">{{ $t('users.state.silenced') }}</option>
 					<option value="suspended">{{ $t('users.state.suspended') }}</option>
 				</ui-select>
-				<ui-select v-model="origin">
+				<ui-select :value="origin" @input="origin = $event">
 					<template #label>{{ $t('users.origin.title') }}</template>
 					<option value="combined">{{ $t('users.origin.combined') }}</option>
 					<option value="local">{{ $t('users.origin.local') }}</option>
@@ -56,10 +56,10 @@
 				</ui-select>
 			</ui-horizon-group>
 			<ui-horizon-group searchboxes>
-				<ui-input v-model="searchUsername" type="text" spellcheck="false" @input="fetchUsers(true)">
+				<ui-input :value="searchUsername" type="text" spellcheck="false" @input="searchUsername = $event; fetchUsers(true)">
 					<span>{{ $t('username') }}</span>
 				</ui-input>
-				<ui-input v-model="searchHost" type="text" spellcheck="false" @input="fetchUsers(true)" :disabled="origin === 'local'">
+				<ui-input :value="searchHost" type="text" spellcheck="false" :disabled="origin === 'local'" @input="searchHost = $event; fetchUsers(true)">
 					<span>{{ $t('host') }}</span>
 				</ui-input>
 			</ui-horizon-group>
@@ -73,14 +73,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import parseAcct from "../../../../misc/acct/parse";
 import { faUsers, faTerminal, faSearch, faKey, faSync, faMicrophoneSlash } from '@fortawesome/free-solid-svg-icons';
 import { faSnowflake, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import XUser from './users.user.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/users.vue'),
 	components: {
 		XUser

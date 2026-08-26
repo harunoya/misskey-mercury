@@ -9,14 +9,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { url } from '../../../config';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/drive-window.vue'),
 	components: {
-		XDrive: () => import('./drive.vue').then(m => m.default),
+		XDrive: defineAsyncComponent(() => import('./drive.vue').then(m => m.default)),
 	},
 	props: ['folder'],
 	data() {

@@ -1,14 +1,14 @@
 <template>
 <div class="kofvwchc">
 	<div>
-		<a :href="user | userPage(null, true)">
+		<a :href="userPage(user, null, true)">
 			<mk-avatar class="avatar" :user="user" :disable-link="true"/>
 		</a>
 	</div>
 	<div @click="click(user.id)">
 		<header>
 			<b><mk-user-name :user="user"/></b>
-			<span class="username">@{{ user | acct }}</span>
+			<span class="username">@{{ acct(user) }}</span>
 			<span class="is-admin" v-if="user.isAdmin">admin</span>
 			<span class="is-moderator" v-if="user.isModerator">moderator</span>
 			<span class="is-silenced" v-if="user.isSilenced" :title="$t('@.silenced-user')"><fa :icon="faMicrophoneSlash"/></span>
@@ -25,12 +25,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faMicrophoneSlash } from '@fortawesome/free-solid-svg-icons';
 import { faSnowflake } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/users.vue'),
 	props: ['user', 'click'],
 	data() {

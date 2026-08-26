@@ -10,7 +10,7 @@
 			<router-link v-for="image in images" class="img"
 				:style="`background-image: url(${image.thumbnailUrl})`"
 				:key="`${image.id}:${image._note.id}`"
-				:to="image._note | notePage"
+				:to="notePage(image._note)"
 				:title="`${image.name}\n${(new Date(image.createdAt)).toLocaleString()}`"
 			></router-link>
 		</div>
@@ -20,12 +20,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { getStaticImageUrl } from '../../../../common/scripts/get-static-image-url';
 import { concat } from '../../../../../../prelude/array';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/pages/user/user.photos.vue'),
 	props: ['user'],
 	data() {

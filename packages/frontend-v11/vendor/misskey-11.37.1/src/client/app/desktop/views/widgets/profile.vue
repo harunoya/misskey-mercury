@@ -2,8 +2,8 @@
 <div class="egwyvoaaryotefqhqtmiyawwefemjfsd">
 	<ui-container :show-header="false" :naked="props.design == 2">
 		<div class="egwyvoaaryotefqhqtmiyawwefemjfsd-body"
-			:data-compact="props.design == 1 || props.design == 2"
-			:data-melt="props.design == 2"
+			:data-compact="(props.design == 1 || props.design == 2) || null"
+			:data-melt="(props.design == 2) || null"
 		>
 			<div class="banner"
 				:style="$store.state.i.bannerUrl ? `background-image: url(${$store.state.i.bannerUrl})` : ''"
@@ -15,25 +15,28 @@
 				@click="updateAvatar()"
 				:title="$t('update-avatar')"
 			/>
-			<router-link class="name" :to="$store.state.i | userPage"><mk-user-name :user="$store.state.i"/></router-link>
-			<p class="username">@{{ $store.state.i | acct }}</p>
+			<router-link class="name" :to="userPage($store.state.i)"><mk-user-name :user="$store.state.i"/></router-link>
+			<p class="username">@{{ acct($store.state.i) }}</p>
 		</div>
 	</ui-container>
 </div>
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 import updateAvatar from '../../api/update-avatar';
 import updateBanner from '../../api/update-banner';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'profile',
 	props: () => ({
 		design: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('desktop/views/widgets/profile.vue'),
 	methods: {
 		func() {

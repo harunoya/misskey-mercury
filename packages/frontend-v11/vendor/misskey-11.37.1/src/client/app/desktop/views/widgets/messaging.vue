@@ -10,20 +10,23 @@
 </template>
 
 <script lang="ts">
+import { defineAsyncComponent, defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 import MkMessagingRoomWindow from '../components/messaging-room-window.vue';
 import MkMessagingWindow from '../components/messaging-window.vue';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'messaging',
 	props: () => ({
 		design: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n(''),
 	components: {
-		XMessaging: () => import('../../../common/views/components/messaging.vue').then(m => m.default)
+		XMessaging: defineAsyncComponent(() => import('../../../common/views/components/messaging.vue').then(m => m.default))
 	},
 	methods: {
 		navigate(user) {

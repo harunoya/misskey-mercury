@@ -5,13 +5,16 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'timemachine',
 	props: () => ({
 		design: 0
 	})
-}).extend({
+}),
+
 	methods: {
 		chosen(date) {
 			this.$root.$emit('warp', date);

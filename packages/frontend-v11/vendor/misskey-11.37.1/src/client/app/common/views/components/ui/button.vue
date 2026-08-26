@@ -1,7 +1,7 @@
 <template>
 <component class="dmtdnykelhudezerjlfpbhgovrgnqqgr"
 	:is="link ? 'a' : 'button'"
-	:class="{ inline, primary, wait, round: $store.state.device.roundedCorners }"
+	:class="{ inline: isInline, primary, wait, round: $store.state.device.roundedCorners }"
 	:type="type"
 	@click="$emit('click')"
 	@mousedown="onMousedown"
@@ -14,8 +14,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-export default Vue.extend({
+import { defineComponent } from 'vue';
+export default defineComponent({
+	emits: ['click'],
 	inject: {
 		horizonGrouped: {
 			default: false
@@ -34,9 +35,9 @@ export default Vue.extend({
 		inline: {
 			type: Boolean,
 			required: false,
-			default(): boolean {
-				return this.horizonGrouped;
-			}
+			// `null` means "unset", leaving the horizon-group injection to decide. Vue 3 calls a
+			// prop default factory without an instance, so that lookup lives in `isInline`.
+			default: null
 		},
 		link: {
 			type: Boolean,
@@ -52,6 +53,11 @@ export default Vue.extend({
 			type: Boolean,
 			required: false,
 			default: false
+		},
+	},
+	computed: {
+		isInline(): boolean {
+			return this.inline ?? this.horizonGrouped;
 		},
 	},
 	mounted() {

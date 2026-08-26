@@ -11,7 +11,9 @@
 					<option label="-Custom-" :value="mapName" v-if="mapName == '-Custom-'"/>
 					<option :label="$t('random')" :value="null"/>
 					<optgroup v-for="c in mapCategories" :key="c" :label="c">
-						<option v-for="m in maps" v-if="m.category == c" :key="m.name" :label="m.name" :value="m.name">{{ m.name }}</option>
+						<!-- Vue 2 ran `v-for` before `v-if`, so this filtered the list. Vue 3 reversed the
+						     priority, which would evaluate `m.category` before `m` exists. -->
+						<template v-for="m in maps" :key="m.name"><option v-if="m.category == c" :label="m.name" :value="m.name">{{ m.name }}</option></template>
 					</optgroup>
 				</select>
 			</header>
@@ -20,7 +22,7 @@
 				<div class="random" v-if="game.map == null"><fa icon="dice"/></div>
 				<div class="board" v-else :style="{ 'grid-template-rows': `repeat(${ game.map.length }, 1fr)`, 'grid-template-columns': `repeat(${ game.map[0].length }, 1fr)` }">
 					<div v-for="(x, i) in game.map.join('')"
-							:data-none="x == ' '"
+							:data-none="(x == ' ') || null"
 							@click="onPixelClick(i, x)">
 						<fa v-if="x == 'b'" :icon="fasCircle"/>
 						<fa v-if="x == 'w'" :icon="farCircle"/>
@@ -35,9 +37,9 @@
 			</header>
 
 			<div>
-				<form-radio v-model="game.bw" value="random" @change="updateSettings('bw')">{{ $t('random') }}</form-radio>
-				<form-radio v-model="game.bw" :value="1" @change="updateSettings('bw')">{{ this.$t('black-is').split('{}')[0] }}<b><mk-user-name :user="game.user1"/></b>{{ this.$t('black-is').split('{}')[1] }}</form-radio>
-				<form-radio v-model="game.bw" :value="2" @change="updateSettings('bw')">{{ this.$t('black-is').split('{}')[0] }}<b><mk-user-name :user="game.user2"/></b>{{ this.$t('black-is').split('{}')[1] }}</form-radio>
+				<form-radio :model="game.bw" value="random" @change="game.bw = $event; updateSettings('bw')">{{ $t('random') }}</form-radio>
+				<form-radio :model="game.bw" :value="1" @change="game.bw = $event; updateSettings('bw')">{{ this.$t('black-is').split('{}')[0] }}<b><mk-user-name :user="game.user1"/></b>{{ this.$t('black-is').split('{}')[1] }}</form-radio>
+				<form-radio :model="game.bw" :value="2" @change="game.bw = $event; updateSettings('bw')">{{ this.$t('black-is').split('{}')[0] }}<b><mk-user-name :user="game.user2"/></b>{{ this.$t('black-is').split('{}')[1] }}</form-radio>
 			</div>
 		</div>
 
@@ -47,9 +49,9 @@
 			</header>
 
 			<div>
-				<ui-switch v-model="game.isLlotheo" @change="updateSettings('isLlotheo')">{{ $t('is-llotheo') }}</ui-switch>
-				<ui-switch v-model="game.loopedBoard" @change="updateSettings('loopedBoard')">{{ $t('looped-map') }}</ui-switch>
-				<ui-switch v-model="game.canPutEverywhere" @change="updateSettings('canPutEverywhere')">{{ $t('can-put-everywhere') }}</ui-switch>
+				<ui-switch :value="game.isLlotheo" @change="game.isLlotheo = $event; updateSettings('isLlotheo')">{{ $t('is-llotheo') }}</ui-switch>
+				<ui-switch :value="game.loopedBoard" @change="game.loopedBoard = $event; updateSettings('loopedBoard')">{{ $t('looped-map') }}</ui-switch>
+				<ui-switch :value="game.canPutEverywhere" @change="game.canPutEverywhere = $event; updateSettings('canPutEverywhere')">{{ $t('can-put-everywhere') }}</ui-switch>
 			</div>
 		</div>
 
@@ -59,20 +61,20 @@
 			</header>
 
 			<div>
-				<template v-for="item in form">
-					<ui-switch v-if="item.type == 'switch'" v-model="item.value" :key="item.id" @change="onChangeForm(item)">{{ item.label || item.desc || '' }}</ui-switch>
+				<template v-for="item in form" :key="item.id">
+					<ui-switch v-if="item.type == 'switch'" :value="item.value" @change="item.value = $event; onChangeForm(item)">{{ item.label || item.desc || '' }}</ui-switch>
 
-					<div class="card" v-if="item.type == 'radio'" :key="item.id">
+					<div class="card" v-if="item.type == 'radio'">
 						<header>
 							<span>{{ item.label }}</span>
 						</header>
 
 						<div>
-							<form-radio v-for="(r, i) in item.items" :key="item.id + ':' + i" v-model="item.value" :value="r.value" @change="onChangeForm(item)">{{ r.label }}</form-radio>
+							<form-radio v-for="(r, i) in item.items" :model="item.value" :value="r.value" @change="item.value = $event; onChangeForm(item)">{{ r.label }}</form-radio>
 						</div>
 					</div>
 
-					<div class="card" v-if="item.type == 'slider'" :key="item.id">
+					<div class="card" v-if="item.type == 'slider'">
 						<header>
 							<span>{{ item.label }}</span>
 						</header>
@@ -82,7 +84,7 @@
 						</div>
 					</div>
 
-					<div class="card" v-if="item.type == 'textbox'" :key="item.id">
+					<div class="card" v-if="item.type == 'textbox'">
 						<header>
 							<span>{{ item.label }}</span>
 						</header>
@@ -114,13 +116,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../../i18n';
 import * as maps from '../../../../../../../games/reversi/maps';
 import { faCircle as fasCircle } from '@fortawesome/free-solid-svg-icons';
 import { faCircle as farCircle } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/games/reversi/reversi.room.vue'),
 	props: ['game', 'connection'],
 
@@ -163,7 +165,7 @@ export default Vue.extend({
 		if (this.game.user2Id != this.$store.state.i.id && this.game.form2) this.form = this.game.form2;
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.off('changeAccepts', this.onChangeAccepts);
 		this.connection.off('updateSettings', this.onUpdateSettings);
 		this.connection.off('initForm', this.onInitForm);
@@ -243,7 +245,7 @@ export default Vue.extend({
 				' ';
 			const line = this.game.map[y].split('');
 			line[x] = newPixel;
-			this.$set(this.game.map, y, line.join(''));
+			this.game.map[y] = line.join('');
 			this.$forceUpdate();
 			this.updateSettings('map');
 		}

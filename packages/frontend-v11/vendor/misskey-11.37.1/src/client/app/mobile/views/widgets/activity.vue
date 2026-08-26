@@ -10,18 +10,21 @@
 </template>
 
 <script lang="ts">
+import { defineAsyncComponent, defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'activity',
 	props: () => ({
 		compact: false
 	})
-}).extend({
+}),
+
 	i18n: i18n(),
 	components: {
-		XActivity: () => import('../../../common/views/components/activity.vue').then(m => m.default)
+		XActivity: defineAsyncComponent(() => import('../../../common/views/components/activity.vue').then(m => m.default))
 	},
 	methods: {
 		func() {

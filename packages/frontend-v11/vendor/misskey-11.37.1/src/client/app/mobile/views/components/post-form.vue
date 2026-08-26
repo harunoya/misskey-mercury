@@ -58,11 +58,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import form from '../../../common/scripts/post-form';
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['cancel'],
 	i18n: i18n(),
 
 	mixins: [

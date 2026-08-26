@@ -11,10 +11,10 @@
 
 		<div class="mkw-polls--body">
 			<div class="poll" v-if="!fetching && poll != null">
-				<p v-if="poll.text"><router-link :to="poll | notePage">
+				<p v-if="poll.text"><router-link :to="notePage(poll)">
 					<mfm :text="poll.text" :author="poll.user" :custom-emojis="poll.emojis"/>
 				</router-link></p>
-				<p v-if="!poll.text"><router-link :to="poll | notePage"><fa icon="link"/></router-link></p>
+				<p v-if="!poll.text"><router-link :to="notePage(poll)"><fa icon="link"/></router-link></p>
 				<mk-poll :note="poll"/>
 			</div>
 			<p class="empty" v-if="!fetching && poll == null">{{ $t('nothing') }}</p>
@@ -25,15 +25,18 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'polls',
 	props: () => ({
 		compact: false
 	})
-}).extend({
+}),
+
 	i18n: i18n('desktop/views/widgets/polls.vue'),
 	data() {
 		return {

@@ -5,8 +5,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-export default Vue.extend({
+import { defineComponent } from 'vue';
+export default defineComponent({
 	provide: {
 		horizonGrouped: true
 	},
@@ -29,7 +29,10 @@ export default Vue.extend({
 	},
 	mounted() {
 		this.$nextTick(() => {
-			this.children = this.$slots.default.length;
+			// Vue 2 handed `$slots.default` over as the rendered vnode array; in Vue 3 it is the
+			// slot function, whose `.length` is its arity — always 0 — so the narrow-screen rule
+			// keyed on this count never fired.
+			this.children = (this.$slots.default?.() ?? []).length;
 		});
 	}
 });

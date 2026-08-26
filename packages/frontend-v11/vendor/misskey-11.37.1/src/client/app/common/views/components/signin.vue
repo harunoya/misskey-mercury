@@ -2,12 +2,12 @@
 <form class="mk-signin" :class="{ signing, totpLogin }" @submit.prevent="onSubmit">
 	<div class="avatar" :style="{ backgroundImage: user ? `url('${ user.avatarUrl }')` : null }" v-show="withAvatar"></div>
 	<div class="normal-signin" v-if="!totpLogin">
-		<ui-input v-model="username" type="text" pattern="^[a-zA-Z0-9_]+$" spellcheck="false" autofocus required @input="onUsernameChange">
+		<ui-input :value="username" type="text" pattern="^[a-zA-Z0-9_]+$" spellcheck="false" autofocus required @input="username = $event; onUsernameChange">
 			<span>{{ $t('username') }}</span>
 			<template #prefix>@</template>
 			<template #suffix>@{{ host }}</template>
 		</ui-input>
-		<ui-input v-model="password" type="password" :with-password-toggle="true" v-if="!user || user && !user.usePasswordLessLogin" required>
+		<ui-input :value="password" @input="password = $event" type="password" :with-password-toggle="true" v-if="!user || user && !user.usePasswordLessLogin" required>
 			<span>{{ $t('password') }}</span>
 			<template #prefix><fa icon="lock"/></template>
 		</ui-input>
@@ -28,11 +28,11 @@
 		</div>
 		<div class="twofa-group totp-group">
 			<p style="margin-bottom:0;">{{ $t('enter-2fa-code') }}</p>
-			<ui-input v-model="password" type="password" :with-password-toggle="true" v-if="user && user.usePasswordLessLogin" required>
+			<ui-input :value="password" @input="password = $event" type="password" :with-password-toggle="true" v-if="user && user.usePasswordLessLogin" required>
 				<span>{{ $t('password') }}</span>
 				<template #prefix><fa icon="lock"/></template>
 			</ui-input>
-			<ui-input v-model="token" type="text" pattern="^[0-9]{6}$" autocomplete="off" spellcheck="false" required>
+			<ui-input :value="token" @input="token = $event" type="text" pattern="^[0-9]{6}$" autocomplete="off" spellcheck="false" required>
 				<span>{{ $t('@.2fa') }}</span>
 				<template #prefix><fa icon="gavel"/></template>
 			</ui-input>
@@ -43,13 +43,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { apiUrl, host } from '../../../config';
 import { toUnicode } from 'punycode';
 import { hexifyAB } from '../../scripts/2fa';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/signin.vue'),
 
 	props: {

@@ -11,20 +11,20 @@
 	</template>
 
 	<section class="ilrvjyvi">
-		<x-blocks class="children" v-model="value.children" :ai-script="aiScript"/>
+		<x-blocks class="children" :value="value.children" @input="value.children = $event" :ai-script="aiScript"/>
 	</section>
 </x-container>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import { v4 as uuid } from 'uuid';
 import { faPlus, faPencilAlt } from '@fortawesome/free-solid-svg-icons';
 import { faStickyNote } from '@fortawesome/free-regular-svg-icons';
 import i18n from '../../../../../i18n';
 import XContainer from '../page-editor.container.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

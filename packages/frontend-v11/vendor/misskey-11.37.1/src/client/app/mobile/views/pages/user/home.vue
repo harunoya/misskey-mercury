@@ -24,18 +24,18 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import XNotes from './home.notes.vue';
 import XPhotos from './home.photos.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/user/home.vue'),
 	components: {
 		XNotes,
 		XPhotos,
-		XPage: () => import('../../../../common/views/components/page/page.vue').then(m => m.default),
-		XActivity: () => import('../../../../common/views/components/activity.vue').then(m => m.default)
+		XPage: defineAsyncComponent(() => import('../../../../common/views/components/page/page.vue').then(m => m.default)),
+		XActivity: defineAsyncComponent(() => import('../../../../common/views/components/activity.vue').then(m => m.default))
 	},
 	props: ['user'],
 	data() {

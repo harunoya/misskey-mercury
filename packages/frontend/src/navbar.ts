@@ -168,9 +168,10 @@ export const navbarItemDef = reactive<{
 				text: 'Misskey v11',
 				active: ui === 'v11',
 				action: () => {
-					window.sessionStorage.setItem('mercury:v11:return-ui', ui === 'deck' ? 'deck' : 'default');
+					// v11 offers one way back rather than a menu, so remember which UI to restore.
+					miLocalStorage.setItem('mercury:v11:previousUi', ui ?? 'default');
 					miLocalStorage.setItem('ui', 'v11');
-					window.location.assign('/v11/');
+					unisonReload();
 				},
 			}])], ev.currentTarget ?? ev.target);
 		},

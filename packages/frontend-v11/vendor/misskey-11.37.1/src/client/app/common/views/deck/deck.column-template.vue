@@ -5,16 +5,17 @@
 	</template>
 
 	<div>
-		<component :is="component" @init="init" v-bind="$attrs"/>
+		<component :is="resolvedComponent" @init="init" v-bind="$attrs"/>
 	</div>
 </x-column>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
+import { asAsyncComponent } from '@compat/async-component';
 import XColumn from './deck.column.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
 		XColumn,
 	},
@@ -23,6 +24,14 @@ export default Vue.extend({
 		component: {
 			required: true
 		}
+	},
+
+	computed: {
+		// The route hands this down as a `() => import(...)` loader, which Vue 3 only
+		// understands once wrapped as an async component.
+		resolvedComponent() {
+			return asAsyncComponent(this.component);
+		},
 	},
 
 	data() {

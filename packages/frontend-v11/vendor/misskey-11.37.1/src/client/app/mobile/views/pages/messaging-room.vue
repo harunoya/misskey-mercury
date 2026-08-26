@@ -10,14 +10,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import parseAcct from '../../../../../misc/acct/parse';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	components: {
-		XMessagingRoom: () => import('../../../common/views/components/messaging-room.vue').then(m => m.default)
+		XMessagingRoom: defineAsyncComponent(() => import('../../../common/views/components/messaging-room.vue').then(m => m.default))
 	},
 	data() {
 		return {
@@ -42,7 +42,7 @@ export default Vue.extend({
 
 		this.fetch();
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.documentElement.style.removeProperty('background');
 		document.documentElement.style.removeProperty('background-color'); // for safari's bug
 		this.unwatchDarkmode();

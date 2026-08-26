@@ -1,8 +1,8 @@
 <template>
-<div class="mkw-calendar" :data-special="special" :data-mobile="platform == 'mobile'">
+<div class="mkw-calendar" :data-special="special" :data-mobile="(platform == 'mobile') || null">
 	<ui-container :naked="props.design == 1" :show-header="false">
 		<div class="mkw-calendar--body">
-			<div class="calendar" :data-is-holiday="isHoliday">
+			<div class="calendar" :data-is-holiday="(isHoliday) || null">
 				<p class="month-and-year">
 					<span class="year">{{ this.$t('year').split('{}')[0] }}{{ year }}{{ this.$t('year').split('{}')[1] }}</span>
 					<span class="month">{{ this.$t('month').split('{}')[0] }}{{ month }}{{ this.$t('month').split('{}')[1] }}</span>
@@ -36,15 +36,18 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'calendar',
 	props: () => ({
 		design: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/calendar.vue'),
 	data() {
 		return {
@@ -65,7 +68,7 @@ export default define({
 		this.tick();
 		this.clock = setInterval(this.tick, 1000);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearInterval(this.clock);
 	},
 	methods: {

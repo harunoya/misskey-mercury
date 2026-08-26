@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import * as tinycolor from 'tinycolor2';
 import ApexCharts from 'apexcharts';
@@ -49,7 +49,7 @@ const limit = 90;
 const sum = (...arr) => arr.reduce((r, a) => r.map((b, i) => a[i] + b));
 const negate = arr => arr.map(x => -x);
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/charts.vue'),
 	data() {
 		return {
@@ -146,7 +146,7 @@ export default Vue.extend({
 		this.render();
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.chartInstance.destroy();
 	},
 

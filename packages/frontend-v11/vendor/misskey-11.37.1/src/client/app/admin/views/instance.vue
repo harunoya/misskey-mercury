@@ -4,27 +4,27 @@
 		<template #title><fa icon="cog"/> {{ $t('instance') }}</template>
 		<section class="fit-top">
 			<ui-input :value="host" readonly>{{ $t('host') }}</ui-input>
-			<ui-input v-model="name">{{ $t('instance-name') }}</ui-input>
-			<ui-textarea v-model="description">{{ $t('instance-description') }}</ui-textarea>
-			<ui-input v-model="iconUrl"><template #icon><fa icon="link"/></template>{{ $t('icon-url') }}</ui-input>
-			<ui-input v-model="mascotImageUrl"><template #icon><fa icon="link"/></template>{{ $t('logo-url') }}</ui-input>
-			<ui-input v-model="bannerUrl"><template #icon><fa icon="link"/></template>{{ $t('banner-url') }}</ui-input>
-			<ui-input v-model="ToSUrl"><template #icon><fa icon="link"/></template>{{ $t('tos-url') }}</ui-input>
+			<ui-input :value="name" @input="name = $event">{{ $t('instance-name') }}</ui-input>
+			<ui-textarea :value="description" @input="description = $event">{{ $t('instance-description') }}</ui-textarea>
+			<ui-input :value="iconUrl" @input="iconUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('icon-url') }}</ui-input>
+			<ui-input :value="mascotImageUrl" @input="mascotImageUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('logo-url') }}</ui-input>
+			<ui-input :value="bannerUrl" @input="bannerUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('banner-url') }}</ui-input>
+			<ui-input :value="ToSUrl" @input="ToSUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('tos-url') }}</ui-input>
 			<details>
 				<summary>{{ $t('advanced-config') }}</summary>
-				<ui-input v-model="errorImageUrl"><template #icon><fa icon="link"/></template>{{ $t('error-image-url') }}</ui-input>
-				<ui-input v-model="languages"><template #icon><fa icon="language"/></template>{{ $t('languages') }}<template #desc>{{ $t('languages-desc') }}</template></ui-input>
-				<ui-input v-model="repositoryUrl"><template #icon><fa icon="link"/></template>{{ $t('repository-url') }}</ui-input>
-				<ui-input v-model="feedbackUrl"><template #icon><fa icon="link"/></template>{{ $t('feedback-url') }}</ui-input>
+				<ui-input :value="errorImageUrl" @input="errorImageUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('error-image-url') }}</ui-input>
+				<ui-input :value="languages" @input="languages = $event"><template #icon><fa icon="language"/></template>{{ $t('languages') }}<template #desc>{{ $t('languages-desc') }}</template></ui-input>
+				<ui-input :value="repositoryUrl" @input="repositoryUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('repository-url') }}</ui-input>
+				<ui-input :value="feedbackUrl" @input="feedbackUrl = $event"><template #icon><fa icon="link"/></template>{{ $t('feedback-url') }}</ui-input>
 			</details>
 		</section>
 		<section class="fit-bottom">
 			<header><fa :icon="faHeadset"/> {{ $t('maintainer-config') }}</header>
-			<ui-input v-model="maintainerName">{{ $t('maintainer-name') }}</ui-input>
-			<ui-input v-model="maintainerEmail" type="email"><template #icon><fa :icon="farEnvelope"/></template>{{ $t('maintainer-email') }}</ui-input>
+			<ui-input :value="maintainerName" @input="maintainerName = $event">{{ $t('maintainer-name') }}</ui-input>
+			<ui-input :value="maintainerEmail" @input="maintainerEmail = $event" type="email"><template #icon><fa :icon="farEnvelope"/></template>{{ $t('maintainer-email') }}</ui-input>
 		</section>
 		<section>
-			<ui-switch v-model="disableRegistration">{{ $t('disable-registration') }}</ui-switch>
+			<ui-switch :value="disableRegistration" @change="disableRegistration = $event">{{ $t('disable-registration') }}</ui-switch>
 			<ui-button v-if="disableRegistration" @click="invite">{{ $t('invite') }}</ui-button>
 		</section>
 		<section>
@@ -35,16 +35,16 @@
 	<ui-card>
 		<template #title><fa :icon="faPencilAlt"/> {{ $t('note-and-tl') }}</template>
 		<section class="fit-top fit-bottom">
-			<ui-input v-model="maxNoteTextLength">{{ $t('max-note-text-length') }}</ui-input>
+			<ui-input :value="maxNoteTextLength" @input="maxNoteTextLength = $event">{{ $t('max-note-text-length') }}</ui-input>
 		</section>
 		<section>
-			<ui-switch v-model="disableLocalTimeline">{{ $t('disable-local-timeline') }}</ui-switch>
-			<ui-switch v-model="disableGlobalTimeline">{{ $t('disable-global-timeline') }}</ui-switch>
+			<ui-switch :value="disableLocalTimeline" @change="disableLocalTimeline = $event">{{ $t('disable-local-timeline') }}</ui-switch>
+			<ui-switch :value="disableGlobalTimeline" @change="disableGlobalTimeline = $event">{{ $t('disable-global-timeline') }}</ui-switch>
 			<ui-info>{{ $t('disabling-timelines-info') }}</ui-info>
 		</section>
 		<section>
-			<ui-switch v-model="enableEmojiReaction">{{ $t('enable-emoji-reaction') }}</ui-switch>
-			<ui-switch v-model="useStarForReactionFallback">{{ $t('use-star-for-reaction-fallback') }}</ui-switch>
+			<ui-switch :value="enableEmojiReaction" @change="enableEmojiReaction = $event">{{ $t('enable-emoji-reaction') }}</ui-switch>
+			<ui-switch :value="useStarForReactionFallback" @change="useStarForReactionFallback = $event">{{ $t('use-star-for-reaction-fallback') }}</ui-switch>
 		</section>
 		<section>
 			<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -54,7 +54,7 @@
 	<ui-card>
 		<template #title><fa icon="cloud"/> {{ $t('drive-config') }}</template>
 		<section>
-			<ui-switch v-model="useObjectStorage">{{ $t('use-object-storage') }}</ui-switch>
+			<ui-switch :value="useObjectStorage" @change="useObjectStorage = $event">{{ $t('use-object-storage') }}</ui-switch>
 			<template v-if="useObjectStorage">
 				<ui-info>
 					<i18n path="object-storage-s3-info">
@@ -62,30 +62,30 @@
 					</i18n>
 				</ui-info>
 				<ui-info>{{ $t('object-storage-gcs-info') }}</ui-info>
-				<ui-input v-model="objectStorageBaseUrl" :disabled="!useObjectStorage">{{ $t('object-storage-base-url') }}</ui-input>
+				<ui-input :value="objectStorageBaseUrl" @input="objectStorageBaseUrl = $event" :disabled="!useObjectStorage">{{ $t('object-storage-base-url') }}</ui-input>
 				<ui-horizon-group inputs>
-					<ui-input v-model="objectStorageBucket" :disabled="!useObjectStorage">{{ $t('object-storage-bucket') }}</ui-input>
-					<ui-input v-model="objectStoragePrefix" :disabled="!useObjectStorage">{{ $t('object-storage-prefix') }}</ui-input>
+					<ui-input :value="objectStorageBucket" @input="objectStorageBucket = $event" :disabled="!useObjectStorage">{{ $t('object-storage-bucket') }}</ui-input>
+					<ui-input :value="objectStoragePrefix" @input="objectStoragePrefix = $event" :disabled="!useObjectStorage">{{ $t('object-storage-prefix') }}</ui-input>
 				</ui-horizon-group>
-				<ui-input v-model="objectStorageEndpoint" :disabled="!useObjectStorage">{{ $t('object-storage-endpoint') }}</ui-input>
+				<ui-input :value="objectStorageEndpoint" @input="objectStorageEndpoint = $event" :disabled="!useObjectStorage">{{ $t('object-storage-endpoint') }}</ui-input>
 				<ui-horizon-group inputs>
-					<ui-input v-model="objectStorageRegion" :disabled="!useObjectStorage">{{ $t('object-storage-region') }}</ui-input>
-					<ui-input v-model="objectStoragePort" type="number" :disabled="!useObjectStorage">{{ $t('object-storage-port') }}</ui-input>
+					<ui-input :value="objectStorageRegion" @input="objectStorageRegion = $event" :disabled="!useObjectStorage">{{ $t('object-storage-region') }}</ui-input>
+					<ui-input :value="objectStoragePort" @input="objectStoragePort = $event" type="number" :disabled="!useObjectStorage">{{ $t('object-storage-port') }}</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group inputs>
-					<ui-input v-model="objectStorageAccessKey" :disabled="!useObjectStorage"><template #icon><fa icon="key"/></template>{{ $t('object-storage-access-key') }}</ui-input>
-					<ui-input v-model="objectStorageSecretKey" :disabled="!useObjectStorage"><template #icon><fa icon="key"/></template>{{ $t('object-storage-secret-key') }}</ui-input>
+					<ui-input :value="objectStorageAccessKey" @input="objectStorageAccessKey = $event" :disabled="!useObjectStorage"><template #icon><fa icon="key"/></template>{{ $t('object-storage-access-key') }}</ui-input>
+					<ui-input :value="objectStorageSecretKey" @input="objectStorageSecretKey = $event" :disabled="!useObjectStorage"><template #icon><fa icon="key"/></template>{{ $t('object-storage-secret-key') }}</ui-input>
 				</ui-horizon-group>
-				<ui-switch v-model="objectStorageUseSSL" :disabled="!useObjectStorage">{{ $t('object-storage-use-ssl') }}</ui-switch>
+				<ui-switch :value="objectStorageUseSSL" @change="objectStorageUseSSL = $event" :disabled="!useObjectStorage">{{ $t('object-storage-use-ssl') }}</ui-switch>
 			</template>
 		</section>
 		<section>
-			<ui-switch v-model="cacheRemoteFiles">{{ $t('cache-remote-files') }}<template #desc>{{ $t('cache-remote-files-desc') }}</template></ui-switch>
-			<ui-switch v-model="proxyRemoteFiles">{{ $t('proxy-remote-files') }}<template #desc>{{ $t('proxy-remote-files-desc') }}</template></ui-switch>
+			<ui-switch :value="cacheRemoteFiles" @change="cacheRemoteFiles = $event">{{ $t('cache-remote-files') }}<template #desc>{{ $t('cache-remote-files-desc') }}</template></ui-switch>
+			<ui-switch :value="proxyRemoteFiles" @change="proxyRemoteFiles = $event">{{ $t('proxy-remote-files') }}<template #desc>{{ $t('proxy-remote-files-desc') }}</template></ui-switch>
 		</section>
 		<section class="fit-top fit-bottom">
-			<ui-input v-model="localDriveCapacityMb" type="number">{{ $t('local-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
-			<ui-input v-model="remoteDriveCapacityMb" type="number" :disabled="!cacheRemoteFiles">{{ $t('remote-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
+			<ui-input :value="localDriveCapacityMb" @input="localDriveCapacityMb = $event" type="number">{{ $t('local-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
+			<ui-input :value="remoteDriveCapacityMb" @input="remoteDriveCapacityMb = $event" type="number" :disabled="!cacheRemoteFiles">{{ $t('remote-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
 		</section>
 		<section>
 			<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -95,7 +95,7 @@
 	<ui-card>
 		<template #title><fa :icon="faThumbtack"/> {{ $t('pinned-users') }}</template>
 		<section class="fit-top">
-			<ui-textarea v-model="pinnedUsers">
+			<ui-textarea :value="pinnedUsers" @input="pinnedUsers = $event">
 				<template #desc>{{ $t('pinned-users-info') }}</template>
 			</ui-textarea>
 			<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -106,7 +106,7 @@
 		<template #title><fa :icon="faGhost"/> {{ $t('proxy-account-config') }}</template>
 		<section>
 			<ui-info>{{ $t('proxy-account-info') }}</ui-info>
-			<ui-input v-model="proxyAccount"><template #prefix>@</template>{{ $t('proxy-account-username') }}<template #desc>{{ $t('proxy-account-username-desc') }}</template></ui-input>
+			<ui-input :value="proxyAccount" @input="proxyAccount = $event"><template #prefix>@</template>{{ $t('proxy-account-username') }}<template #desc>{{ $t('proxy-account-username-desc') }}</template></ui-input>
 			<ui-info warn>{{ $t('proxy-account-warn') }}</ui-info>
 		</section>
 		<section>
@@ -117,19 +117,19 @@
 	<ui-card>
 		<template #title><fa :icon="farEnvelope"/> {{ $t('email-config') }}</template>
 		<section>
-			<ui-switch v-model="enableEmail">{{ $t('enable-email') }}<template #desc>{{ $t('email-config-info') }}</template></ui-switch>
+			<ui-switch :value="enableEmail" @change="enableEmail = $event">{{ $t('enable-email') }}<template #desc>{{ $t('email-config-info') }}</template></ui-switch>
 			<template v-if="enableEmail">
-				<ui-input v-model="email" type="email" :disabled="!enableEmail">{{ $t('email') }}</ui-input>
+				<ui-input :value="email" @input="email = $event" type="email" :disabled="!enableEmail">{{ $t('email') }}</ui-input>
 				<ui-horizon-group inputs>
-					<ui-input v-model="smtpHost" :disabled="!enableEmail">{{ $t('smtp-host') }}</ui-input>
-					<ui-input v-model="smtpPort" type="number" :disabled="!enableEmail">{{ $t('smtp-port') }}</ui-input>
+					<ui-input :value="smtpHost" @input="smtpHost = $event" :disabled="!enableEmail">{{ $t('smtp-host') }}</ui-input>
+					<ui-input :value="smtpPort" @input="smtpPort = $event" type="number" :disabled="!enableEmail">{{ $t('smtp-port') }}</ui-input>
 				</ui-horizon-group>
-				<ui-switch v-model="smtpAuth">{{ $t('smtp-auth') }}</ui-switch>
+				<ui-switch :value="smtpAuth" @change="smtpAuth = $event">{{ $t('smtp-auth') }}</ui-switch>
 				<ui-horizon-group inputs>
-					<ui-input v-model="smtpUser" :disabled="!enableEmail || !smtpAuth">{{ $t('smtp-user') }}</ui-input>
-					<ui-input v-model="smtpPass" type="password" :with-password-toggle="true" :disabled="!enableEmail || !smtpAuth">{{ $t('smtp-pass') }}</ui-input>
+					<ui-input :value="smtpUser" @input="smtpUser = $event" :disabled="!enableEmail || !smtpAuth">{{ $t('smtp-user') }}</ui-input>
+					<ui-input :value="smtpPass" @input="smtpPass = $event" type="password" :with-password-toggle="true" :disabled="!enableEmail || !smtpAuth">{{ $t('smtp-pass') }}</ui-input>
 				</ui-horizon-group>
-				<ui-switch v-model="smtpSecure" :disabled="!enableEmail">{{ $t('smtp-secure') }}<template #desc>{{ $t('smtp-secure-info') }}</template></ui-switch>
+				<ui-switch :value="smtpSecure" @change="smtpSecure = $event" :disabled="!enableEmail">{{ $t('smtp-secure') }}<template #desc>{{ $t('smtp-secure-info') }}</template></ui-switch>
 				<ui-button @click="testEmail()">{{ $t('test-email') }}</ui-button>
 			</template>
 		</section>
@@ -141,12 +141,12 @@
 	<ui-card>
 		<template #title><fa :icon="faBolt"/> {{ $t('serviceworker-config') }}</template>
 		<section>
-			<ui-switch v-model="enableServiceWorker">{{ $t('enable-serviceworker') }}<template #desc>{{ $t('serviceworker-info') }}</template></ui-switch>
+			<ui-switch :value="enableServiceWorker" @change="enableServiceWorker = $event">{{ $t('enable-serviceworker') }}<template #desc>{{ $t('serviceworker-info') }}</template></ui-switch>
 			<template v-if="enableServiceWorker">
 				<ui-info>{{ $t('vapid-info') }}<br><code>npm i web-push -g<br>web-push generate-vapid-keys</code></ui-info>
 				<ui-horizon-group inputs class="fit-bottom">
-					<ui-input v-model="swPublicKey" :disabled="!enableServiceWorker"><template #icon><fa icon="key"/></template>{{ $t('vapid-publickey') }}</ui-input>
-					<ui-input v-model="swPrivateKey" :disabled="!enableServiceWorker"><template #icon><fa icon="key"/></template>{{ $t('vapid-privatekey') }}</ui-input>
+					<ui-input :value="swPublicKey" @input="swPublicKey = $event" :disabled="!enableServiceWorker"><template #icon><fa icon="key"/></template>{{ $t('vapid-publickey') }}</ui-input>
+					<ui-input :value="swPrivateKey" @input="swPrivateKey = $event" :disabled="!enableServiceWorker"><template #icon><fa icon="key"/></template>{{ $t('vapid-privatekey') }}</ui-input>
 				</ui-horizon-group>
 			</template>
 		</section>
@@ -158,13 +158,13 @@
 	<ui-card>
 		<template #title><fa :icon="faShieldAlt"/> {{ $t('recaptcha-config') }}</template>
 		<section :class="enableRecaptcha ? 'fit-bottom' : ''">
-			<ui-switch v-model="enableRecaptcha">{{ $t('enable-recaptcha') }}</ui-switch>
+			<ui-switch :value="enableRecaptcha" @change="enableRecaptcha = $event">{{ $t('enable-recaptcha') }}</ui-switch>
 			<template v-if="enableRecaptcha">
 				<ui-info>{{ $t('recaptcha-info') }}</ui-info>
 				<ui-info warn>{{ $t('recaptcha-info2') }}</ui-info>
 				<ui-horizon-group inputs>
-					<ui-input v-model="recaptchaSiteKey" :disabled="!enableRecaptcha"><template #icon><fa icon="key"/></template>{{ $t('recaptcha-site-key') }}</ui-input>
-					<ui-input v-model="recaptchaSecretKey" :disabled="!enableRecaptcha"><template #icon><fa icon="key"/></template>{{ $t('recaptcha-secret-key') }}</ui-input>
+					<ui-input :value="recaptchaSiteKey" @input="recaptchaSiteKey = $event" :disabled="!enableRecaptcha"><template #icon><fa icon="key"/></template>{{ $t('recaptcha-site-key') }}</ui-input>
+					<ui-input :value="recaptchaSecretKey" @input="recaptchaSecretKey = $event" :disabled="!enableRecaptcha"><template #icon><fa icon="key"/></template>{{ $t('recaptcha-secret-key') }}</ui-input>
 				</ui-horizon-group>
 			</template>
 		</section>
@@ -181,33 +181,33 @@
 		<template #title><fa :icon="faShieldAlt"/> {{ $t('external-service-integration-config') }}</template>
 		<section>
 			<header><fa :icon="['fab', 'twitter']"/> {{ $t('twitter-integration-config') }}</header>
-			<ui-switch v-model="enableTwitterIntegration">{{ $t('enable-twitter-integration') }}</ui-switch>
+			<ui-switch :value="enableTwitterIntegration" @change="enableTwitterIntegration = $event">{{ $t('enable-twitter-integration') }}</ui-switch>
 			<template v-if="enableTwitterIntegration">
 				<ui-horizon-group>
-					<ui-input v-model="twitterConsumerKey" :disabled="!enableTwitterIntegration"><template #icon><fa icon="key"/></template>{{ $t('twitter-integration-consumer-key') }}</ui-input>
-					<ui-input v-model="twitterConsumerSecret" :disabled="!enableTwitterIntegration"><template #icon><fa icon="key"/></template>{{ $t('twitter-integration-consumer-secret') }}</ui-input>
+					<ui-input :value="twitterConsumerKey" @input="twitterConsumerKey = $event" :disabled="!enableTwitterIntegration"><template #icon><fa icon="key"/></template>{{ $t('twitter-integration-consumer-key') }}</ui-input>
+					<ui-input :value="twitterConsumerSecret" @input="twitterConsumerSecret = $event" :disabled="!enableTwitterIntegration"><template #icon><fa icon="key"/></template>{{ $t('twitter-integration-consumer-secret') }}</ui-input>
 				</ui-horizon-group>
 				<ui-info>{{ $t('twitter-integration-info', { url: `${url}/api/tw/cb` }) }}</ui-info>
 			</template>
 		</section>
 		<section>
 			<header><fa :icon="['fab', 'github']"/> {{ $t('github-integration-config') }}</header>
-			<ui-switch v-model="enableGithubIntegration">{{ $t('enable-github-integration') }}</ui-switch>
+			<ui-switch :value="enableGithubIntegration" @change="enableGithubIntegration = $event">{{ $t('enable-github-integration') }}</ui-switch>
 			<template v-if="enableGithubIntegration">
 				<ui-horizon-group>
-					<ui-input v-model="githubClientId" :disabled="!enableGithubIntegration"><template #icon><fa icon="key"/></template>{{ $t('github-integration-client-id') }}</ui-input>
-					<ui-input v-model="githubClientSecret" :disabled="!enableGithubIntegration"><template #icon><fa icon="key"/></template>{{ $t('github-integration-client-secret') }}</ui-input>
+					<ui-input :value="githubClientId" @input="githubClientId = $event" :disabled="!enableGithubIntegration"><template #icon><fa icon="key"/></template>{{ $t('github-integration-client-id') }}</ui-input>
+					<ui-input :value="githubClientSecret" @input="githubClientSecret = $event" :disabled="!enableGithubIntegration"><template #icon><fa icon="key"/></template>{{ $t('github-integration-client-secret') }}</ui-input>
 				</ui-horizon-group>
 				<ui-info>{{ $t('github-integration-info', { url: `${url}/api/gh/cb` }) }}</ui-info>
 			</template>
 		</section>
 		<section>
 			<header><fa :icon="['fab', 'discord']"/> {{ $t('discord-integration-config') }}</header>
-			<ui-switch v-model="enableDiscordIntegration">{{ $t('enable-discord-integration') }}</ui-switch>
+			<ui-switch :value="enableDiscordIntegration" @change="enableDiscordIntegration = $event">{{ $t('enable-discord-integration') }}</ui-switch>
 			<template v-if="enableDiscordIntegration">
 				<ui-horizon-group>
-					<ui-input v-model="discordClientId" :disabled="!enableDiscordIntegration"><template #icon><fa icon="key"/></template>{{ $t('discord-integration-client-id') }}</ui-input>
-					<ui-input v-model="discordClientSecret" :disabled="!enableDiscordIntegration"><template #icon><fa icon="key"/></template>{{ $t('discord-integration-client-secret') }}</ui-input>
+					<ui-input :value="discordClientId" @input="discordClientId = $event" :disabled="!enableDiscordIntegration"><template #icon><fa icon="key"/></template>{{ $t('discord-integration-client-id') }}</ui-input>
+					<ui-input :value="discordClientSecret" @input="discordClientSecret = $event" :disabled="!enableDiscordIntegration"><template #icon><fa icon="key"/></template>{{ $t('discord-integration-client-secret') }}</ui-input>
 				</ui-horizon-group>
 				<ui-info>{{ $t('discord-integration-info', { url: `${url}/api/dc/cb` }) }}</ui-info>
 			</template>
@@ -223,7 +223,7 @@
 		<ui-card>
 			<template #title><fa :icon="faHashtag"/> {{ $t('hidden-tags') }}</template>
 			<section class="fit-top">
-				<ui-textarea v-model="hiddenTags">
+				<ui-textarea :value="hiddenTags" @input="hiddenTags = $event">
 					<template #desc>{{ $t('hidden-tags-info') }}</template>
 				</ui-textarea>
 				<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -233,7 +233,7 @@
 		<ui-card>
 			<template #title>summaly Proxy</template>
 			<section class="fit-top fit-bottom">
-				<ui-input v-model="summalyProxy">URL</ui-input>
+				<ui-input :value="summalyProxy" @input="summalyProxy = $event">URL</ui-input>
 			</section>
 			<section>
 				<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -244,14 +244,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { url, host } from '../../config';
 import { toUnicode } from 'punycode';
 import { faHeadset, faShieldAlt, faGhost, faUserPlus, faBolt, faThumbtack, faPencilAlt, faHashtag } from '@fortawesome/free-solid-svg-icons';
 import { faEnvelope as farEnvelope, faSave } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/instance.vue'),
 
 	data() {

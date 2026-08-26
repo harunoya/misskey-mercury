@@ -1,7 +1,7 @@
 <template>
 <div class="mk-window" :data-flexible="isFlexible" @dragover="onDragover">
 	<div class="bg" ref="bg" v-show="isModal" @click="onBgClick"></div>
-	<div class="main" ref="main" tabindex="-1" :data-is-modal="isModal" @mousedown="onBodyMousedown" @keydown="onKeydown" :style="{ width, height }">
+	<div class="main" ref="main" tabindex="-1" :data-is-modal="(isModal) || null" @mousedown="onBodyMousedown" @keydown="onKeydown" :style="{ width, height }">
 		<div class="body">
 			<header ref="header"
 				@contextmenu.prevent="() => {}" @mousedown.prevent="onHeaderMousedown"
@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import anime from 'animejs';
 import contains from '../../../common/scripts/contains';
@@ -55,7 +55,7 @@ function dragClear(fn) {
 	window.removeEventListener('mouseup',    dragClear);
 }
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/window.vue'),
 	props: {
 		isModal: {
@@ -115,7 +115,7 @@ export default Vue.extend({
 		});
 	},
 
-	destroyed() {
+	unmounted() {
 		// ウィンドウをウィンドウシステムから削除
 		this.$root.os.windows.remove(this);
 

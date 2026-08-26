@@ -69,17 +69,20 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 import { v4 as uuid } from 'uuid';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'posts-monitor',
 	props: () => ({
 		design: 0,
 		view: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/posts-monitor.vue'),
 
 	data() {
@@ -120,7 +123,7 @@ export default define({
 			id: Math.random().toString().substr(2, 8)
 		});
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 	methods: {

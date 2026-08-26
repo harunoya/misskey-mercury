@@ -22,6 +22,7 @@ export type Keys = (
 	'fontSize' |
 	'ui' |
 	'ui_temp' |
+	'mercury:v11:previousUi' |
 	'bootloaderLocales' |
 	'theme' |
 	'themeId' |

@@ -18,7 +18,7 @@
 			<div class="body" v-if="appearNote.deletedAt == null">
 				<p v-if="appearNote.cw != null" class="cw">
 				<mfm v-if="appearNote.cw != ''" class="text" :text="appearNote.cw" :author="appearNote.user" :i="$store.state.i" :custom-emojis="appearNote.emojis" />
-					<mk-cw-button v-model="showContent" :note="appearNote"/>
+					<mk-cw-button :value="showContent" @input="showContent = $event" :note="appearNote"/>
 				</p>
 				<div class="content" v-show="appearNote.cw == null || showContent">
 					<div class="text">
@@ -68,14 +68,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 
 import XSub from './note.sub.vue';
 import noteMixin from '../../../common/scripts/note-mixin';
 import noteSubscriber from '../../../common/scripts/note-subscriber';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/components/note.vue'),
 	components: {
 		XSub

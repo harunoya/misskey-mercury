@@ -65,10 +65,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import getNoteSummary from '../../../../../misc/get-note-summary';
 
-export default Vue.extend({
+export default defineComponent({
 	props: ['notification'],
 	data() {
 		return {

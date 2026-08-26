@@ -7,14 +7,17 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'activity',
 	props: () => ({
 		design: 0,
 		view: 0
 	})
-}).extend({
+}),
+
 	methods: {
 		func() {
 			if (this.props.design == 2) {

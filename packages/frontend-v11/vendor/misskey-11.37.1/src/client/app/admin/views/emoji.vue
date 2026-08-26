@@ -4,19 +4,19 @@
 		<template #title><fa icon="plus"/> {{ $t('add-emoji.title') }}</template>
 		<section class="fit-top">
 			<ui-horizon-group inputs>
-				<ui-input v-model="name">
+				<ui-input :value="name" @input="name = $event">
 					<span>{{ $t('add-emoji.name') }}</span>
 					<template #desc>{{ $t('add-emoji.name-desc') }}</template>
 				</ui-input>
-				<ui-input v-model="category" :datalist="categoryList">
+				<ui-input :value="category" @input="category = $event" :datalist="categoryList">
 					<span>{{ $t('add-emoji.category') }}</span>
 				</ui-input>
-				<ui-input v-model="aliases">
+				<ui-input :value="aliases" @input="aliases = $event">
 					<span>{{ $t('add-emoji.aliases') }}</span>
 					<template #desc>{{ $t('add-emoji.aliases-desc') }}</template>
 				</ui-input>
 			</ui-horizon-group>
-			<ui-input v-model="url">
+			<ui-input :value="url" @input="url = $event">
 				<template #icon><fa icon="link"/></template>
 				<span>{{ $t('add-emoji.url') }}</span>
 			</ui-input>
@@ -33,17 +33,17 @@
 			</div>
 			<div>
 				<ui-horizon-group>
-					<ui-input v-model="emoji.name">
+					<ui-input :value="emoji.name" @input="emoji.name = $event">
 						<span>{{ $t('add-emoji.name') }}</span>
 					</ui-input>
-					<ui-input v-model="emoji.category" :datalist="categoryList">
+					<ui-input :value="emoji.category" @input="emoji.category = $event" :datalist="categoryList">
 						<span>{{ $t('add-emoji.category') }}</span>
 					</ui-input>
-					<ui-input v-model="emoji.aliases">
+					<ui-input :value="emoji.aliases" @input="emoji.aliases = $event">
 						<span>{{ $t('add-emoji.aliases') }}</span>
 					</ui-input>
 				</ui-horizon-group>
-				<ui-input v-model="emoji.url">
+				<ui-input :value="emoji.url" @input="emoji.url = $event">
 					<template #icon><fa icon="link"/></template>
 					<span>{{ $t('add-emoji.url') }}</span>
 				</ui-input>
@@ -58,12 +58,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faGrin } from '@fortawesome/free-regular-svg-icons';
 import { unique } from '../../../../prelude/array';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/emoji.vue'),
 	data() {
 		return {

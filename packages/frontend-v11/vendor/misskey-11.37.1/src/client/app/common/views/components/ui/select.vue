@@ -1,5 +1,5 @@
 <template>
-<div class="ui-select" :class="[{ focused, disabled, filled, inline }, styl]">
+<div class="ui-select" :class="[{ focused, disabled, filled, inline: isInline }, styl]">
 	<div class="icon" ref="icon"><slot name="icon"></slot></div>
 	<div class="input" @click="focus">
 		<span class="label" ref="label"><slot name="label"></slot></span>
@@ -20,9 +20,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['input'],
 	inject: {
 		horizonGrouped: {
 			default: false
@@ -48,9 +49,9 @@ export default Vue.extend({
 		inline: {
 			type: Boolean,
 			required: false,
-			default(): boolean {
-				return this.horizonGrouped;
-			}
+			// `null` means "unset", leaving the horizon-group injection to decide. Vue 3 calls a
+			// prop default factory without an instance, so that lookup lives in `isInline`.
+			default: null
 		},
 	},
 	data() {
@@ -59,6 +60,10 @@ export default Vue.extend({
 		};
 	},
 	computed: {
+		isInline(): boolean {
+			return this.inline ?? this.horizonGrouped;
+		},
+
 		v: {
 			get() {
 				return this.value;

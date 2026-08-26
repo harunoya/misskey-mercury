@@ -15,8 +15,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-export default Vue.extend({
+import { defineComponent } from 'vue';
+export default defineComponent({
 	props: {
 		showHeader: {
 			type: Boolean,
@@ -86,13 +86,13 @@ export default Vue.extend({
 				color var(--faceHeaderText)
 				background var(--faceHeader)
 
-				> [data-icon]
+				> [data-icon], > :slotted([data-icon])
 					margin-right 6px
 
 				&:empty
 					display none
 
-			> button
+			> button, > :slotted(button)
 				position absolute
 				z-index 2
 				top 0
@@ -116,7 +116,7 @@ export default Vue.extend({
 			color var(--text)
 			background var(--deckColumnBg)
 
-			> button
+			> button, > :slotted(button)
 				position absolute
 				top 0
 				right 8px

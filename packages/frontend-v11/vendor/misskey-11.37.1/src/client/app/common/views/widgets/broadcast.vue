@@ -3,8 +3,8 @@
 	<ui-container :show-header="false" :naked="props.design === 1">
 		<div class="anltbovirfeutcigvwgmgxipejaeozxi-body"
 			:data-found="announcements && announcements.length !== 0"
-			:data-melt="props.design == 1"
-			:data-mobile="platform == 'mobile'"
+			:data-melt="(props.design == 1) || null"
+			:data-mobile="(platform == 'mobile') || null"
 		>
 			<div class="broadcast-left" v-show="announcements && announcements.length !== 0">
 				<div class="icon">
@@ -37,16 +37,19 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'broadcast',
 	props: () => ({
 		design: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/broadcast.vue'),
 	data() {
 		return {

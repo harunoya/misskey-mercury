@@ -7,11 +7,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
-		XSettings: () => import('../components/settings.vue').then(m => m.default)
+		XSettings: defineAsyncComponent(() => import('../components/settings.vue').then(m => m.default))
 	},
 	mounted() {
 		document.title = this.$root.instanceName;

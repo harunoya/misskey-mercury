@@ -3,17 +3,19 @@
 	<x-pie class="pie" :value="usage"/>
 	<div>
 		<p><fa icon="microchip"/>CPU</p>
-		<p>{{ meta.cpu.cores }} Logical cores</p>
-		<p>{{ meta.cpu.model }}</p>
+		<!-- API_COMPAT: v11's `meta` reported the host's CPU; the current one does not, so these
+		     read as blank rather than taking the whole widget down with them. -->
+		<p v-if="meta.cpu">{{ meta.cpu.cores }} Logical cores</p>
+		<p v-if="meta.cpu">{{ meta.cpu.model }}</p>
 	</div>
 </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import XPie from './server.pie.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
 		XPie
 	},
@@ -26,7 +28,7 @@ export default Vue.extend({
 	mounted() {
 		this.connection.on('stats', this.onStats);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.off('stats', this.onStats);
 	},
 	methods: {

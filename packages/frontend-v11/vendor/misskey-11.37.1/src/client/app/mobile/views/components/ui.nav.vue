@@ -16,26 +16,26 @@
 				</router-link>
 				<div class="links">
 					<ul>
-						<li><router-link to="/" :data-active="$route.name == 'index'"><i><fa icon="home" fixed-width/></i>{{ $t('timeline') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/" :data-active="($route.name == 'index') || null"><i><fa icon="home" fixed-width/></i>{{ $t('timeline') }}<i><fa icon="angle-right"/></i></router-link></li>
 						<li v-if="$store.state.device.enableMobileQuickNotificationView"><p @click="showNotifications = true"><i><fa :icon="faBell" fixed-width/></i>{{ $t('notifications') }}<i v-if="hasUnreadNotification" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></p></li>
-						<li v-else><router-link to="/i/notifications" :data-active="$route.name == 'notifications'"><i><fa :icon="faBell" fixed-width/></i>{{ $t('notifications') }}<i v-if="hasUnreadNotification" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/i/messaging" :data-active="$route.name == 'messaging'"><i><fa :icon="['far', 'comments']" fixed-width/></i>{{ $t('@.messaging') }}<i v-if="hasUnreadMessagingMessage" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
-						<li v-if="$store.getters.isSignedIn && ($store.state.i.isLocked || $store.state.i.carefulBot)"><router-link to="/i/follow-requests" :data-active="$route.name == 'follow-requests'"><i><fa :icon="['far', 'envelope']" fixed-width/></i>{{ $t('follow-requests') }}<i v-if="$store.getters.isSignedIn && $store.state.i.pendingReceivedFollowRequestsCount" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/featured" :data-active="$route.name == 'featured'"><i><fa :icon="faNewspaper" fixed-width/></i>{{ $t('@.featured-notes') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/explore" :data-active="$route.name == 'explore' || $route.name == 'explore-tag'"><i><fa :icon="faHashtag" fixed-width/></i>{{ $t('@.explore') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/games/reversi" :data-active="$route.name == 'reversi'"><i><fa icon="gamepad" fixed-width/></i>{{ $t('game') }}<i v-if="hasGameInvitation" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
+						<li v-else><router-link to="/i/notifications" :data-active="($route.name == 'notifications') || null"><i><fa :icon="faBell" fixed-width/></i>{{ $t('notifications') }}<i v-if="hasUnreadNotification" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/messaging" :data-active="($route.name == 'messaging') || null"><i><fa :icon="['far', 'comments']" fixed-width/></i>{{ $t('@.messaging') }}<i v-if="hasUnreadMessagingMessage" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
+						<li v-if="$store.getters.isSignedIn && ($store.state.i.isLocked || $store.state.i.carefulBot)"><router-link to="/i/follow-requests" :data-active="($route.name == 'follow-requests') || null"><i><fa :icon="['far', 'envelope']" fixed-width/></i>{{ $t('follow-requests') }}<i v-if="$store.getters.isSignedIn && $store.state.i.pendingReceivedFollowRequestsCount" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/featured" :data-active="($route.name == 'featured') || null"><i><fa :icon="faNewspaper" fixed-width/></i>{{ $t('@.featured-notes') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/explore" :data-active="($route.name == 'explore' || $route.name == 'explore-tag') || null"><i><fa :icon="faHashtag" fixed-width/></i>{{ $t('@.explore') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/games/reversi" :data-active="($route.name == 'reversi') || null"><i><fa icon="gamepad" fixed-width/></i>{{ $t('game') }}<i v-if="hasGameInvitation" class="circle"><fa icon="circle"/></i><i><fa icon="angle-right"/></i></router-link></li>
 					</ul>
 					<ul>
-						<li><router-link to="/i/widgets" :data-active="$route.name == 'widgets'"><i><fa :icon="['far', 'calendar-alt']" fixed-width/></i>{{ $t('widgets') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/i/favorites" :data-active="$route.name == 'favorites'"><i><fa icon="star" fixed-width/></i>{{ $t('@.favorites') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/i/lists" :data-active="$route.name == 'user-lists'"><i><fa icon="list" fixed-width/></i>{{ $t('user-lists') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/i/groups" :data-active="$route.name == 'user-groups'"><i><fa :icon="faUsers" fixed-width/></i>{{ $t('user-groups') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/i/drive" :data-active="$route.name == 'drive'"><i><fa icon="cloud" fixed-width/></i>{{ $t('@.drive') }}<i><fa icon="angle-right"/></i></router-link></li>
-						<li><router-link to="/i/pages" :data-active="$route.name == 'pages'"><i><fa :icon="faStickyNote" fixed-width/></i>{{ $t('@.pages') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/widgets" :data-active="($route.name == 'widgets') || null"><i><fa :icon="['far', 'calendar-alt']" fixed-width/></i>{{ $t('widgets') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/favorites" :data-active="($route.name == 'favorites') || null"><i><fa icon="star" fixed-width/></i>{{ $t('@.favorites') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/lists" :data-active="($route.name == 'user-lists') || null"><i><fa icon="list" fixed-width/></i>{{ $t('user-lists') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/groups" :data-active="($route.name == 'user-groups') || null"><i><fa :icon="faUsers" fixed-width/></i>{{ $t('user-groups') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/drive" :data-active="($route.name == 'drive') || null"><i><fa icon="cloud" fixed-width/></i>{{ $t('@.drive') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/pages" :data-active="($route.name == 'pages') || null"><i><fa :icon="faStickyNote" fixed-width/></i>{{ $t('@.pages') }}<i><fa icon="angle-right"/></i></router-link></li>
 					</ul>
 					<ul>
 						<li><a @click="search"><i><fa icon="search" fixed-width/></i>{{ $t('search') }}<i><fa icon="angle-right"/></i></a></li>
-						<li><router-link to="/i/settings" :data-active="$route.name == 'settings'"><i><fa icon="cog" fixed-width/></i>{{ $t('@.settings') }}<i><fa icon="angle-right"/></i></router-link></li>
+						<li><router-link to="/i/settings" :data-active="($route.name == 'settings') || null"><i><fa icon="cog" fixed-width/></i>{{ $t('@.settings') }}<i><fa icon="angle-right"/></i></router-link></li>
 						<li v-if="$store.getters.isSignedIn && ($store.state.i.isAdmin || $store.state.i.isModerator)"><a href="/admin"><i><fa icon="terminal" fixed-width/></i><span>{{ $t('admin') }}</span><i><fa icon="angle-right"/></i></a></li>
 					</ul>
 					<ul>
@@ -65,14 +65,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { lang } from '../../../config';
 import { faNewspaper, faHashtag, faHome, faColumns, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { faMoon, faSun, faStickyNote, faBell } from '@fortawesome/free-regular-svg-icons';
 import { search } from '../../../common/scripts/search';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/components/ui.nav.vue'),
 
 	props: ['isOpen'],
@@ -122,7 +122,7 @@ export default Vue.extend({
 		}
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.$store.getters.isSignedIn) {
 			this.connection.dispose();
 		}
@@ -327,7 +327,7 @@ export default Vue.extend({
 	transform: translateX(0);
 	transition: transform 300ms cubic-bezier(0.23, 1, 0.32, 1), opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.nav-enter,
+.nav-enter-from,
 .nav-leave-active {
 	opacity: 0;
 	transform: translateX(-240px);
@@ -338,7 +338,7 @@ export default Vue.extend({
 	opacity: 1;
 	transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.back-enter,
+.back-enter-from,
 .back-leave-active {
 	opacity: 0;
 }

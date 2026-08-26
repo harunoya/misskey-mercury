@@ -3,11 +3,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import Home from './home.vue';
 import Welcome from './welcome.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
 		Home,
 		Welcome

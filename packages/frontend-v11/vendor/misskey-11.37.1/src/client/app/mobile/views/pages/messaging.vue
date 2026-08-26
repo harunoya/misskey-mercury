@@ -6,14 +6,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import getAcct from '../../../../../misc/acct/render';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	components: {
-		XMessaging: () => import('../../../common/views/components/messaging.vue').then(m => m.default)
+		XMessaging: defineAsyncComponent(() => import('../../../common/views/components/messaging.vue').then(m => m.default))
 	},
 	mounted() {
 		document.title = `${this.$root.instanceName} ${this.$t('@.messaging')}`;

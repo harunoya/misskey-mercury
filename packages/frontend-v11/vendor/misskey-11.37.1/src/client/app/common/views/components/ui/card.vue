@@ -9,8 +9,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-export default Vue.extend({
+import { defineComponent } from 'vue';
+export default defineComponent({
 	provide() {
 		return {
 			isCardChild: true
@@ -41,7 +41,7 @@ export default Vue.extend({
 		@media (min-width 500px)
 			padding 24px 32px
 
-	> section
+	> :slotted(section)
 		padding 20px 16px
 		border-top solid var(--lineWidth) var(--faceDivider)
 

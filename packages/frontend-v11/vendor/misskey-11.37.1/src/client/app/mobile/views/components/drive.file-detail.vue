@@ -22,7 +22,7 @@
 		<div>
 			<span class="type"><mk-file-type-icon :type="file.type"/> {{ file.type }}</span>
 			<span class="separator"></span>
-			<span class="data-size">{{ file.size | bytes }}</span>
+			<span class="data-size">{{ bytes(file.size) }}</span>
 			<span class="separator"></span>
 			<span class="created-at" @click="showCreatedAt"><fa :icon="['far', 'clock']"/><mk-time :time="file.createdAt"/></span>
 			<template v-if="file.isSensitive">
@@ -54,12 +54,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { gcd } from '../../../../../prelude/math';
 import XFileThumbnail from '../../../common/views/components/drive-file-thumbnail.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/components/drive.file-detail.vue'),
 	props: ['file'],
 

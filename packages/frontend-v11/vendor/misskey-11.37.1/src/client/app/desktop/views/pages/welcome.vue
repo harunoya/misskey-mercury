@@ -19,8 +19,8 @@
 					<div class="info">
 						<span><b>{{ host }}</b> - <span v-html="$t('powered-by-misskey')"></span></span>
 						<span class="stats" v-if="stats">
-							<span><fa icon="user"/> {{ stats.originalUsersCount | number }}</span>
-							<span><fa icon="pencil-alt"/> {{ stats.originalNotesCount | number }}</span>
+							<span><fa icon="user"/> {{ number(stats.originalUsersCount) }}</span>
+							<span><fa icon="pencil-alt"/> {{ number(stats.originalNotesCount) }}</span>
 						</span>
 					</div>
 
@@ -148,13 +148,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { host, copyright } from '../../../config';
 import { concat } from '../../../../../prelude/array';
 import { toUnicode } from 'punycode';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/pages/welcome.vue'),
 	data() {
 		return {

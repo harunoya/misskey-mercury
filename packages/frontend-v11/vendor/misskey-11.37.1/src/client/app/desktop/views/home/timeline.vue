@@ -4,15 +4,15 @@
 	<div class="main">
 		<component :is="src == 'list' ? 'mk-user-list-timeline' : 'x-core'" ref="tl" v-bind="options">
 			<header class="zahtxcqi">
-				<div :data-active="src == 'home'" @click="src = 'home'"><fa icon="home"/> {{ $t('home') }}</div>
-				<div :data-active="src == 'local'" @click="src = 'local'" v-if="enableLocalTimeline"><fa :icon="['far', 'comments']"/> {{ $t('local') }}</div>
-				<div :data-active="src == 'hybrid'" @click="src = 'hybrid'" v-if="enableLocalTimeline"><fa icon="share-alt"/> {{ $t('hybrid') }}</div>
-				<div :data-active="src == 'global'" @click="src = 'global'" v-if="enableGlobalTimeline"><fa icon="globe"/> {{ $t('global') }}</div>
-				<div :data-active="src == 'tag'" @click="src = 'tag'" v-if="tagTl"><fa icon="hashtag"/> {{ tagTl.title }}</div>
-				<div :data-active="src == 'list'" @click="src = 'list'" v-if="list"><fa icon="list"/> {{ list.name }}</div>
+				<div :data-active="(src == 'home') || null" @click="src = 'home'"><fa icon="home"/> {{ $t('home') }}</div>
+				<div :data-active="(src == 'local') || null" @click="src = 'local'" v-if="enableLocalTimeline"><fa :icon="['far', 'comments']"/> {{ $t('local') }}</div>
+				<div :data-active="(src == 'hybrid') || null" @click="src = 'hybrid'" v-if="enableLocalTimeline"><fa icon="share-alt"/> {{ $t('hybrid') }}</div>
+				<div :data-active="(src == 'global') || null" @click="src = 'global'" v-if="enableGlobalTimeline"><fa icon="globe"/> {{ $t('global') }}</div>
+				<div :data-active="(src == 'tag') || null" @click="src = 'tag'" v-if="tagTl"><fa icon="hashtag"/> {{ tagTl.title }}</div>
+				<div :data-active="(src == 'list') || null" @click="src = 'list'" v-if="list"><fa icon="list"/> {{ list.name }}</div>
 				<div class="buttons">
-					<button :data-active="src == 'mentions'" @click="src = 'mentions'" :title="$t('mentions')"><fa icon="at"/><i class="indicator" v-if="$store.state.i.hasUnreadMentions"><fa icon="circle"/></i></button>
-					<button :data-active="src == 'messages'" @click="src = 'messages'" :title="$t('messages')"><fa :icon="['far', 'envelope']"/><i class="indicator" v-if="$store.state.i.hasUnreadSpecifiedNotes"><fa icon="circle"/></i></button>
+					<button :data-active="(src == 'mentions') || null" @click="src = 'mentions'" :title="$t('mentions')"><fa icon="at"/><i class="indicator" v-if="$store.state.i.hasUnreadMentions"><fa icon="circle"/></i></button>
+					<button :data-active="(src == 'messages') || null" @click="src = 'messages'" :title="$t('messages')"><fa :icon="['far', 'envelope']"/><i class="indicator" v-if="$store.state.i.hasUnreadSpecifiedNotes"><fa icon="circle"/></i></button>
 					<button @click="chooseTag" :title="$t('hashtag')" ref="tagButton"><fa icon="hashtag"/></button>
 					<button @click="chooseList" :title="$t('list')" ref="listButton"><fa icon="list"/></button>
 				</div>
@@ -23,18 +23,18 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import XCore from './timeline.core.vue';
 import Menu from '../../../common/views/components/menu.vue';
 import MkSettingsWindow from '../components/settings-window.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/timeline.vue'),
 
 	components: {
 		XCore,
-		XPostForm: () => import('../components/post-form.vue').then(m => m.default)
+		XPostForm: defineAsyncComponent(() => import('../components/post-form.vue').then(m => m.default))
 	},
 
 	data() {

@@ -5,7 +5,7 @@
 		<a v-for="(image, i) in images" :key="i"
 			class="img"
 			:style="`background-image: url(${thumbnail(image.file)})`"
-			:href="image.note | notePage"
+			:href="notePage(image.note)"
 		></a>
 	</div>
 	<p class="empty" v-if="!fetching && images.length == 0">{{ $t('no-photos') }}</p>
@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { getStaticImageUrl } from '../../../../common/scripts/get-static-image-url';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/user/home.photos.vue'),
 	props: ['user'],
 	data() {

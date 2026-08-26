@@ -1,3 +1,4 @@
+import { createDetachedComponent } from '@compat/detached';
 /**
  * マウスオーバーするとユーザーがプレビューされる要素を設定します
  */
@@ -5,7 +6,7 @@
 import MkUserPreview from '../components/user-preview.vue';
 
 export default {
-	bind(el, binding, vn) {
+	beforeMount(el, binding, vn) {
 		const self = el._userPreviewDirective_ = {} as any;
 
 		self.user = binding.value;
@@ -23,12 +24,9 @@ export default {
 		const show = () => {
 			if (self.tag) return;
 
-			self.tag = new MkUserPreview({
-				parent: vn.context,
-				propsData: {
+			self.tag = createDetachedComponent(MkUserPreview, {
 					user: self.user
-				}
-			}).$mount();
+				}).$mount();
 
 			const preview = self.tag.$el;
 			const rect = el.getBoundingClientRect();
@@ -63,7 +61,7 @@ export default {
 		});
 	},
 
-	unbind(el, binding, vn) {
+	unmounted(el, binding, vn) {
 		const self = el._userPreviewDirective_;
 		clearTimeout(self.showTimer);
 		clearTimeout(self.hideTimer);

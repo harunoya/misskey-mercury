@@ -3,13 +3,13 @@
 	<ui-card>
 		<template #title><fa :icon="faDatabase"/> {{ $t('tables') }}</template>
 		<section v-if="tables">
-			<div v-for="table in Object.keys(tables)"><b>{{ table }}</b> {{ tables[table].count | number }} {{ tables[table].size | bytes }}</div>
+			<div v-for="table in Object.keys(tables)"><b>{{ table }}</b> {{ tables[number(table].count) }} {{ tables[bytes(table].size) }}</div>
 		</section>
 		<section>
 			<header><fa :icon="faBroom"/> {{ $t('vacuum') }}</header>
 			<ui-info>{{ $t('vacuum-info') }}</ui-info>
-			<ui-switch v-model="fullVacuum">FULL</ui-switch>
-			<ui-switch v-model="analyzeVacuum">ANALYZE</ui-switch>
+			<ui-switch :value="fullVacuum" @change="fullVacuum = $event">FULL</ui-switch>
+			<ui-switch :value="analyzeVacuum" @change="analyzeVacuum = $event">ANALYZE</ui-switch>
 			<ui-button @click="vacuum()"><fa :icon="faBroom"/> {{ $t('vacuum') }}</ui-button>
 			<ui-info warn>{{ $t('vacuum-exclamation') }}</ui-info>
 		</section>
@@ -18,11 +18,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faDatabase, faBroom } from '@fortawesome/free-solid-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/db.vue'),
 
 	data() {

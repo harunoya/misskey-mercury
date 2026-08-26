@@ -5,12 +5,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import contains from '../../../common/scripts/contains';
 
-export default Vue.extend({
+export default defineComponent({
 	components: {
-		XPicker: () => import('../../../common/views/components/emoji-picker.vue').then(m => m.default)
+		XPicker: defineAsyncComponent(() => import('../../../common/views/components/emoji-picker.vue').then(m => m.default))
 	},
 
 	props: {

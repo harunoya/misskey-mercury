@@ -1,0 +1,34 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and misskey-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+/*
+ * Undoes the parts of the current client's global stylesheet that v11 cannot live with.
+ *
+ * v11 used to own its own page, where `<body>` was the default `height: auto` and the document
+ * itself scrolled. It is now loaded into the current client's document, and that client pins
+ * `html, body, #misskey_app { height: 100% }` and clips `body`, because it scrolls its own inner
+ * containers instead. Left in place those two rules cut every v11 screen off at the fold: the
+ * timeline, the widget columns and the footer are all rendered, just clipped.
+ *
+ * Only the properties the other client sets are reset — v11's own `html { height: 100% }` stands.
+ * These rules are injected at runtime, so they come after the linked stylesheet and win on order.
+ */
+body {
+	height: auto;
+	min-height: 100%;
+	overflow: visible;
+}
+
+/*
+ * v11's own reset sets `font-family` on `html, body` and deliberately nothing else, so its type
+ * scale was the browser's: a 16px root and `line-height: normal`. The current client sets 14px and
+ * 1.35 there, and every v11 rule that inherits either — most of the mobile layout — was measured
+ * against the wrong base.
+ */
+html,
+body {
+	font-size: medium;
+	line-height: normal;
+}

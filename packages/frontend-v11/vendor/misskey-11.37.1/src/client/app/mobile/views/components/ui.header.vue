@@ -16,11 +16,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { env } from '../../../config';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	props: ['func'],
 
@@ -96,7 +96,7 @@ export default Vue.extend({
 				overflow hidden
 				text-overflow ellipsis
 
-				> img
+				> img, > :slotted(img)
 					display inline-block
 					vertical-align bottom
 					width ($height - 16px)
@@ -126,7 +126,7 @@ export default Vue.extend({
 				font-size 10px
 				color var(--notificationIndicator)
 
-			> button:last-child
+			> button:last-child, > :slotted(button:last-child)
 				display block
 				position absolute
 				top 0

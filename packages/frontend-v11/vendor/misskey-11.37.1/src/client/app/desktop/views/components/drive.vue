@@ -3,9 +3,9 @@
 	<nav>
 		<div class="path" @contextmenu.prevent.stop="() => {}">
 			<x-nav-folder :class="{ current: folder == null }"/>
-			<template v-for="folder in hierarchyFolders">
+			<template v-for="folder in hierarchyFolders" :key="folder.id">
 				<span class="separator"><fa icon="angle-right"/></span>
-				<x-nav-folder :folder="folder" :key="folder.id"/>
+				<x-nav-folder :folder="folder"/>
 			</template>
 			<span class="separator" v-if="folder != null"><fa icon="angle-right"/></span>
 			<span class="folder current" v-if="folder != null">{{ folder.name }}</span>
@@ -54,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import MkDriveWindow from './drive-window.vue';
 import XNavFolder from './drive.nav-folder.vue';
@@ -64,7 +64,7 @@ import contains from '../../../common/scripts/contains';
 import { url } from '../../../config';
 import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/drive.vue'),
 	components: {
 		XNavFolder,
@@ -133,7 +133,7 @@ export default Vue.extend({
 			this.fetch();
 		}
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 	methods: {

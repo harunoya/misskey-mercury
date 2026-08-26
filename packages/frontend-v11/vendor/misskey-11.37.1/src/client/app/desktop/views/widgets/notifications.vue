@@ -10,16 +10,19 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'notifications',
 	props: () => ({
 		compact: false,
 		type: 'all'
 	})
-}).extend({
+}),
+
 	i18n: i18n('desktop/views/widgets/notifications.vue'),
 	methods: {
 		settings() {

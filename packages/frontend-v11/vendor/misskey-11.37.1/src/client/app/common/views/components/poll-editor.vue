@@ -17,27 +17,27 @@
 		<fa icon="times"/>
 	</button>
 	<section>
-		<ui-switch v-model="multiple">{{ $t('multiple') }}</ui-switch>
+		<ui-switch :value="multiple" @change="multiple = $event">{{ $t('multiple') }}</ui-switch>
 		<div>
-			<ui-select v-model="expiration">
+			<ui-select :value="expiration" @input="expiration = $event">
 				<template #label>{{ $t('expiration') }}</template>
 				<option value="infinite">{{ $t('infinite') }}</option>
 				<option value="at">{{ $t('at') }}</option>
 				<option value="after">{{ $t('after') }}</option>
 			</ui-select>
 			<section v-if="expiration === 'at'">
-				<ui-input v-model="atDate" type="date">
+				<ui-input :value="atDate" @input="atDate = $event" type="date">
 					<template #title>{{ $t('deadline-date') }}</template>
 				</ui-input>
-				<ui-input v-model="atTime" type="time">
+				<ui-input :value="atTime" @input="atTime = $event" type="time">
 					<template #title>{{ $t('deadline-time') }}</template>
 				</ui-input>
 			</section>
 			<section v-if="expiration === 'after'">
-				<ui-input v-model="after" type="number">
+				<ui-input :value="after" @input="after = $event" type="number">
 					<template #title>{{ $t('interval') }}</template>
 				</ui-input>
-				<ui-select v-model="unit">
+				<ui-select :value="unit" @input="unit = $event">
 					<template #title>{{ $t('unit') }}</template>
 					<option value="second">{{ $t('second') }}</option>
 					<option value="minute">{{ $t('minute') }}</option>
@@ -51,13 +51,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { erase } from '../../../../../prelude/array';
 import { addTimespan } from '../../../../../prelude/time';
 import { formatDateTimeString } from '../../../../../misc/format-time-string';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/poll-editor.vue'),
 	data() {
 		return {

@@ -3,10 +3,10 @@
 	<mk-notes ref="timeline" :pagination="pagination" @inited="() => $emit('loaded')">
 		<template #header>
 			<header class="kugajpep">
-				<span :data-active="mode == 'default'" @click="mode = 'default'"><fa :icon="['far', 'comment-alt']"/> {{ $t('default') }}</span>
-				<span :data-active="mode == 'with-replies'" @click="mode = 'with-replies'"><fa icon="comments"/> {{ $t('with-replies') }}</span>
-				<span :data-active="mode == 'with-media'" @click="mode = 'with-media'"><fa :icon="['far', 'images']"/> {{ $t('with-media') }}</span>
-				<span :data-active="mode == 'my-posts'" @click="mode = 'my-posts'"><fa icon="user"/> {{ $t('my-posts') }}</span>
+				<span :data-active="(mode == 'default') || null" @click="mode = 'default'"><fa :icon="['far', 'comment-alt']"/> {{ $t('default') }}</span>
+				<span :data-active="(mode == 'with-replies') || null" @click="mode = 'with-replies'"><fa icon="comments"/> {{ $t('with-replies') }}</span>
+				<span :data-active="(mode == 'with-media') || null" @click="mode = 'with-media'"><fa :icon="['far', 'images']"/> {{ $t('with-media') }}</span>
+				<span :data-active="(mode == 'my-posts') || null" @click="mode = 'my-posts'"><fa icon="user"/> {{ $t('my-posts') }}</span>
 			</header>
 		</template>
 	</mk-notes>
@@ -14,10 +14,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/pages/user/user.timeline.vue'),
 
 	props: ['user'],

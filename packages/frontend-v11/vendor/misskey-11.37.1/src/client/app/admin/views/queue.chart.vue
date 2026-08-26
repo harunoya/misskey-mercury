@@ -2,22 +2,22 @@
 <div>
 	<ui-info warn v-if="latestStats && latestStats.waiting > 0">The queue is jammed.</ui-info>
 	<ui-horizon-group inputs v-if="latestStats" class="fit-bottom">
-		<ui-input :value="latestStats.activeSincePrevTick | number" type="text" readonly>
+		<ui-input :value="number(latestStats.activeSincePrevTick)" type="text" readonly>
 			<span>Process</span>
 			<template #prefix><fa :icon="fasPlayCircle"/></template>
 			<template #suffix>jobs/tick</template>
 		</ui-input>
-		<ui-input :value="latestStats.active | number" type="text" readonly>
+		<ui-input :value="number(latestStats.active)" type="text" readonly>
 			<span>Active</span>
 			<template #prefix><fa :icon="farPlayCircle"/></template>
 			<template #suffix>jobs</template>
 		</ui-input>
-		<ui-input :value="latestStats.waiting | number" type="text" readonly>
+		<ui-input :value="number(latestStats.waiting)" type="text" readonly>
 			<span>Waiting</span>
 			<template #prefix><fa :icon="faStopCircle"/></template>
 			<template #suffix>jobs</template>
 		</ui-input>
-		<ui-input :value="latestStats.delayed | number" type="text" readonly>
+		<ui-input :value="number(latestStats.delayed)" type="text" readonly>
 			<span>Delayed</span>
 			<template #prefix><fa :icon="faStopwatch"/></template>
 			<template #suffix>jobs</template>
@@ -28,14 +28,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import ApexCharts from 'apexcharts';
 import * as tinycolor from 'tinycolor2';
 import { faStopwatch, faPlayCircle as fasPlayCircle } from '@fortawesome/free-solid-svg-icons';
 import { faStopCircle, faPlayCircle as farPlayCircle } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/queue.vue'),
 
 	props: {

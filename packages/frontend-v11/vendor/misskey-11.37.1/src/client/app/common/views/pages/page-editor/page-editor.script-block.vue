@@ -37,30 +37,30 @@
 		</select>
 	</section>
 	<section v-else-if="value.type === 'fn'" class="" style="padding:0 16px 16px 16px;">
-		<ui-textarea v-model="slots">
+		<ui-textarea :value="slots" @input="slots = $event">
 			<span>{{ $t('script.blocks._fn.slots') }}</span>
 			<template #desc>{{ $t('script.blocks._fn.slots-info') }}</template>
 		</ui-textarea>
-		<x-v v-if="value.value.expression" v-model="value.value.expression" :title="$t(`script.blocks._fn.arg1`)" :get-expected-type="() => null" :ai-script="aiScript" :fn-slots="value.value.slots" :name="name"/>
+		<x-v v-if="value.value.expression" :value="value.value.expression" @input="value.value.expression = $event" :title="$t(`script.blocks._fn.arg1`)" :get-expected-type="() => null" :ai-script="aiScript" :fn-slots="value.value.slots" :name="name"/>
 	</section>
 	<section v-else-if="value.type.startsWith('fn:')" class="" style="padding:16px;">
-		<x-v v-for="(x, i) in value.args" v-model="value.args[i]" :title="aiScript.getVarByName(value.type.split(':')[1]).value.slots[i].name" :get-expected-type="() => null" :ai-script="aiScript" :name="name" :key="i"/>
+		<x-v v-for="(x, i) in value.args" :value="value.args[i]" @input="value.args[i] = $event" :title="aiScript.getVarByName(value.type.split(':')[1]).value.slots[i].name" :get-expected-type="() => null" :ai-script="aiScript" :name="name" :key="i"/>
 	</section>
 	<section v-else class="" style="padding:16px;">
-		<x-v v-for="(x, i) in value.args" v-model="value.args[i]" :title="$t(`script.blocks._${value.type}.arg${i + 1}`)" :get-expected-type="() => _getExpectedType(i)" :ai-script="aiScript" :name="name" :fn-slots="fnSlots" :key="i"/>
+		<x-v v-for="(x, i) in value.args" :value="value.args[i]" @input="value.args[i] = $event" :title="$t(`script.blocks._${value.type}.arg${i + 1}`)" :get-expected-type="() => _getExpectedType(i)" :ai-script="aiScript" :name="name" :fn-slots="fnSlots" :key="i"/>
 	</section>
 </x-container>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import XContainer from './page-editor.container.vue';
 import { faPencilAlt, faPlug } from '@fortawesome/free-solid-svg-icons';
 import { isLiteralBlock, funcDefs, blockDefs } from '../../../../../../misc/aiscript/index';
 import { v4 as uuid } from 'uuid';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

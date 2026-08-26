@@ -6,7 +6,7 @@
 		<div class="body">
 			<p v-if="note.cw != null" class="cw">
 				<span class="text" v-if="note.cw != ''">{{ note.cw }}</span>
-				<mk-cw-button v-model="showContent" :note="note"/>
+				<mk-cw-button :value="showContent" @input="showContent = $event" :note="note"/>
 			</p>
 			<div class="content" v-show="note.cw == null || showContent">
 				<mk-sub-note-content class="text" :note="note"/>
@@ -17,9 +17,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		note: {
 			type: Object,

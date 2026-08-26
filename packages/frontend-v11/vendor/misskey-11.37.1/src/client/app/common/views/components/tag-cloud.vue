@@ -18,11 +18,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
-import * as VueWordCloud from 'vuewordcloud';
+// `vuewordcloud` is Vue 2 only — its render function takes `createElement` and reads
+// `$scopedSlots`, and there is no Vue 3 release. Stubbed rather than ported: `mk-tag-cloud` is used
+// only by the signed-out welcome page, which this integration never reaches because v11 is offered
+// to signed-in readers alone. The cloud renders nothing; there is no fallback list.
+const VueWordCloud = { name: 'VueWordCloud', render: () => null };
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/tag-cloud.vue'),
 	components: {
 		[VueWordCloud.name]: VueWordCloud
@@ -38,7 +42,7 @@ export default Vue.extend({
 		this.fetch();
 		this.clock = setInterval(this.fetch, 1000 * 60);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearInterval(this.clock);
 	},
 	methods: {

@@ -5,12 +5,12 @@
 		<div>
 			<header>
 				<mk-reaction-icon :reaction="notification.reaction" class="icon"/>
-				<router-link :to="notification.user | userPage" class="name">
+				<router-link :to="userPage(notification.user)" class="name">
 					<mk-user-name :user="notification.user"/>
 				</router-link>
 				<mk-time :time="notification.createdAt"/>
 			</header>
-			<router-link class="note-ref" :to="notification.note | notePage" :title="getNoteSummary(notification.note)">
+			<router-link class="note-ref" :to="notePage(notification.note)" :title="getNoteSummary(notification.note)">
 				<fa icon="quote-left"/>
 					<mfm :text="getNoteSummary(notification.note)" :plain="true" :nowrap="true" :custom-emojis="notification.note.emojis"/>
 				<fa icon="quote-right"/>
@@ -23,12 +23,12 @@
 		<div>
 			<header>
 				<fa icon="retweet" class="icon"/>
-				<router-link :to="notification.user | userPage" class="name">
+				<router-link :to="userPage(notification.user)" class="name">
 					<mk-user-name :user="notification.user"/>
 				</router-link>
 				<mk-time :time="notification.createdAt"/>
 			</header>
-			<router-link class="note-ref" :to="notification.note | notePage" :title="getNoteSummary(notification.note.renote)">
+			<router-link class="note-ref" :to="notePage(notification.note)" :title="getNoteSummary(notification.note.renote)">
 				<fa icon="quote-left"/>
 					<mfm :text="getNoteSummary(notification.note.renote)" :plain="true" :nowrap="true" :custom-emojis="notification.note.renote.emojis"/>
 				<fa icon="quote-right"/>
@@ -41,7 +41,7 @@
 		<div>
 			<header>
 				<fa icon="user-plus" class="icon"/>
-				<router-link :to="notification.user | userPage" class="name">
+				<router-link :to="userPage(notification.user)" class="name">
 					<mk-user-name :user="notification.user"/>
 				</router-link>
 				<mk-time :time="notification.createdAt"/>
@@ -54,7 +54,7 @@
 		<div>
 			<header>
 				<fa icon="user-clock" class="icon"/>
-				<router-link :to="notification.user | userPage" class="name">
+				<router-link :to="userPage(notification.user)" class="name">
 					<mk-user-name :user="notification.user"/>
 				</router-link>
 				<mk-time :time="notification.createdAt"/>
@@ -67,12 +67,12 @@
 		<div>
 			<header>
 				<fa icon="chart-pie" class="icon"/>
-				<router-link :to="notification.user | userPage" class="name">
+				<router-link :to="userPage(notification.user)" class="name">
 					<mk-user-name :user="notification.user"/>
 				</router-link>
 				<mk-time :time="notification.createdAt"/>
 			</header>
-			<router-link class="note-ref" :to="notification.note | notePage" :title="getNoteSummary(notification.note)">
+			<router-link class="note-ref" :to="notePage(notification.note)" :title="getNoteSummary(notification.note)">
 				<fa icon="quote-left"/>
 					<mfm :text="getNoteSummary(notification.note)" :plain="true" :nowrap="true" :custom-emojis="notification.note.emojis"/>
 				<fa icon="quote-right"/>
@@ -95,10 +95,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import getNoteSummary from '../../../../../misc/get-note-summary';
 
-export default Vue.extend({
+export default defineComponent({
 	props: ['notification'],
 	data() {
 		return {

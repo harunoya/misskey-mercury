@@ -4,10 +4,10 @@
 		<template #title><fa :icon="faStream"/> {{ $t('logs') }}</template>
 		<section class="fit-top">
 			<ui-horizon-group inputs>
-				<ui-input v-model="domain" :debounce="true">
+				<ui-input :value="domain" @input="domain = $event" :debounce="true">
 					<span>{{ $t('domain') }}</span>
 				</ui-input>
-				<ui-select v-model="level">
+				<ui-select :value="level" @input="level = $event">
 					<template #label>{{ $t('level') }}</template>
 					<option value="all">{{ $t('levels.all') }}</option>
 					<option value="info">{{ $t('levels.info') }}</option>
@@ -34,12 +34,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faStream } from '@fortawesome/free-solid-svg-icons';
 import VueJsonPretty from 'vue-json-pretty';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/logs.vue'),
 
 	components: {

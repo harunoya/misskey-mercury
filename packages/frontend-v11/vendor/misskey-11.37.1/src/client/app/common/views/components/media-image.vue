@@ -16,12 +16,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import ImageViewer from './image-viewer.vue';
 import { getStaticImageUrl } from '../../../common/scripts/get-static-image-url';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/media-image.vue'),
 	props: {
 		image: {

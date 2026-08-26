@@ -6,15 +6,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { url } from '../../../config';
 import getAcct from '../../../../../misc/acct/render';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	components: {
-		XMessagingRoom: () => import('../../../common/views/components/messaging-room.vue').then(m => m.default)
+		XMessagingRoom: defineAsyncComponent(() => import('../../../common/views/components/messaging-room.vue').then(m => m.default))
 	},
 	props: ['user', 'group'],
 	computed: {

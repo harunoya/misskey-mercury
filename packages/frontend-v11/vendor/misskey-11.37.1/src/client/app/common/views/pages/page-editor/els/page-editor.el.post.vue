@@ -3,18 +3,18 @@
 	<template #header><fa :icon="faPaperPlane"/> {{ $t('blocks.post') }}</template>
 
 	<section style="padding: 0 16px 16px 16px;">
-		<ui-textarea v-model="value.text">{{ $t('blocks._post.text') }}</ui-textarea>
+		<ui-textarea :value="value.text" @input="value.text = $event">{{ $t('blocks._post.text') }}</ui-textarea>
 	</section>
 </x-container>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import { faPaperPlane } from '@fortawesome/free-regular-svg-icons';
 import i18n from '../../../../../i18n';
 import XContainer from '../page-editor.container.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

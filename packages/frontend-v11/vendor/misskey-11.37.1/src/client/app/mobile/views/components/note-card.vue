@@ -1,6 +1,6 @@
 <template>
 <div class="mk-note-card">
-	<a :href="note | notePage">
+	<a :href="notePage(note)">
 		<header>
 			<img :src="avator" alt="avatar"/>
 			<h3><mk-user-name :user="note.user"/></h3>
@@ -14,11 +14,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import summary from '../../../../../misc/get-note-summary';
 import { getStaticImageUrl } from '../../../common/scripts/get-static-image-url';
 
-export default Vue.extend({
+export default defineComponent({
 	props: ['note'],
 	computed: {
 		text(): string {

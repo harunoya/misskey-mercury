@@ -1,8 +1,8 @@
 <template>
 <div class="fdcvngpy">
 	<sequential-entrance animation="entranceFromTop" delay="25">
-		<template v-for="note in notes">
-			<mk-note-detail class="post" :note="note" :key="note.id"/>
+		<template v-for="note in notes" :key="note.id">
+			<mk-note-detail class="post" :note="note"/>
 		</template>
 	</sequential-entrance>
 	<ui-button v-if="more" @click="fetchMore()">{{ $t('@.load-more') }}</ui-button>
@@ -10,11 +10,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import paging from '../../../common/scripts/paging';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 
 	mixins: [

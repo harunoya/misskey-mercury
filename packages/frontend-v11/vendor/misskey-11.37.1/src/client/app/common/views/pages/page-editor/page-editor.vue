@@ -13,29 +13,29 @@
 		<section>
 			<router-link class="view" v-if="pageId" :to="`/@${ author.username }/pages/${ currentName }`"><fa :icon="faExternalLinkSquareAlt"/> {{ $t('view-page') }}</router-link>
 
-			<ui-input v-model="title">
+			<ui-input :value="title" @input="title = $event">
 				<span>{{ $t('title') }}</span>
 			</ui-input>
 
 			<template v-if="showOptions">
-				<ui-input v-model="summary">
+				<ui-input :value="summary" @input="summary = $event">
 					<span>{{ $t('summary') }}</span>
 				</ui-input>
 
-				<ui-input v-model="name">
+				<ui-input :value="name" @input="name = $event">
 					<template #prefix>{{ url }}/@{{ author.username }}/pages/</template>
 					<span>{{ $t('url') }}</span>
 				</ui-input>
 
-				<ui-switch v-model="alignCenter">{{ $t('align-center') }}</ui-switch>
+				<ui-switch :value="alignCenter" @change="alignCenter = $event">{{ $t('align-center') }}</ui-switch>
 
-				<ui-select v-model="font">
+				<ui-select :value="font" @input="font = $event">
 					<template #label>{{ $t('font') }}</template>
 					<option value="serif">{{ $t('fontSerif') }}</option>
 					<option value="sans-serif">{{ $t('fontSansSerif') }}</option>
 				</ui-select>
 
-				<ui-switch v-model="hideTitleWhenPinned">{{ $t('hide-title-when-pinned') }}</ui-switch>
+				<ui-switch :value="hideTitleWhenPinned" @change="hideTitleWhenPinned = $event">{{ $t('hide-title-when-pinned') }}</ui-switch>
 
 				<div class="eyeCatch">
 					<ui-button v-if="eyeCatchingImageId == null && !readonly" @click="setEyeCatchingImage()"><fa :icon="faPlus"/> {{ $t('set-eye-catching-image') }}</ui-button>
@@ -46,7 +46,7 @@
 				</div>
 			</template>
 
-			<x-blocks class="content" v-model="content" :ai-script="aiScript"/>
+			<x-blocks class="content" :value="content" @input="content = $event" :ai-script="aiScript"/>
 
 			<ui-button @click="add()" v-if="!readonly"><fa :icon="faPlus"/></ui-button>
 		</section>
@@ -92,7 +92,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import * as XDraggable from 'vuedraggable';
 import { faICursor, faPlus, faMagic, faCog, faCode, faExternalLinkSquareAlt } from '@fortawesome/free-solid-svg-icons';
 import { faSave, faStickyNote, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
@@ -105,7 +105,7 @@ import { ASTypeChecker } from '../../../../../../misc/aiscript/type-checker';
 import { url } from '../../../../config';
 import { collectPageVars } from '../../../scripts/collect-page-vars';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

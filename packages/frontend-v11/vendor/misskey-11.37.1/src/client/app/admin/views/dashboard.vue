@@ -10,7 +10,7 @@
 
 	<marquee-text v-if="instances.length > 0" class="instances" :repeat="10" :duration="60">
 		<span v-for="instance in instances" class="instance">
-			<b :style="{ background: instance.bg }">{{ instance.host }}</b>{{ instance.notesCount | number }} / {{ instance.usersCount | number }}
+			<b :style="{ background: instance.bg }">{{ instance.host }}</b>{{ number(instance.notesCount) }} / {{ number(instance.usersCount) }}
 		</span>
 	</marquee-text>
 
@@ -20,7 +20,7 @@
 				<div><fa icon="user"/></div>
 				<div>
 					<span>{{ $t('accounts') }}</span>
-					<b>{{ stats.originalUsersCount | number }}</b>
+					<b>{{ number(stats.originalUsersCount) }}</b>
 				</div>
 			</div>
 			<div>
@@ -33,7 +33,7 @@
 				<div><fa icon="pencil-alt"/></div>
 				<div>
 					<span>{{ $t('notes') }}</span>
-					<b>{{ stats.originalNotesCount | number }}</b>
+					<b>{{ number(stats.originalNotesCount) }}</b>
 				</div>
 			</div>
 			<div>
@@ -46,7 +46,7 @@
 				<div><fa :icon="faDatabase"/></div>
 				<div>
 					<span>{{ $t('drive') }}</span>
-					<b>{{ stats.driveUsageLocal | bytes }}</b>
+					<b>{{ bytes(stats.driveUsageLocal) }}</b>
 				</div>
 			</div>
 			<div>
@@ -59,7 +59,7 @@
 				<div><fa :icon="['far', 'hdd']"/></div>
 				<div>
 					<span>{{ $t('instances') }}</span>
-					<b>{{ stats.instances | number }}</b>
+					<b>{{ number(stats.instances) }}</b>
 				</div>
 			</div>
 			<div>
@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import XCpuMemory from "./dashboard.cpu-memory.vue";
 import XQueue from "./dashboard.queue-charts.vue";
@@ -98,7 +98,7 @@ import { faDatabase } from '@fortawesome/free-solid-svg-icons';
 import MarqueeText from 'vue-marquee-text-component';
 import randomColor from 'randomcolor';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/dashboard.vue'),
 
 	components: {
@@ -141,7 +141,7 @@ export default Vue.extend({
 		});
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 

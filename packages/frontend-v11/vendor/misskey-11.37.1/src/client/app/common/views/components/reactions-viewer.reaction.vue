@@ -15,12 +15,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { createDetachedComponent } from '@compat/detached';
+import { defineComponent } from 'vue';
 import Icon from './reaction-icon.vue';
 import anime from 'animejs';
 import XDetails from './reactions-viewer.details.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		reaction: {
 			type: String,
@@ -137,12 +138,9 @@ export default Vue.extend({
 				const x = rect.left;
 				const y = rect.top;
 
-				const icon = new Icon({
-					parent: this,
-					propsData: {
+				const icon = createDetachedComponent(Icon, {
 						reaction: this.reaction
-					}
-				}).$mount();
+					}).$mount();
 
 				icon.$el.style.position = 'absolute';
 				icon.$el.style.zIndex = 100;

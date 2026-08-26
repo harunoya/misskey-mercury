@@ -1,13 +1,13 @@
 <template>
 <div>
-	<ui-textarea class="" v-model="v">{{ script.interpolate(value.text) }}</ui-textarea>
+	<ui-textarea class="" :value="v" @input="v = $event">{{ script.interpolate(value.text) }}</ui-textarea>
 </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		value: {
 			required: true

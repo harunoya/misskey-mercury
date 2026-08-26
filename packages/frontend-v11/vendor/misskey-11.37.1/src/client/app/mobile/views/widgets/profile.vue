@@ -8,7 +8,7 @@
 			:src="$store.state.i.avatarUrl"
 			alt="avatar"
 		/>
-		<router-link :class="$style.name" :to="$store.state.i | userPage">
+		<router-link :class="$style.name" :to="userPage($store.state.i)">
 			<mk-user-name :user="$store.state.i"/>
 		</router-link>
 	</ui-container>

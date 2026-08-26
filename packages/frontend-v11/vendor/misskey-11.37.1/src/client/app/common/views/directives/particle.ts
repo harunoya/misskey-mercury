@@ -1,8 +1,9 @@
+import { createDetachedComponent } from '@compat/detached';
 import Particle from '../components/particle.vue';
 
 export default {
-	bind(el, binding, vn) {
-		if (vn.context.$store.state.device.reduceMotion) return;
+	beforeMount(el, binding, vn) {
+		if (binding.instance.$store.state.device.reduceMotion) return;
 
 		el.addEventListener('click', () => {
 			if (binding.value === false) return;
@@ -12,13 +13,10 @@ export default {
 			const x = rect.left + (el.clientWidth / 2);
 			const y = rect.top + (el.clientHeight / 2);
 
-			const particle = new Particle({
-				parent: vn.context,
-				propsData: {
+			const particle = createDetachedComponent(Particle, {
 					x,
 					y
-				}
-			}).$mount();
+				}).$mount();
 
 			document.body.appendChild(particle.$el);
 		});

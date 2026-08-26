@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import keyCode from './keycode';
 import { concat } from '../../../prelude/array';
 
@@ -59,7 +60,7 @@ function match(e: KeyboardEvent, patterns: action['patterns']): boolean {
 export default {
 	install(Vue) {
 		Vue.directive('hotkey', {
-			bind(el, binding) {
+			beforeMount(el, binding) {
 				el._hotkey_global = binding.modifiers.global === true;
 
 				const actions = getKeyMap(binding.value);
@@ -94,7 +95,7 @@ export default {
 				}
 			},
 
-			unbind(el) {
+			unmounted(el) {
 				if (el._hotkey_global) {
 					document.removeEventListener('keydown', el._keyHandler);
 				} else {

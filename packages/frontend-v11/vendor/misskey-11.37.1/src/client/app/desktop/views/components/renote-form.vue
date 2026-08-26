@@ -16,14 +16,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/renote-form.vue'),
 
 	components: {
-		XPostForm: () => import('./post-form.vue').then(m => m.default)
+		XPostForm: defineAsyncComponent(() => import('./post-form.vue').then(m => m.default))
 	},
 
 	props: {

@@ -9,6 +9,20 @@ import { installNamespacedStorage } from './compat/storage.js';
 import { leaveToCurrentUi, readMercuryToken } from './compat/session.js';
 import { applyPersistedTheme } from './compat/theme.js';
 import 'katex/dist/katex.min.css';
+// Must come after the current client's stylesheet, which injecting at runtime guarantees.
+import './compat/host-document.css';
+
+/**
+ * Clears the current client's splash.
+ *
+ * v11 is one of the current client's UI styles, so this bundle loads into a document that is
+ * already open and already showing that splash. Upstream `init.ts` rebuilds `document.body` for
+ * its own mount point a moment later, which takes the splash with it — but not before it has been
+ * visible on top of v11's first paint.
+ */
+function hideCurrentUiSplash(): void {
+	document.getElementById('splash')?.remove();
+}
 
 // Must be read before the namespaced storage is installed: `account` is Mercury's own key.
 const token = readMercuryToken();
@@ -18,6 +32,8 @@ const token = readMercuryToken();
 if (token == null) {
 	leaveToCurrentUi();
 } else {
+	hideCurrentUiSplash();
+
 	const storage = installNamespacedStorage(localStorage);
 
 	storage.setItem('lang', 'ja-JP');

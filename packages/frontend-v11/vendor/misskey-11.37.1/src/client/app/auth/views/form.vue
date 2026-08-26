@@ -13,8 +13,8 @@
 		<section>
 			<h2>{{ $t('permission-ask') }}</h2>
 			<ul>
-				<template v-for="p in app.permission">
-					<li :key="p">{{ $t(`@.permissions.${p}`) }}</li>
+				<template v-for="p in app.permission" :key="p">
+					<li>{{ $t(`@.permissions.${p}`) }}</li>
 				</template>
 			</ul>
 		</section>
@@ -27,10 +27,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('auth/views/form.vue'),
 	props: ['session'],
 	computed: {

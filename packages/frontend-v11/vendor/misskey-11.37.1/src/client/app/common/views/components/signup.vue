@@ -1,12 +1,12 @@
 <template>
 <form class="mk-signup" @submit.prevent="onSubmit" :autocomplete="Math.random()">
 	<template v-if="meta">
-		<ui-input v-if="meta.disableRegistration" v-model="invitationCode" type="text" :autocomplete="Math.random()" spellcheck="false" required styl="fill">
+		<ui-input v-if="meta.disableRegistration" :value="invitationCode" @input="invitationCode = $event" type="text" :autocomplete="Math.random()" spellcheck="false" required styl="fill">
 			<span>{{ $t('invitation-code') }}</span>
 			<template #prefix><fa icon="id-card-alt"/></template>
 			<template #desc v-html="this.$t('invitation-info').replace('{}', 'mailto:' + meta.maintainerEmail)"></template>
 		</ui-input>
-		<ui-input v-model="username" type="text" pattern="^[a-zA-Z0-9_]{1,20}$" :autocomplete="Math.random()" spellcheck="false" required @input="onChangeUsername" styl="fill">
+		<ui-input :value="username" type="text" pattern="^[a-zA-Z0-9_]{1,20}$" :autocomplete="Math.random()" spellcheck="false" required styl="fill" @input="username = $event; onChangeUsername">
 			<span>{{ $t('username') }}</span>
 			<template #prefix>@</template>
 			<template #suffix>@{{ host }}</template>
@@ -20,7 +20,7 @@
 				<span v-if="usernameState == 'max-range'" style="color:#FF1161"><fa icon="exclamation-triangle" fixed-width/> {{ $t('too-long') }}</span>
 			</template>
 		</ui-input>
-		<ui-input v-model="password" type="password" :autocomplete="Math.random()" required @input="onChangePassword" :with-password-meter="true" styl="fill">
+		<ui-input :value="password" type="password" :autocomplete="Math.random()" required :with-password-meter="true" styl="fill" @input="password = $event; onChangePassword">
 			<span>{{ $t('password') }}</span>
 			<template #prefix><fa icon="lock"/></template>
 			<template #desc>
@@ -29,7 +29,7 @@
 				<p v-if="passwordStrength == 'high'" style="color:#3CB7B5"><fa icon="check" fixed-width/> {{ $t('strong-password') }}</p>
 			</template>
 		</ui-input>
-		<ui-input v-model="retypedPassword" type="password" :autocomplete="Math.random()" required @input="onChangePasswordRetype" styl="fill">
+		<ui-input :value="retypedPassword" type="password" :autocomplete="Math.random()" required styl="fill" @input="retypedPassword = $event; onChangePasswordRetype">
 			<span>{{ $t('password') }} ({{ $t('retype') }})</span>
 			<template #prefix><fa icon="lock"/></template>
 			<template #desc>
@@ -37,7 +37,7 @@
 				<p v-if="passwordRetypeState == 'not-match'" style="color:#FF1161"><fa icon="exclamation-triangle" fixed-width/> {{ $t('password-not-matched') }}</p>
 			</template>
 		</ui-input>
-		<ui-switch v-model="ToSAgreement" v-if="meta.ToSUrl">
+		<ui-switch :value="ToSAgreement" @change="ToSAgreement = $event" v-if="meta.ToSUrl">
 			<i18n path="agree-to">
 				<a :href="meta.ToSUrl" target="_blank">{{ $t('tos') }}</a>
 			</i18n>
@@ -49,13 +49,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 const getPasswordStrength = require('syuilo-password-strength');
 import { host, url } from '../../../config';
 import { toUnicode } from 'punycode';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/signup.vue'),
 
 	data() {

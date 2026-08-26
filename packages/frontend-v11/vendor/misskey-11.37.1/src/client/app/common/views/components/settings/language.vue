@@ -3,7 +3,7 @@
 	<template #title><fa icon="language"/> {{ $t('title') }}</template>
 
 	<section class="fit-top">
-		<ui-select v-model="lang" :placeholder="$t('pick-language')">
+		<ui-select :value="lang" @input="lang = $event" :placeholder="$t('pick-language')">
 			<optgroup :label="$t('recommended')">
 				<option value="">{{ $t('auto') }}</option>
 			</optgroup>
@@ -19,11 +19,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { langs } from '../../../../config';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/language-settings.vue'),
 
 	data() {

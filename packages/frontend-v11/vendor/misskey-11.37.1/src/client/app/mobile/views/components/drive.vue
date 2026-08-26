@@ -2,9 +2,9 @@
 <div class="kmmwchoexgckptowjmjgfsygeltxfeqs">
 	<nav ref="nav">
 		<a @click.prevent="goRoot()" href="/i/drive"><fa icon="cloud"/>{{ $t('@.drive') }}</a>
-		<template v-for="folder in hierarchyFolders">
-			<span :key="folder.id + '>'"><fa icon="angle-right"/></span>
-			<a :key="folder.id" @click.prevent="cd(folder)" :href="`/i/drive/folder/${folder.id}`">{{ folder.name }}</a>
+		<template v-for="folder in hierarchyFolders" :key="folder.id + '>'">
+			<span><fa icon="angle-right"/></span>
+			<a @click.prevent="cd(folder)" :href="`/i/drive/folder/${folder.id}`">{{ folder.name }}</a>
 		</template>
 		<template v-if="folder != null">
 			<span><fa icon="angle-right"/></span>
@@ -52,13 +52,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import XFolder from './drive.folder.vue';
 import XFile from './drive.file.vue';
 import XFileDetail from './drive.file-detail.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/components/drive.vue'),
 	components: {
 		XFolder,
@@ -123,7 +123,7 @@ export default Vue.extend({
 			(this.$refs.nav as any).style.top = `${this.top}px`;
 		}
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 	methods: {

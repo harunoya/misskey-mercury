@@ -16,11 +16,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import anime from 'animejs';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/stream-indicator.vue'),
 	computed: {
 		stream() {
@@ -37,7 +37,7 @@ export default Vue.extend({
 			}
 		});
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.$root.stream.off('_connected_', this.onConnected);
 		this.$root.stream.off('_disconnected_', this.onDisconnected);
 	},

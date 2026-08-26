@@ -3,7 +3,7 @@
 	<ui-card>
 		<template #title><fa :icon="faTerminal"/> {{ $t('operation') }}</template>
 		<section class="fit-top">
-			<ui-input v-model="target" type="text">
+			<ui-input :value="target" @input="target = $event" type="text">
 				<span>{{ $t('fileid-or-url') }}</span>
 			</ui-input>
 			<ui-horizon-group>
@@ -12,7 +12,7 @@
 			</ui-horizon-group>
 			<ui-button @click="findAndDel()"><fa :icon="faTrashAlt"/> {{ $t('delete') }}</ui-button>
 			<ui-button @click="show()"><fa :icon="faSearch"/> {{ $t('lookup') }}</ui-button>
-			<ui-textarea v-if="file" :value="file | json5" readonly tall style="margin-top:16px;"></ui-textarea>
+			<ui-textarea v-if="file" :value="json5(file)" readonly tall style="margin-top:16px;"></ui-textarea>
 		</section>
 		<section>
 			<ui-button @click="cleanUp()"><fa :icon="faTrashAlt"/> {{ $t('clean-up') }}</ui-button>
@@ -24,14 +24,14 @@
 		<template #title><fa :icon="faCloud"/> {{ $t('@.drive') }}</template>
 		<section class="fit-top">
 			<ui-horizon-group inputs>
-				<ui-select v-model="sort">
+				<ui-select :value="sort" @input="sort = $event">
 					<template #label>{{ $t('sort.title') }}</template>
 					<option value="-createdAt">{{ $t('sort.createdAtAsc') }}</option>
 					<option value="+createdAt">{{ $t('sort.createdAtDesc') }}</option>
 					<option value="-size">{{ $t('sort.sizeAsc') }}</option>
 					<option value="+size">{{ $t('sort.sizeDesc') }}</option>
 				</ui-select>
-				<ui-select v-model="origin">
+				<ui-select :value="origin" @input="origin = $event">
 					<template #label>{{ $t('origin.title') }}</template>
 					<option value="combined">{{ $t('origin.combined') }}</option>
 					<option value="local">{{ $t('origin.local') }}</option>
@@ -47,12 +47,12 @@
 						<div>
 							<header>
 								<b>{{ file.name }}</b>
-								<span class="username">@{{ file.user | acct }}</span>
+								<span class="username">@{{ acct(file.user) }}</span>
 							</header>
 							<div>
 								<div>
 									<span style="margin-right:16px;">{{ file.type }}</span>
-									<span>{{ file.size | bytes }}</span>
+									<span>{{ bytes(file.size) }}</span>
 								</div>
 								<div><mk-time :time="file.createdAt" mode="detail"/></div>
 							</div>
@@ -75,13 +75,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faCloud, faTerminal, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { faTrashAlt, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import XFileThumbnail from '../../common/views/components/drive-file-thumbnail.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/drive.vue'),
 
 	components: {

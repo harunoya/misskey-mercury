@@ -1,13 +1,13 @@
 <template>
 <div>
-	<ui-input class="kudkigyw" v-model="v" type="number">{{ script.interpolate(value.text) }}</ui-input>
+	<ui-input class="kudkigyw" :value="v" @input="v = $event" type="number">{{ script.interpolate(value.text) }}</ui-input>
 </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		value: {
 			required: true

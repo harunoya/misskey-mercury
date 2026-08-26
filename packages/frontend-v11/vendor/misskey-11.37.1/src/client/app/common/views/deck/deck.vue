@@ -1,13 +1,13 @@
 <template>
 <mk-ui :class="$style.root">
 	<div class="qlvquzbjribqcaozciifydkngcwtyzje" ref="body" :style="style" :class="`${$store.state.device.deckColumnAlign} ${$store.state.device.deckColumnWidth}`" v-hotkey.global="keymap">
-		<template v-for="ids in layout">
+		<template v-for="ids in layout" :key="id">
 			<div v-if="ids.length > 1" class="folder">
 				<template v-for="id, i in ids">
-					<x-column-core :ref="id" :key="id" :column="columns.find(c => c.id == id)" :is-stacked="true" @parentFocus="moveFocus(id, $event)"/>
+					<x-column-core :ref="id" :column="columns.find(c => c.id == id)" :is-stacked="true" @parentFocus="moveFocus(id, $event)"/>
 				</template>
 			</div>
-			<x-column-core v-else :ref="ids[0]" :key="ids[0]" :column="columns.find(c => c.id == ids[0])" @parentFocus="moveFocus(ids[0], $event)"/>
+			<x-column-core v-else :ref="ids[0]" :column="columns.find(c => c.id == ids[0])" @parentFocus="moveFocus(ids[0], $event)"/>
 		</template>
 		<router-view></router-view>
 		<button ref="add" @click="add" :title="$t('@deck.add-column')"><fa icon="plus"/></button>
@@ -16,14 +16,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import XColumnCore from './deck.column-core.vue';
 import Menu from '../../../common/views/components/menu.vue';
 
 import { v4 as uuid } from 'uuid';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('deck'),
 
 	components: {
@@ -115,7 +115,7 @@ export default Vue.extend({
 		document.documentElement.style.overflow = 'hidden';
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		document.documentElement.style.overflow = 'auto';
 	},
 

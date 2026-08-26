@@ -3,21 +3,21 @@
 	<template #header><fa :icon="faBolt"/> {{ $t('blocks.button') }}</template>
 
 	<section class="xfhsjczc">
-		<ui-input v-model="value.text"><span>{{ $t('blocks._button.text') }}</span></ui-input>
-		<ui-switch v-model="value.primary"><span>{{ $t('blocks._button.colored') }}</span></ui-switch>
-		<ui-select v-model="value.action">
+		<ui-input :value="value.text" @input="value.text = $event"><span>{{ $t('blocks._button.text') }}</span></ui-input>
+		<ui-switch :value="value.primary" @change="value.primary = $event"><span>{{ $t('blocks._button.colored') }}</span></ui-switch>
+		<ui-select :value="value.action" @input="value.action = $event">
 			<template #label>{{ $t('blocks._button.action') }}</template>
 			<option value="dialog">{{ $t('blocks._button._action.dialog') }}</option>
 			<option value="resetRandom">{{ $t('blocks._button._action.resetRandom') }}</option>
 			<option value="pushEvent">{{ $t('blocks._button._action.pushEvent') }}</option>
 		</ui-select>
 		<template v-if="value.action === 'dialog'">
-			<ui-input v-model="value.content"><span>{{ $t('blocks._button._action._dialog.content') }}</span></ui-input>
+			<ui-input :value="value.content" @input="value.content = $event"><span>{{ $t('blocks._button._action._dialog.content') }}</span></ui-input>
 		</template>
 		<template v-else-if="value.action === 'pushEvent'">
-			<ui-input v-model="value.event"><span>{{ $t('blocks._button._action._pushEvent.event') }}</span></ui-input>
-			<ui-input v-model="value.message"><span>{{ $t('blocks._button._action._pushEvent.message') }}</span></ui-input>
-			<ui-select v-model="value.var">
+			<ui-input :value="value.event" @input="value.event = $event"><span>{{ $t('blocks._button._action._pushEvent.event') }}</span></ui-input>
+			<ui-input :value="value.message" @input="value.message = $event"><span>{{ $t('blocks._button._action._pushEvent.message') }}</span></ui-input>
+			<ui-select :value="value.var" @input="value.var = $event">
 				<template #label>{{ $t('blocks._button._action._pushEvent.variable') }}</template>
 				<option :value="null">{{ $t('blocks._button._action._pushEvent.no-variable') }}</option>
 				<option v-for="v in aiScript.getVarsByType()" :value="v.name">{{ v.name }}</option>
@@ -34,12 +34,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../../../i18n';
 import XContainer from '../page-editor.container.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('pages'),
 
 	components: {

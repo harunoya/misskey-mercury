@@ -20,12 +20,12 @@
 	<article>
 		<mk-avatar class="avatar" :user="appearNote.user"/>
 		<header>
-			<router-link class="name" :to="appearNote.user | userPage" v-user-preview="appearNote.user.id">
+			<router-link class="name" :to="userPage(appearNote.user)" v-user-preview="appearNote.user.id">
 				<mk-user-name :user="appearNote.user"/>
 			</router-link>
 			<span class="username"><mk-acct :user="appearNote.user"/></span>
 			<div class="info">
-				<router-link class="time" :to="appearNote | notePage">
+				<router-link class="time" :to="notePage(appearNote)">
 					<mk-time :time="appearNote.createdAt"/>
 				</router-link>
 				<div class="visibility-info">
@@ -41,7 +41,7 @@
 		<div class="body">
 			<p v-if="appearNote.cw != null" class="cw">
 				<mfm v-if="appearNote.cw != ''" class="text" :text="appearNote.cw" :author="appearNote.user" :i="$store.state.i" :custom-emojis="appearNote.emojis" />
-				<mk-cw-button v-model="showContent" :note="appearNote"/>
+				<mk-cw-button :value="showContent" @input="showContent = $event" :note="appearNote"/>
 			</p>
 			<div class="content" v-show="appearNote.cw == null || showContent">
 				<div class="text">
@@ -93,13 +93,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import XSub from './note.sub.vue';
 import noteSubscriber from '../../../common/scripts/note-subscriber';
 import noteMixin from '../../../common/scripts/note-mixin';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/note-detail.vue'),
 
 	components: {

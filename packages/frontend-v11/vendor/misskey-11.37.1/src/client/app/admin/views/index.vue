@@ -58,7 +58,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { version } from '../../config';
 import XDashboard from './dashboard.vue';
@@ -81,7 +81,7 @@ import { faGrin } from '@fortawesome/free-regular-svg-icons';
 const ua = navigator.userAgent.toLowerCase();
 const isMobile = /mobile|iphone|ipad|android/.test(ua);
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/index.vue'),
 	components: {
 		XDashboard,

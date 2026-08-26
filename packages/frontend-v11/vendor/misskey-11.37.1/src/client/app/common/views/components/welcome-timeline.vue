@@ -5,12 +5,12 @@
 			<mk-avatar class="avatar" :user="note.user" target="_blank"/>
 			<div class="body">
 				<header>
-					<router-link class="name" :to="note.user | userPage" v-user-preview="note.user.id">
+					<router-link class="name" :to="userPage(note.user)" v-user-preview="note.user.id">
 						<mk-user-name :user="note.user"/>
 					</router-link>
-					<span class="username">@{{ note.user | acct }}</span>
+					<span class="username">@{{ acct(note.user) }}</span>
 					<div class="info">
-						<router-link class="created-at" :to="note | notePage">
+						<router-link class="created-at" :to="notePage(note)">
 							<mk-time :time="note.createdAt"/>
 						</router-link>
 					</div>
@@ -25,9 +25,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
 	props: {
 		max: {
 			type: Number,
@@ -52,7 +52,7 @@ export default Vue.extend({
 		this.connection.on('note', this.onNote);
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 
@@ -85,7 +85,7 @@ export default Vue.extend({
 </script>
 
 <style lang="stylus" scoped>
-.ldzpakcixzickvggyixyrhqwjaefknon-enter
+.ldzpakcixzickvggyixyrhqwjaefknon-enter-from
 .ldzpakcixzickvggyixyrhqwjaefknon-leave-to
 	opacity 0
 	transform translateY(-30px)

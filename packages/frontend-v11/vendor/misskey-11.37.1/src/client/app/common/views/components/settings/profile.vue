@@ -8,32 +8,32 @@
 		</div>
 
 		<ui-form :disabled="saving">
-			<ui-input v-model="name" :max="30">
+			<ui-input :value="name" @input="name = $event" :max="30">
 				<span>{{ $t('name') }}</span>
 			</ui-input>
 
-			<ui-input v-model="username" readonly>
+			<ui-input :value="username" @input="username = $event" readonly>
 				<span>{{ $t('account') }}</span>
 				<template #prefix>@</template>
 				<template #suffix>@{{ host }}</template>
 			</ui-input>
 
-			<ui-input v-model="location">
+			<ui-input :value="location" @input="location = $event">
 				<span>{{ $t('location') }}</span>
 				<template #prefix><fa icon="map-marker-alt"/></template>
 			</ui-input>
 
-			<ui-input v-model="birthday" type="date">
+			<ui-input :value="birthday" @input="birthday = $event" type="date">
 				<template #title>{{ $t('birthday') }}</template>
 				<template #prefix><fa icon="birthday-cake"/></template>
 			</ui-input>
 
-			<ui-textarea v-model="description" :max="500">
+			<ui-textarea :value="description" @input="description = $event" :max="500">
 				<span>{{ $t('description') }}</span>
 				<template #desc>{{ $t('you-can-include-hashtags') }}</template>
 			</ui-textarea>
 
-			<ui-select v-model="lang">
+			<ui-select :value="lang" @input="lang = $event">
 				<template #label>{{ $t('language') }}</template>
 				<template #icon><fa icon="language"/></template>
 				<option v-for="lang in unique(Object.values(langmap).map(x => x.nativeName)).map(name => Object.keys(langmap).find(k => langmap[k].nativeName == name))" :value="lang" :key="lang">{{ langmap[lang].nativeName }}</option>
@@ -54,20 +54,20 @@
 			<div class="fields">
 				<header>{{ $t('profile-metadata') }}</header>
 				<ui-horizon-group>
-					<ui-input v-model="fieldName0">{{ $t('metadata-label') }}</ui-input>
-					<ui-input v-model="fieldValue0">{{ $t('metadata-content') }}</ui-input>
+					<ui-input :value="fieldName0" @input="fieldName0 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue0" @input="fieldValue0 = $event">{{ $t('metadata-content') }}</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group>
-					<ui-input v-model="fieldName1">{{ $t('metadata-label') }}</ui-input>
-					<ui-input v-model="fieldValue1">{{ $t('metadata-content') }}</ui-input>
+					<ui-input :value="fieldName1" @input="fieldName1 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue1" @input="fieldValue1 = $event">{{ $t('metadata-content') }}</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group>
-					<ui-input v-model="fieldName2">{{ $t('metadata-label') }}</ui-input>
-					<ui-input v-model="fieldValue2">{{ $t('metadata-content') }}</ui-input>
+					<ui-input :value="fieldName2" @input="fieldName2 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue2" @input="fieldValue2 = $event">{{ $t('metadata-content') }}</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group>
-					<ui-input v-model="fieldName3">{{ $t('metadata-label') }}</ui-input>
-					<ui-input v-model="fieldValue3">{{ $t('metadata-content') }}</ui-input>
+					<ui-input :value="fieldName3" @input="fieldName3 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue3" @input="fieldValue3 = $event">{{ $t('metadata-content') }}</ui-input>
 				</ui-horizon-group>
 			</div>
 
@@ -79,9 +79,9 @@
 		<header><fa :icon="faCogs"/> {{ $t('advanced') }}</header>
 
 		<div>
-			<ui-switch v-model="isCat" @change="save(false)">{{ $t('is-cat') }}</ui-switch>
-			<ui-switch v-model="isBot" @change="save(false)">{{ $t('is-bot') }}</ui-switch>
-			<ui-switch v-model="alwaysMarkNsfw">{{ $t('@._settings.always-mark-nsfw') }}</ui-switch>
+			<ui-switch :value="isCat" @change="isCat = $event; save(false)">{{ $t('is-cat') }}</ui-switch>
+			<ui-switch :value="isBot" @change="isBot = $event; save(false)">{{ $t('is-bot') }}</ui-switch>
+			<ui-switch :value="alwaysMarkNsfw" @change="alwaysMarkNsfw = $event">{{ $t('@._settings.always-mark-nsfw') }}</ui-switch>
 		</div>
 	</section>
 
@@ -89,9 +89,9 @@
 		<header><fa :icon="faUnlockAlt"/> {{ $t('privacy') }}</header>
 
 		<div>
-			<ui-switch v-model="isLocked" @change="save(false)">{{ $t('is-locked') }}</ui-switch>
-			<ui-switch v-model="carefulBot" :disabled="isLocked" @change="save(false)">{{ $t('careful-bot') }}</ui-switch>
-			<ui-switch v-model="autoAcceptFollowed" :disabled="!isLocked && !carefulBot" @change="save(false)">{{ $t('auto-accept-followed') }}</ui-switch>
+			<ui-switch :value="isLocked" @change="isLocked = $event; save(false)">{{ $t('is-locked') }}</ui-switch>
+			<ui-switch :value="carefulBot" :disabled="isLocked" @change="carefulBot = $event; save(false)">{{ $t('careful-bot') }}</ui-switch>
+			<ui-switch :value="autoAcceptFollowed" :disabled="!isLocked && !carefulBot" @change="autoAcceptFollowed = $event; save(false)">{{ $t('auto-accept-followed') }}</ui-switch>
 		</div>
 	</section>
 
@@ -103,7 +103,7 @@
 				<ui-info v-if="$store.state.i.emailVerified">{{ $t('email-verified') }}</ui-info>
 				<ui-info v-else warn>{{ $t('email-not-verified') }}</ui-info>
 			</template>
-			<ui-input v-model="email" type="email"><span>{{ $t('email-address') }}</span></ui-input>
+			<ui-input :value="email" @input="email = $event" type="email"><span>{{ $t('email-address') }}</span></ui-input>
 			<ui-button @click="updateEmail()" :disabled="email === $store.state.i.email"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
 		</div>
 	</section>
@@ -112,7 +112,7 @@
 		<header><fa :icon="faBoxes"/> {{ $t('export-and-import') }}</header>
 
 		<div>
-			<ui-select v-model="exportTarget">
+			<ui-select :value="exportTarget" @input="exportTarget = $event">
 				<option value="notes">{{ $t('export-targets.all-notes') }}</option>
 				<option value="following">{{ $t('export-targets.following-list') }}</option>
 				<option value="mute">{{ $t('export-targets.mute-list') }}</option>
@@ -136,7 +136,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { apiUrl, host } from '../../../../config';
 import { toUnicode } from 'punycode';
@@ -145,7 +145,7 @@ import { unique } from '../../../../../../prelude/array';
 import { faDownload, faUpload, faUnlockAlt, faBoxes, faCogs } from '@fortawesome/free-solid-svg-icons';
 import { faSave, faEnvelope } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/profile-editor.vue'),
 
 	data() {

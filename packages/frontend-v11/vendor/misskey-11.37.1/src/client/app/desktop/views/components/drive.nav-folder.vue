@@ -1,6 +1,6 @@
 <template>
 <div class="root nav-folder"
-	:data-draghover="draghover"
+	:data-draghover="(draghover) || null"
 	@click="onClick"
 	@dragover.prevent.stop="onDragover"
 	@dragenter="onDragenter"
@@ -13,9 +13,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n(),
 	props: ['folder'],
 	data() {

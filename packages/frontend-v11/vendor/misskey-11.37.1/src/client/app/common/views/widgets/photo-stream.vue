@@ -1,5 +1,5 @@
 <template>
-<div class="mkw-photo-stream" :class="$style.root" :data-melt="props.design == 2">
+<div class="mkw-photo-stream" :class="$style.root" :data-melt="(props.design == 2) || null">
 	<ui-container :show-header="props.design == 0" :naked="props.design == 2">
 		<template #header><fa icon="camera"/>{{ $t('title') }}</template>
 
@@ -18,16 +18,19 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 import { getStaticImageUrl } from '../../scripts/get-static-image-url';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'photo-stream',
 	props: () => ({
 		design: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/photo-stream.vue'),
 
 	data() {
@@ -52,7 +55,7 @@ export default define({
 		});
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 

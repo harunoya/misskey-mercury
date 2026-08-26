@@ -1,5 +1,5 @@
 <template>
-<div class="mk-messaging" :data-compact="compact">
+<div class="mk-messaging" :data-compact="(compact) || null">
 	<div class="search" v-if="!compact" :style="{ top: headerTop + 'px' }">
 		<div class="form">
 			<label for="search-input"><i><fa icon="search"/></i></label>
@@ -15,7 +15,7 @@
 				>
 					<mk-avatar class="avatar" :user="user" :key="user.id"/>
 					<span class="name"><mk-user-name :user="user" :key="user.id"/></span>
-					<span class="username">@{{ user | acct }}</span>
+					<span class="username">@{{ acct(user) }}</span>
 				</li>
 			</ol>
 		</div>
@@ -24,8 +24,8 @@
 		<a v-for="message in messages"
 			class="user"
 			:href="message.groupId ? `/i/messaging/group/${message.groupId}` : `/i/messaging/${getAcct(isMe(message) ? message.recipient : message.user)}`"
-			:data-is-me="isMe(message)"
-			:data-is-read="message.groupId ? message.reads.includes($store.state.i.id) : message.isRead"
+			:data-is-me="(isMe(message)) || null"
+			:data-is-read="(message.groupId ? message.reads.includes($store.state.i.id) : message.isRead) || null"
 			@click.prevent="message.groupId ? navigateGroup(message.group) : navigate(isMe(message) ? message.recipient : message.user)"
 			:key="message.id"
 		>
@@ -37,7 +37,7 @@
 				</header>
 				<header v-else>
 					<span class="name"><mk-user-name :user="isMe(message) ? message.recipient : message.user"/></span>
-					<span class="username">@{{ isMe(message) ? message.recipient : message.user | acct }}</span>
+					<span class="username">@{{ isMe(acct(message) ? message.recipient : message.user) }}</span>
 					<mk-time :time="message.createdAt"/>
 				</header>
 				<div class="body">
@@ -56,12 +56,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../i18n';
 import getAcct from '../../../../../misc/acct/render';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/messaging.vue'),
 	props: {
 		compact: {
@@ -99,7 +99,7 @@ export default Vue.extend({
 			});
 		});
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 	methods: {

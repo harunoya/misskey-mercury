@@ -3,7 +3,7 @@
 	<ui-card>
 		<template #title><fa icon="plus"/> {{ $t('add-moderator.title') }}</template>
 		<section class="fit-top">
-			<ui-input v-model="username" type="text">
+			<ui-input :value="username" @input="username = $event" type="text">
 				<template #prefix>@</template>
 			</ui-input>
 			<ui-horizon-group>
@@ -19,7 +19,7 @@
 			<sequential-entrance animation="entranceFromTop" delay="25">
 				<div v-for="log in logs" :key="log.id" class="">
 					<ui-horizon-group inputs>
-						<ui-input :value="log.user | acct" type="text" readonly>
+						<ui-input :value="acct(log.user)" type="text" readonly>
 							<span>{{ $t('logs.moderator') }}</span>
 						</ui-input>
 						<ui-input :value="log.type" type="text" readonly>
@@ -41,11 +41,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import parseAcct from "../../../../misc/acct/parse";
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/moderators.vue'),
 
 	data() {

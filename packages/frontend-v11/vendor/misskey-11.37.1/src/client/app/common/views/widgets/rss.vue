@@ -4,7 +4,7 @@
 		<template #header><fa icon="rss-square"/>RSS</template>
 		<template #func><button title="設定" @click="setting"><fa icon="cog"/></button></template>
 
-		<div class="mkw-rss--body" :data-mobile="platform == 'mobile'">
+		<div class="mkw-rss--body" :data-mobile="(platform == 'mobile') || null">
 			<p class="fetching" v-if="fetching"><fa icon="spinner" pulse fixed-width/>{{ $t('@.loading') }}<mk-ellipsis/></p>
 			<div class="feed" v-else>
 				<a v-for="item in items" :href="item.link" rel="nofollow noopener" target="_blank" :title="item.title">{{ item.title }}</a>
@@ -15,16 +15,19 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'rss',
 	props: () => ({
 		compact: false,
 		url: 'http://feeds.afpbb.com/rss/afpbb/afpbbnews'
 	})
-}).extend({
+}),
+
 	i18n: i18n(),
 	data() {
 		return {
@@ -37,7 +40,7 @@ export default define({
 		this.fetch();
 		this.clock = setInterval(this.fetch, 60000);
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearInterval(this.clock);
 	},
 	methods: {

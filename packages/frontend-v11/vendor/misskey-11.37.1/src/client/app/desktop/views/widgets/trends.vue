@@ -7,8 +7,8 @@
 		<div class="mkw-trends--body">
 			<p class="fetching" v-if="fetching"><fa icon="spinner" pulse fixed-width/>{{ $t('@.loading') }}<mk-ellipsis/></p>
 			<div class="note" v-else-if="note != null">
-				<p class="text"><router-link :to="note | notePage">{{ note.text }}</router-link></p>
-				<p class="author">―<router-link :to="note.user | userPage">@{{ note.user | acct }}</router-link></p>
+				<p class="text"><router-link :to="notePage(note)">{{ note.text }}</router-link></p>
+				<p class="author">―<router-link :to="userPage(note.user)">@{{ acct(note.user) }}</router-link></p>
 			</div>
 			<p class="empty" v-else>{{ $t('nothing') }}</p>
 		</div>
@@ -17,15 +17,18 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'trends',
 	props: () => ({
 		compact: false
 	})
-}).extend({
+}),
+
 	i18n: i18n('desktop/views/widgets/trends.vue'),
 	data() {
 		return {

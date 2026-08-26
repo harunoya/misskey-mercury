@@ -15,8 +15,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-export default Vue.extend({
+import { defineComponent } from 'vue';
+export default defineComponent({
+	emits: ['toggle'],
 	props: {
 		showHeader: {
 			type: Boolean,
@@ -91,13 +92,13 @@ export default Vue.extend({
 				color var(--faceHeaderText)
 				box-shadow 0 var(--lineWidth) rgba(#000, 0.07)
 
-				> [data-icon]
+				> [data-icon], > :slotted([data-icon])
 					margin-right 6px
 
 				&:empty
 					display none
 
-			> button
+			> button, > :slotted(button)
 				position absolute
 				z-index 2
 				top 0
@@ -127,7 +128,7 @@ export default Vue.extend({
 			&.bodyTogglable
 				cursor pointer
 
-			> button
+			> button, > :slotted(button)
 				position absolute
 				top 0
 				right 8px

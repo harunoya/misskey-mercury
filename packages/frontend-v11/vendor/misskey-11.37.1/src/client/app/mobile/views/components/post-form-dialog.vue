@@ -19,11 +19,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import anime from 'animejs';
 import XPostForm from './post-form.vue';
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['cancel', 'posted'],
 	components: {
 		XPostForm
 	},

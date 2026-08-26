@@ -26,9 +26,9 @@
 			<header v-if="title" v-html="title"></header>
 			<header v-if="title == null && user">{{ $t('@.enter-username') }}</header>
 			<div class="body" v-if="text" v-html="text"></div>
-			<ui-input v-if="input" v-model="inputValue" autofocus :type="input.type || 'text'" :placeholder="input.placeholder" @keydown="onInputKeydown"></ui-input>
-			<ui-input v-if="user" v-model="userInputValue" autofocus @keydown="onInputKeydown"><template #prefix>@</template></ui-input>
-			<ui-select v-if="select" v-model="selectedValue" autofocus>
+			<ui-input v-if="input" :value="inputValue" @input="inputValue = $event" autofocus :type="input.type || 'text'" :placeholder="input.placeholder" @keydown="onInputKeydown"></ui-input>
+			<ui-input v-if="user" :value="userInputValue" @input="userInputValue = $event" autofocus @keydown="onInputKeydown"><template #prefix>@</template></ui-input>
+			<ui-select v-if="select" :value="selectedValue" @input="selectedValue = $event" autofocus>
 				<template v-if="select.items">
 					<option v-for="item in select.items" :value="item.value">{{ item.text }}</option>
 				</template>
@@ -48,13 +48,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import anime from 'animejs';
 import { faTimesCircle, faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import parseAcct from "../../../../../misc/acct/parse";
 import i18n from '../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
+	emits: ['cancel', 'ok'],
 	i18n: i18n(),
 	props: {
 		type: {

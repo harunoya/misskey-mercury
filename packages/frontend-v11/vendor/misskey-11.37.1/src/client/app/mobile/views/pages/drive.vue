@@ -23,17 +23,17 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import Progress from '../../../common/scripts/loading';
 import XMenu from '../../../common/views/components/menu.vue';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/drive.vue'),
 	components: {
-		XDrive: () => import('../components/drive.vue').then(m => m.default),
+		XDrive: defineAsyncComponent(() => import('../components/drive.vue').then(m => m.default)),
 	},
 	data() {
 		return {
@@ -53,7 +53,7 @@ export default Vue.extend({
 	mounted() {
 		document.title = `${this.$root.instanceName} Drive`;
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		window.removeEventListener('popstate', this.onPopState);
 	},
 	methods: {

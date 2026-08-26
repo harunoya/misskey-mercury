@@ -1,3 +1,4 @@
+import { defineAsyncComponent } from 'vue';
 import insertTextAtCursor from 'insert-text-at-cursor';
 import { length } from 'stringz';
 import { toASCII } from 'punycode';
@@ -14,8 +15,8 @@ export default (opts) => ({
 	i18n: i18n(),
 
 	components: {
-		XPostFormAttaches: () => import('../views/components/post-form-attaches.vue').then(m => m.default),
-		XPollEditor: () => import('../views/components/poll-editor.vue').then(m => m.default)
+		XPostFormAttaches: defineAsyncComponent(() => import('../views/components/post-form-attaches.vue').then(m => m.default)),
+		XPollEditor: defineAsyncComponent(() => import('../views/components/poll-editor.vue').then(m => m.default))
 	},
 
 	props: {

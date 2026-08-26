@@ -44,16 +44,16 @@
 					</p>
 				</div>
 				<div class="status">
-					<router-link :to="user | userPage()">
-						<b>{{ user.notesCount | number }}</b>
+					<router-link :to="userPage(user)">
+						<b>{{ number(user.notesCount) }}</b>
 						<i>{{ $t('notes') }}</i>
 					</router-link>
-					<router-link :to="user | userPage('following')">
-						<b>{{ user.followingCount | number }}</b>
+					<router-link :to="userPage(user, 'following')">
+						<b>{{ number(user.followingCount) }}</b>
 						<i>{{ $t('following') }}</i>
 					</router-link>
-					<router-link :to="user | userPage('followers')">
-						<b>{{ user.followersCount | number }}</b>
+					<router-link :to="userPage(user, 'followers')">
+						<b>{{ number(user.followersCount) }}</b>
 						<i>{{ $t('followers') }}</i>
 					</router-link>
 				</div>
@@ -61,9 +61,9 @@
 		</header>
 		<nav v-if="$route.name == 'user'" :class="{ shadow: $store.state.device.useShadow }">
 			<div class="nav-container">
-				<a :data-active="page == 'home'" @click="page = 'home'"><fa icon="home"/> {{ $t('overview') }}</a>
-				<a :data-active="page == 'notes'" @click="page = 'notes'"><fa :icon="['far', 'comment-alt']"/> {{ $t('timeline') }}</a>
-				<a :data-active="page == 'media'" @click="page = 'media'"><fa icon="image"/> {{ $t('media') }}</a>
+				<a :data-active="(page == 'home') || null" @click="page = 'home'"><fa icon="home"/> {{ $t('overview') }}</a>
+				<a :data-active="(page == 'notes') || null" @click="page = 'notes'"><fa :icon="['far', 'comment-alt']"/> {{ $t('timeline') }}</a>
+				<a :data-active="(page == 'media') || null" @click="page = 'media'"><fa icon="image"/> {{ $t('media') }}</a>
 			</div>
 		</nav>
 		<main>
@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import * as age from 's-age';
 import parseAcct from '../../../../../../misc/acct/parse';
@@ -89,7 +89,7 @@ import XHome from './home.vue';
 import { getStaticImageUrl } from '../../../../common/scripts/get-static-image-url';
 import XIntegrations from '../../../../common/views/components/integrations.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/user.vue'),
 	components: {
 		XHome,

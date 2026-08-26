@@ -1,7 +1,7 @@
 <template>
 <div class="gvfdktuvdgwhmztnuekzkswkjygptfcv"
-	:data-is-selected="isSelected"
-	:data-is-contextmenu-showing="isContextmenuShowing"
+	:data-is-selected="(isSelected) || null"
+	:data-is-contextmenu-showing="(isContextmenuShowing) || null"
 	@click="onClick"
 	draggable="true"
 	@dragstart="onDragstart"
@@ -32,14 +32,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import copyToClipboard from '../../../common/scripts/copy-to-clipboard';
 import updateAvatar from '../../api/update-avatar';
 import updateBanner from '../../api/update-banner';
 import XFileThumbnail from '../../../common/views/components/drive-file-thumbnail.vue';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/drive.file.vue'),
 	props: ['file'],
 	components: {

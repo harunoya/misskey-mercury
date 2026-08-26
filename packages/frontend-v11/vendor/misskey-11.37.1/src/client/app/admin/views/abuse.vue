@@ -6,10 +6,10 @@
 			<sequential-entrance animation="entranceFromTop" delay="25">
 				<div v-for="report in userReports" :key="report.id" class="haexwsjc">
 					<ui-horizon-group inputs>
-						<ui-input :value="report.user | acct" type="text" readonly>
+						<ui-input :value="acct(report.user)" type="text" readonly>
 							<span>{{ $t('target') }}</span>
 						</ui-input>
-						<ui-input :value="report.reporter | acct" type="text" readonly>
+						<ui-input :value="acct(report.reporter)" type="text" readonly>
 							<span>{{ $t('reporter') }}</span>
 						</ui-input>
 					</ui-horizon-group>
@@ -26,11 +26,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/abuse.vue'),
 
 	data() {

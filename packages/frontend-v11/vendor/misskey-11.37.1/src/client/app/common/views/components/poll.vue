@@ -1,5 +1,5 @@
 <template>
-<div class="mk-poll" :data-done="closed || isVoted">
+<div class="mk-poll" :data-done="(closed || isVoted) || null">
 	<ul>
 		<li v-for="(choice, i) in poll.choices" :key="i" @click="vote(i)" :class="{ voted: choice.voted }" :title="!closed && !isVoted ? $t('vote-to').replace('{}', choice.text) : ''">
 			<div class="backdrop" :style="{ 'width': `${showResult ? (choice.votes / total * 100) : 0}%` }"></div>
@@ -22,10 +22,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { sum } from '../../../../../prelude/array';
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/poll.vue'),
 	props: ['note'],
 	data() {

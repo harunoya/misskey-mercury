@@ -1,5 +1,5 @@
 <template>
-<div class="mk-calendar" :data-melt="design == 4 || design == 5" :class="{ shadow: $store.state.device.useShadow, round: $store.state.device.roundedCorners }">
+<div class="mk-calendar" :data-melt="(design == 4 || design == 5) || null" :class="{ shadow: $store.state.device.useShadow, round: $store.state.device.roundedCorners }">
 	<template v-if="design == 0 || design == 1">
 		<button @click="prev" :title="$t('prev')"><fa icon="chevron-circle-left"/></button>
 		<p class="title">{{ $t('title', { year, month }) }}</p>
@@ -10,16 +10,16 @@
 		<template v-if="design == 0 || design == 2 || design == 4">
 		<div class="weekday"
 			v-for="(day, i) in Array(7).fill(0)"
-			:data-today="year == today.getFullYear() && month == today.getMonth() + 1 && today.getDay() == i"
-			:data-is-weekend="i == 0 || i == 6"
+			:data-today="(year == today.getFullYear() && month == today.getMonth() + 1 && today.getDay() == i) || null"
+			:data-is-weekend="(i == 0 || i == 6) || null"
 		>{{ weekdayText[i] }}</div>
 		</template>
 		<div v-for="n in paddingDays"></div>
 		<div class="day" v-for="(day, i) in days"
-			:data-today="isToday(i + 1)"
-			:data-selected="isSelected(i + 1)"
-			:data-is-out-of-range="isOutOfRange(i + 1)"
-			:data-is-weekend="isWeekend(i + 1)"
+			:data-today="(isToday(i + 1)) || null"
+			:data-selected="(isSelected(i + 1)) || null"
+			:data-is-out-of-range="(isOutOfRange(i + 1)) || null"
+			:data-is-weekend="(isWeekend(i + 1)) || null"
 			@click="go(i + 1)"
 			:title="isOutOfRange(i + 1) ? null : $t('go')"
 		>
@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 
 const eachMonthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -39,7 +39,7 @@ function isLeapYear(year) {
 	return !(year & (year % 25 ? 3 : 15));
 }
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('desktop/views/components/calendar.vue'),
 	props: {
 		design: {

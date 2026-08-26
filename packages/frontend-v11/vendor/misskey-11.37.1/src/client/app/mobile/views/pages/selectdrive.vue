@@ -10,13 +10,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/selectdrive.vue'),
 	components: {
-		XDrive: () => import('../components/drive.vue').then(m => m.default),
+		XDrive: defineAsyncComponent(() => import('../components/drive.vue').then(m => m.default)),
 	},
 	data() {
 		return {

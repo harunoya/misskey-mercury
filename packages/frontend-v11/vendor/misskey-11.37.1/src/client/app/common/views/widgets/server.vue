@@ -18,6 +18,7 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue';
 import define from '../../../common/define-widget';
 import i18n from '../../../i18n';
 import XCpuMemory from './server.cpu-memory.vue';
@@ -27,13 +28,15 @@ import XDisk from './server.disk.vue';
 import XUptimes from './server.uptimes.vue';
 import XInfo from './server.info.vue';
 
-export default define({
+export default defineComponent({
+	extends: define({
 	name: 'server',
 	props: () => ({
 		design: 0,
 		view: 0
 	})
-}).extend({
+}),
+
 	i18n: i18n('common/views/widgets/server.vue'),
 
 	components: {
@@ -59,7 +62,7 @@ export default define({
 
 		this.connection = this.$root.stream.useSharedConnection('serverStats');
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.connection.dispose();
 	},
 	methods: {

@@ -3,7 +3,7 @@
 	<ui-card>
 		<template #title><fa :icon="faTerminal"/> {{ $t('instance') }}</template>
 		<section class="fit-top">
-			<ui-input class="target" v-model="target" type="text" @enter="showInstance()">
+			<ui-input class="target" :value="target" @input="target = $event" type="text" @enter="showInstance()">
 				<span>{{ $t('host') }}</span>
 				<template #prefix><fa :icon="faServer"/></template>
 			</ui-input>
@@ -21,21 +21,21 @@
 					</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group inputs>
-					<ui-input :value="instance.notesCount | number" type="text" readonly>
+					<ui-input :value="number(instance.notesCount)" type="text" readonly>
 						<span>{{ $t('notes') }}</span>
 						<template #prefix><fa :icon="faEnvelopeOpenText"/></template>
 					</ui-input>
-					<ui-input :value="instance.usersCount | number" type="text" readonly>
+					<ui-input :value="number(instance.usersCount)" type="text" readonly>
 						<span>{{ $t('users') }}</span>
 						<template #prefix><fa :icon="faUsers"/></template>
 					</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group inputs>
-					<ui-input :value="instance.followingCount | number" type="text" readonly>
+					<ui-input :value="number(instance.followingCount)" type="text" readonly>
 						<span>{{ $t('following') }}</span>
 						<template #prefix><fa :icon="faCaretDown"/></template>
 					</ui-input>
-					<ui-input :value="instance.followersCount | number" type="text" readonly>
+					<ui-input :value="number(instance.followersCount)" type="text" readonly>
 						<span>{{ $t('followers') }}</span>
 						<template #prefix><fa :icon="faCaretUp"/></template>
 					</ui-input>
@@ -54,11 +54,11 @@
 					<span>{{ $t('latest-request-received-at') }}</span>
 					<template #prefix><fa :icon="faInbox"/></template>
 				</ui-input>
-				<ui-switch v-model="instance.isMarkedAsClosed" @change="updateInstance()">{{ $t('marked-as-closed') }}</ui-switch>
+				<ui-switch :value="instance.isMarkedAsClosed" @change="instance.isMarkedAsClosed = $event; updateInstance()">{{ $t('marked-as-closed') }}</ui-switch>
 				<details>
 					<summary>{{ $t('charts') }}</summary>
 					<ui-horizon-group inputs>
-						<ui-select v-model="chartSrc">
+						<ui-select :value="chartSrc" @input="chartSrc = $event">
 							<option value="requests">{{ $t('chart-srcs.requests') }}</option>
 							<option value="users">{{ $t('chart-srcs.users') }}</option>
 							<option value="users-total">{{ $t('chart-srcs.users-total') }}</option>
@@ -71,7 +71,7 @@
 							<option value="drive-files">{{ $t('chart-srcs.drive-files') }}</option>
 							<option value="drive-files-total">{{ $t('chart-srcs.drive-files-total') }}</option>
 						</ui-select>
-						<ui-select v-model="chartSpan">
+						<ui-select :value="chartSpan" @input="chartSpan = $event">
 							<option value="hour">{{ $t('chart-spans.hour') }}</option>
 							<option value="day">{{ $t('chart-spans.day') }}</option>
 						</ui-select>
@@ -95,7 +95,7 @@
 		<template #title><fa :icon="faServer"/> {{ $t('instances') }}</template>
 		<section class="fit-top">
 			<ui-horizon-group inputs>
-				<ui-select v-model="sort">
+				<ui-select :value="sort" @input="sort = $event">
 					<template #label>{{ $t('sort') }}</template>
 					<option value="-caughtAt">{{ $t('sorts.caughtAtAsc') }}</option>
 					<option value="+caughtAt">{{ $t('sorts.caughtAtDesc') }}</option>
@@ -114,7 +114,7 @@
 					<option value="-driveFiles">{{ $t('sorts.driveFilesAsc') }}</option>
 					<option value="+driveFiles">{{ $t('sorts.driveFilesDesc') }}</option>
 				</ui-select>
-				<ui-select v-model="state">
+				<ui-select :value="state" @input="state = $event">
 					<template #label>{{ $t('state') }}</template>
 					<option value="all">{{ $t('states.all') }}</option>
 					<option value="blocked">{{ $t('states.blocked') }}</option>
@@ -134,10 +134,10 @@
 				</header>
 				<div v-for="instance in instances" :style="{ opacity: instance.isNotResponding ? 0.5 : 1 }">
 					<a @click.prevent="showInstance(instance.host)" rel="nofollow noopener" target="_blank" :href="`https://${instance.host}`" :style="{ textDecoration: instance.isMarkedAsClosed ? 'line-through' : 'none' }">{{ instance.host }}</a>
-					<span>{{ instance.notesCount | number }}</span>
-					<span>{{ instance.usersCount | number }}</span>
-					<span>{{ instance.followingCount | number }}</span>
-					<span>{{ instance.followersCount | number }}</span>
+					<span>{{ number(instance.notesCount) }}</span>
+					<span>{{ number(instance.usersCount) }}</span>
+					<span>{{ number(instance.followingCount) }}</span>
+					<span>{{ number(instance.followersCount) }}</span>
 					<span>{{ instance.latestStatus }}</span>
 				</div>
 			</div>
@@ -149,7 +149,7 @@
 	<ui-card>
 		<template #title><fa :icon="faBan"/> {{ $t('blocked-hosts') }}</template>
 		<section class="fit-top">
-			<ui-textarea v-model="blockedHosts">
+			<ui-textarea :value="blockedHosts" @input="blockedHosts = $event">
 				<template #desc>{{ $t('blocked-hosts-info') }}</template>
 			</ui-textarea>
 			<ui-button @click="saveBlockedHosts">{{ $t('save') }}</ui-button>
@@ -159,7 +159,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faPaperPlane } from '@fortawesome/free-regular-svg-icons';
 import { faTrashAlt, faBan, faGlobe, faTerminal, faSearch, faMinusCircle, faServer, faCrosshairs, faEnvelopeOpenText, faUsers, faCaretDown, faCaretUp, faTrafficLight, faInbox } from '@fortawesome/free-solid-svg-icons';
@@ -170,7 +170,7 @@ const chartLimit = 90;
 const sum = (...arr) => arr.reduce((r, a) => r.map((b, i) => a[i] + b));
 const negate = arr => arr.map(x => -x);
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('admin/views/federation.vue'),
 
 	filters: {
@@ -266,7 +266,7 @@ export default Vue.extend({
 		});
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		this.chartInstance.destroy();
 	},
 

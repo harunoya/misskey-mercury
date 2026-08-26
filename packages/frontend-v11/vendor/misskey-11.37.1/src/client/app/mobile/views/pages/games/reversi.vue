@@ -6,13 +6,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('mobile/views/pages/games/reversi.vue'),
 	components: {
-		XReversi: () => import('../../../../common/views/components/games/reversi/reversi.vue').then(m => m.default)
+		XReversi: defineAsyncComponent(() => import('../../../../common/views/components/games/reversi/reversi.vue').then(m => m.default))
 	},
 	mounted() {
 		document.title = `${this.$root.instanceName} | ${this.$t('reversi')}`;

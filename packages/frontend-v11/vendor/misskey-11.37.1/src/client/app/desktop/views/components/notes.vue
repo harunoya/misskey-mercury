@@ -9,16 +9,16 @@
 	<mk-error v-if="error" @retry="init()"/>
 
 	<div class="placeholder" v-if="fetching">
-		<template v-for="i in 10">
-			<mk-note-skeleton :key="i"/>
+		<template v-for="i in 10" :key="i">
+			<mk-note-skeleton/>
 		</template>
 	</div>
 
 	<!-- トランジションを有効にするとなぜかメモリリークする -->
 	<component :is="!$store.state.device.reduceMotion ? 'transition-group' : 'div'" name="mk-notes" class="notes transition" tag="div" ref="notes">
-		<template v-for="(note, i) in _notes">
-			<mk-note :note="note" :key="note.id" :compact="true" ref="note"/>
-			<p class="date" :key="note.id + '_date'" v-if="i != items.length - 1 && note._date != _notes[i + 1]._date">
+		<template v-for="(note, i) in _notes" :key="note.id">
+			<mk-note :note="note" :compact="true" ref="note"/>
+			<p class="date" v-if="i != items.length - 1 && note._date != _notes[i + 1]._date">
 				<span><fa icon="angle-up"/>{{ note._datetext }}</span>
 				<span><fa icon="angle-down"/>{{ _notes[i + 1]._datetext }}</span>
 			</p>
@@ -35,13 +35,19 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { TransitionGroup, defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import * as config from '../../../config';
 import shouldMuteNote from '../../../common/scripts/should-mute-note';
 import paging from '../../../common/scripts/paging';
 
-export default Vue.extend({
+export default defineComponent({
+	// `:is="'transition-group'"` is resolved at runtime, which only consults registered
+	// components; Vue 2 also matched the built-ins by name.
+	components: {
+		'transition-group': TransitionGroup,
+	},
+
 	i18n: i18n(),
 
 	mixins: [
@@ -119,7 +125,7 @@ export default Vue.extend({
 		box-shadow 0 3px 8px rgba(0, 0, 0, 0.2)
 
 	.transition
-		.mk-notes-enter
+		.mk-notes-enter-from
 		.mk-notes-leave-to
 			opacity 0
 			transform translateY(-30px)

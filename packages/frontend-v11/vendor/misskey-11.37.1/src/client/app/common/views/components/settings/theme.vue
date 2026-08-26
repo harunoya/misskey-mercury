@@ -22,7 +22,7 @@
 		</div>
 
 		<label>
-			<ui-select v-model="light" :placeholder="$t('light-theme')">
+			<ui-select :value="light" @input="light = $event" :placeholder="$t('light-theme')">
 				<template #label><fa :icon="faSun"/> {{ $t('light-theme') }}</template>
 				<optgroup :label="$t('light-themes')">
 					<option v-for="x in lightThemes" :value="x.id" :key="x.id">{{ x.name }}</option>
@@ -34,7 +34,7 @@
 		</label>
 
 		<label>
-			<ui-select v-model="dark" :placeholder="$t('dark-theme')">
+			<ui-select :value="dark" @input="dark = $event" :placeholder="$t('dark-theme')">
 				<template #label><fa :icon="faMoon"/> {{ $t('dark-theme') }}</template>
 				<optgroup :label="$t('dark-themes')">
 					<option v-for="x in darkThemes" :value="x.id" :key="x.id">{{ x.name }}</option>
@@ -51,14 +51,14 @@
 			<summary><fa icon="palette"/> {{ $t('create-a-theme') }}</summary>
 			<div>
 				<span>{{ $t('base-theme') }}:</span>
-				<ui-radio v-model="myThemeBase" value="light">{{ $t('base-theme-light') }}</ui-radio>
-				<ui-radio v-model="myThemeBase" value="dark">{{ $t('base-theme-dark') }}</ui-radio>
+				<ui-radio :model="myThemeBase" @change="myThemeBase = $event" value="light">{{ $t('base-theme-light') }}</ui-radio>
+				<ui-radio :model="myThemeBase" @change="myThemeBase = $event" value="dark">{{ $t('base-theme-dark') }}</ui-radio>
 			</div>
 			<div>
-				<ui-input v-model="myThemeName">
+				<ui-input :value="myThemeName" @input="myThemeName = $event">
 					<span>{{ $t('theme-name') }}</span>
 				</ui-input>
-				<ui-textarea v-model="myThemeDesc">
+				<ui-textarea :value="myThemeDesc" @input="myThemeDesc = $event">
 					<span>{{ $t('desc') }}</span>
 				</ui-textarea>
 			</div>
@@ -83,7 +83,7 @@
 			<ui-button @click="import_()"><fa icon="file-import"/> {{ $t('import') }}</ui-button>
 			<input ref="file" type="file" accept=".misskeytheme" style="display:none;" @change="onUpdateImportFile"/>
 			<p>{{ $t('import-by-code') }}:</p>
-			<ui-textarea v-model="installThemeCode">
+			<ui-textarea :value="installThemeCode" @input="installThemeCode = $event">
 				<span>{{ $t('theme-code') }}</span>
 			</ui-textarea>
 			<ui-button @click="() => install(this.installThemeCode)"><fa icon="check"/> {{ $t('install') }}</ui-button>
@@ -91,7 +91,7 @@
 
 		<details>
 			<summary><fa icon="folder-open"/> {{ $t('manage-themes') }}</summary>
-			<ui-select v-model="selectedThemeId" :placeholder="$t('select-theme')">
+			<ui-select :value="selectedThemeId" @input="selectedThemeId = $event" :placeholder="$t('select-theme')">
 				<optgroup :label="$t('builtin-themes')">
 					<option v-for="x in builtinThemes" :value="x.id" :key="x.id">{{ x.name }}</option>
 				</optgroup>
@@ -121,16 +121,17 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
 import { lightTheme, darkTheme, builtinThemes, applyTheme, Theme } from '../../../../theme';
-import { Chrome } from 'vue-color';
+import { ColorPicker as Chrome } from 'vue3-colorpicker';
+import 'vue3-colorpicker/style.css';
 import { v4 as uuid } from 'uuid';
 import * as tinycolor from 'tinycolor2';
 import * as JSON5 from 'json5';
 import { faMoon, faSun } from '@fortawesome/free-regular-svg-icons';
 
-export default Vue.extend({
+export default defineComponent({
 	i18n: i18n('common/views/components/theme.vue'),
 	components: {
 		ColorPicker: Chrome
