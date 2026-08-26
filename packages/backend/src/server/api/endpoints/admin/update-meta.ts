@@ -9,6 +9,7 @@ import type { MiMeta } from '@/models/Meta.js';
 import { ModerationLogService } from '@/core/ModerationLogService.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { MetaService } from '@/core/MetaService.js';
+import { sanitizeInstanceHtml } from '@/misc/sanitize-html.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -339,7 +340,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			if (ps.description !== undefined) {
-				set.description = ps.description;
+				set.description = ps.description == null ? ps.description : sanitizeInstanceHtml(ps.description);
 			}
 
 			if (ps.defaultLightTheme !== undefined) {
@@ -664,7 +665,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			if (ps.serverRules !== undefined) {
-				set.serverRules = ps.serverRules;
+				set.serverRules = ps.serverRules.map(rule => sanitizeInstanceHtml(rule));
 			}
 
 			if (ps.preservedUsernames !== undefined) {

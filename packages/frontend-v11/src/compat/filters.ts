@@ -8,6 +8,7 @@ import type { App } from 'vue';
 import getAcct from '../../vendor/misskey-11.37.1/src/misc/acct/render';
 import getUserName from '../../vendor/misskey-11.37.1/src/misc/get-user-name';
 import { url } from '../../vendor/misskey-11.37.1/src/client/app/config';
+import { sanitizeHtml } from './sanitize-html';
 
 /**
  * v11's template filters, as plain functions.
@@ -31,6 +32,8 @@ export const filters = {
 	number: (n: number | null | undefined) => (n == null ? 'N/A' : n.toLocaleString()),
 
 	json5: (x: unknown) => JSON5.stringify(x, null, 2),
+
+	sanitizeHtml,
 
 	bytes: (v: number | null | undefined, digits = 0) => {
 		if (v == null) return '?';
