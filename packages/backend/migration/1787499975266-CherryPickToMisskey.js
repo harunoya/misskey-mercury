@@ -98,10 +98,37 @@ const cherryPickOnlyTypes = [
     'emoji_copypermission_enum',
 ];
 
+// CherryPick is not simply Misskey plus extras: it also lags behind on upstream changes it never
+// merged. Whether those close on their own depends on what the fork recorded in `migrations`, and a
+// history that claims a migration ran when the schema says otherwise leaves the entity definitions
+// pointing at columns that do not exist. Restating them here is idempotent and costs nothing when
+// the upstream migration already applied.
+const missingUpstreamColumns = [
+    ['meta', 'sensitiveMediaDetectionApiUrl', `character varying(1024)`],
+    ['meta', 'sensitiveMediaDetectionApiKey', `character varying(1024)`],
+    ['meta', 'sensitiveMediaDetectionTimeout', `integer NOT NULL DEFAULT '60000'`],
+    ['meta', 'sensitiveMediaDetectionMaxImagesPerRequest', `integer NOT NULL DEFAULT '4'`],
+    ['meta', 'urlPreviewSensitiveList', `character varying(3072) array NOT NULL DEFAULT '{}'`],
+];
+
+// Same story, but for defaults rather than whole columns.
+const missingUpstreamDefaults = [
+    ['hashtag', 'mentionedUserIds', `'{}'`],
+    ['hashtag', 'mentionedLocalUserIds', `'{}'`],
+    ['hashtag', 'mentionedRemoteUserIds', `'{}'`],
+    ['hashtag', 'attachedUserIds', `'{}'`],
+    ['hashtag', 'attachedLocalUserIds', `'{}'`],
+    ['hashtag', 'attachedRemoteUserIds', `'{}'`],
+];
+
 export class CherryPickToMisskey1787499975266 {
     name = 'CherryPickToMisskey1787499975266'
 
     async up(queryRunner) {
+        // Deliberately narrow. `user_group` and the `group` antenna source look like CherryPick
+        // markers but Misskey carried both itself, so widening the test to them makes this migration
+        // fire on a plain Misskey database and start dismantling it. `skipCherryPickVersion` is the
+        // one column Misskey never had.
         const [{ isCherryPick }] = await queryRunner.query(`
             SELECT EXISTS (
                 SELECT 1
@@ -131,6 +158,14 @@ export class CherryPickToMisskey1787499975266 {
             await queryRunner.query(`DROP TYPE IF EXISTS "public"."${type}"`);
         }
 
+        for (const [table, column, definition] of missingUpstreamColumns) {
+            await queryRunner.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "${column}" ${definition}`);
+        }
+
+        for (const [table, column, value] of missingUpstreamDefaults) {
+            await queryRunner.query(`ALTER TABLE "${table}" ALTER COLUMN "${column}" SET DEFAULT ${value}`);
+        }
+
         await queryRunner.query(`ALTER TABLE "meta" ALTER COLUMN "repositoryUrl" SET DEFAULT 'https://github.com/misskey-dev/misskey'`);
         await queryRunner.query(`ALTER TABLE "meta" ALTER COLUMN "feedbackUrl" SET DEFAULT 'https://github.com/misskey-dev/misskey/issues/new'`);
         await queryRunner.query(`ALTER TABLE "meta" ALTER COLUMN "preservedUsernames" SET DEFAULT '{admin,administrator,root,system,maintainer,host,mod,moderator,owner,superuser,staff,auth,i,me,everyone,all,mention,mentions,example,user,users,account,accounts,official,help,helps,support,supports,info,information,informations,announce,announces,announcement,announcements,notice,notification,notifications,dev,developer,developers,tech,misskey}'`);
@@ -154,8 +189,19 @@ export class CherryPickToMisskey1787499975266 {
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_0e43068c3f92cab197c3d3cd86" ON "channel_following" ("followeeId")`);
         await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_6d8084ec9496e7334a4602707e" ON "channel_following" ("followerId")`);
         await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_2e230dd45a10e671d781d99f3e" ON "channel_following" ("followerId", "followeeId")`);
-        await queryRunner.query(`ALTER TABLE "channel_following" ADD CONSTRAINT "FK_0e43068c3f92cab197c3d3cd86e" FOREIGN KEY ("followeeId") REFERENCES "channel"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "channel_following" ADD CONSTRAINT "FK_6d8084ec9496e7334a4602707e1" FOREIGN KEY ("followerId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        // Every other statement in this block tolerates the table already being there; these did
+        // not, because Postgres has no ADD CONSTRAINT IF NOT EXISTS. A fork that already created
+        // `channel_following` would fail the whole migration on the very last two statements.
+        const addConstraintIfMissing = (name, definition) => queryRunner.query(`
+            DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '${name}') THEN
+                    ALTER TABLE "channel_following" ADD CONSTRAINT "${name}" ${definition};
+                END IF;
+            END $$
+        `);
+
+        await addConstraintIfMissing('FK_0e43068c3f92cab197c3d3cd86e', `FOREIGN KEY ("followeeId") REFERENCES "channel"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await addConstraintIfMissing('FK_6d8084ec9496e7334a4602707e1', `FOREIGN KEY ("followerId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
     }
 
     async down() {
