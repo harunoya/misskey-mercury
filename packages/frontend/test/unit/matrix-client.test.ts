@@ -14,6 +14,39 @@ function jsonResponse(body: unknown, init?: ResponseInit): Response {
 	});
 }
 
+describe('MatrixApiError', () => {
+	test('recognises a rejected access token', () => {
+		expect(new MatrixApiError(401, 'no', 'M_UNKNOWN_TOKEN').isAuthenticationFailure).toBe(true);
+		expect(new MatrixApiError(403, 'no', 'M_MISSING_TOKEN').isAuthenticationFailure).toBe(true);
+		expect(new MatrixApiError(401, 'no').isAuthenticationFailure).toBe(true);
+		// A rate limit clears on its own; treating it as a dead session would sign the user out.
+		expect(new MatrixApiError(429, 'slow down', 'M_LIMIT_EXCEEDED').isAuthenticationFailure).toBe(false);
+	});
+
+	test('carries the retry delay from a rate limited response', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(
+			{ errcode: 'M_LIMIT_EXCEEDED', error: 'Too Many Requests', retry_after_ms: 4200 },
+			{ status: 429 },
+		));
+		const client = new MatrixClient({ homeserverUrl: 'https://matrix.example', accessToken: 'token', userId: '@alice:example.com' }, fetchMock);
+
+		await expect(client.sync()).rejects.toMatchObject({ status: 429, retryAfterMs: 4200 });
+	});
+});
+
+describe('room membership', () => {
+	test('joins and leaves a room by id', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ room_id: '!room:example.com' }));
+		const client = new MatrixClient({ homeserverUrl: 'https://matrix.example', accessToken: 'token', userId: '@alice:example.com' }, fetchMock);
+
+		await client.joinRoom('!room:example.com');
+		expect(fetchMock.mock.calls[0]![0]).toBe('https://matrix.example/_matrix/client/v3/rooms/!room%3Aexample.com/join');
+
+		await client.leaveRoom('!room:example.com');
+		expect(fetchMock.mock.calls[1]![0]).toBe('https://matrix.example/_matrix/client/v3/rooms/!room%3Aexample.com/leave');
+	});
+});
+
 describe('normalizeHomeserverUrl', () => {
 	test('normalizes a homeserver origin', () => {
 		expect(normalizeHomeserverUrl(' https://matrix.example/ ')).toBe('https://matrix.example');

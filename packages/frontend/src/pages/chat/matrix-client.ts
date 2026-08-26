@@ -48,10 +48,17 @@ export type MatrixJoinedRoom = {
 	unread_notifications?: { notification_count?: number };
 };
 
+// A room someone has invited us to. The server sends a stripped state subset — enough to show who
+// is inviting and to what — and nothing appears under `join` until the invite is accepted.
+export type MatrixInvitedRoom = {
+	invite_state?: { events?: MatrixEvent[] };
+};
+
 export type MatrixSyncResponse = {
 	next_batch: string;
 	rooms?: {
 		join?: Record<string, MatrixJoinedRoom>;
+		invite?: Record<string, MatrixInvitedRoom>;
 		leave?: Record<string, unknown>;
 	};
 };
@@ -59,12 +66,20 @@ export type MatrixSyncResponse = {
 export class MatrixApiError extends Error {
 	public readonly status: number;
 	public readonly errcode?: string;
+	/** How long the homeserver wants us to wait, from `retry_after_ms` on a rate limited response. */
+	public readonly retryAfterMs?: number;
 
-	constructor(status: number, message: string, errcode?: string) {
+	constructor(status: number, message: string, errcode?: string, retryAfterMs?: number) {
 		super(message);
 		this.name = 'MatrixApiError';
 		this.status = status;
 		this.errcode = errcode;
+		this.retryAfterMs = retryAfterMs;
+	}
+
+	/** The access token was rejected; waiting will not help and the session has to be re-established. */
+	public get isAuthenticationFailure(): boolean {
+		return this.errcode === 'M_UNKNOWN_TOKEN' || this.errcode === 'M_MISSING_TOKEN' || this.status === 401;
 	}
 }
 
@@ -152,6 +167,14 @@ export class MatrixClient {
 		});
 	}
 
+	public async joinRoom(roomId: string): Promise<{ room_id: string }> {
+		return this.request(`/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/join`, { method: 'POST', body: '{}' });
+	}
+
+	public async leaveRoom(roomId: string): Promise<void> {
+		await this.request(`/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/leave`, { method: 'POST', body: '{}' });
+	}
+
 	public async createDirectRoom(userId: string): Promise<{ room_id: string }> {
 		return this.request('/_matrix/client/v3/createRoom', {
 			method: 'POST',
@@ -200,6 +223,7 @@ export class MatrixClient {
 				response.status,
 				typeof result.error === 'string' ? result.error : response.statusText,
 				typeof result.errcode === 'string' ? result.errcode : undefined,
+				typeof result.retry_after_ms === 'number' ? result.retry_after_ms : undefined,
 			);
 		}
 		return result as T;

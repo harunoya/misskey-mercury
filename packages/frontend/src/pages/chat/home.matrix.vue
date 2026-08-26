@@ -62,6 +62,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<input v-model="roomSearch" type="search" :placeholder="i18n.ts.search">
 					</label>
 				</div>
+				<template v-if="invites.length > 0">
+					<div :class="$style.roomSectionHeader">
+						<span><i class="ti ti-mail"></i> {{ i18n.ts._matrix.invites }}</span>
+						<span>{{ invites.length }}</span>
+					</div>
+					<div :class="$style.inviteList">
+						<div v-for="invite in invites" :key="invite.roomId" :class="$style.invite">
+							<span :class="$style.roomCopy">
+								<span :class="$style.roomName">{{ invite.name }}</span>
+								<span :class="$style.roomTopic">{{ i18n.tsx._matrix.invitedBy({ user: invite.inviter }) }}</span>
+							</span>
+							<span :class="$style.inviteActions">
+								<MkButton primary small :disabled="respondingInviteIds.includes(invite.roomId)" @click="respondToInvite(invite, true)">{{ i18n.ts._matrix.acceptInvite }}</MkButton>
+								<MkButton small :disabled="respondingInviteIds.includes(invite.roomId)" @click="respondToInvite(invite, false)">{{ i18n.ts._matrix.declineInvite }}</MkButton>
+							</span>
+						</div>
+					</div>
+				</template>
 				<div :class="$style.roomSectionHeader">
 					<span><i class="ti ti-chevron-down"></i> {{ i18n.ts._matrix.rooms }}</span>
 					<span>{{ filteredRooms.length }}</span>
@@ -164,42 +182,32 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
-import type { MatrixEvent, MatrixJoinedRoom, MatrixSession } from './matrix-client.js';
-import { isMatrixSession, MatrixClient, matrixSessionKey, upsertMatrixSession } from './matrix-client.js';
+import type { MatrixSession } from './matrix-client.js';
+import { matrixSessionKey } from './matrix-client.js';
+import type { MatrixInvite, MatrixMessage } from './matrix-store.js';
+import * as matrix from './matrix-store.js';
 import MkButton from '@/components/MkButton.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkInput from '@/components/MkInput.vue';
 import { i18n } from '@/i18n.js';
-import { miLocalStorage } from '@/local-storage.js';
 import * as os from '@/os.js';
 import type { MenuItem } from '@/types/menu.js';
-
-type MatrixRoomSummary = {
-	roomId: string;
-	name: string;
-	topic?: string;
-	encrypted: boolean;
-	unreadCount: number;
-};
-
-type MatrixMessage = {
-	eventId: string;
-	sender: string;
-	body: string;
-	timestamp: number;
-	own: boolean;
-};
 
 type DisplayMatrixMessage = MatrixMessage & {
 	showHeader: boolean;
 	showDay: boolean;
 };
 
-const storedSessions = miLocalStorage.getItemAsJson('matrixSessions');
-const legacySession = miLocalStorage.getItemAsJson('matrixSession');
-const initialSessions = loadStoredSessions(storedSessions, legacySession);
-const sessions = ref<MatrixSession[]>(initialSessions);
-const session = ref<MatrixSession | null>(initialSessions[0] ?? null);
+// Session, rooms and the sync loop live in the shared store so that the unified direct-message list
+// and this view show the same conversations without running two syncs. Only view state stays local.
+const sessions = matrix.sessions;
+const session = matrix.session;
+const rooms = matrix.rooms;
+const invites = matrix.invites;
+const messages = matrix.messages;
+const initialSync = matrix.initialSync;
+const connectionError = matrix.connectionError;
+
 const homeserverUrl = ref(session.value?.homeserverUrl ?? 'https://matrix.org');
 const userId = ref('');
 const password = ref('');
@@ -207,11 +215,8 @@ const loggingIn = ref(false);
 const loggingOut = ref(false);
 const showLogin = ref(false);
 const loginError = ref<string | null>(null);
-const initialSync = ref(false);
 const sending = ref(false);
-const connectionError = ref<string | null>(null);
-const rooms = ref<MatrixRoomSummary[]>([]);
-const messages = ref<Record<string, MatrixMessage[]>>({});
+const respondingInviteIds = ref<string[]>([]);
 const selectedRoomId = ref<string | null>(null);
 const messageDraft = ref('');
 const roomSearch = ref('');
@@ -219,20 +224,16 @@ const mobileConversationOpen = ref(false);
 const timelineEl = useTemplateRef('timelineEl');
 const composerInputEl = useTemplateRef<HTMLTextAreaElement>('composerInputEl');
 
-let client: MatrixClient | null = null;
-let syncToken: string | undefined;
-let syncController: AbortController | null = null;
 let sendOperation = 0;
 let componentActive = true;
 let stickToTimelineBottom = true;
-const latestTimelineEventIds = new Map<string, string>();
 
 const selectedRoom = computed(() => rooms.value.find(room => room.roomId === selectedRoomId.value) ?? null);
 const selectedMessages = computed(() => selectedRoomId.value == null ? [] : messages.value[selectedRoomId.value] ?? []);
 const filteredRooms = computed(() => {
 	const query = roomSearch.value.trim().toLocaleLowerCase();
 	if (query.length === 0) return rooms.value;
-	return rooms.value.filter(room => `${room.name}\n${room.topic ?? ''}\n${room.roomId}`.toLocaleLowerCase().includes(query));
+	return rooms.value.filter(room => [room.name, room.topic ?? '', room.roomId].join('\n').toLocaleLowerCase().includes(query));
 });
 const displayMessages = computed<DisplayMatrixMessage[]>(() => selectedMessages.value.map((message, index, source) => {
 	const previous = source[index - 1];
@@ -244,8 +245,13 @@ const displayMessages = computed<DisplayMatrixMessage[]>(() => selectedMessages.
 }));
 const canSend = computed(() => messageDraft.value.trim().length > 0 && selectedRoom.value != null && !selectedRoom.value.encrypted && !sending.value);
 
-persistSessions();
-if (session.value) startSync();
+matrix.acquireSync();
+
+if (matrix.sessionExpired.value) {
+	loginError.value = i18n.ts._matrix.sessionExpired;
+	showLogin.value = true;
+	matrix.sessionExpired.value = false;
+}
 
 watch(selectedMessages, async () => {
 	await nextTick();
@@ -260,45 +266,35 @@ watch(messageDraft, async () => {
 	element.style.height = `${Math.min(element.scrollHeight, 140)}px`;
 });
 
+// A room joined from an invitation only exists once the next sync delivers it, so open it then.
+watch(rooms, () => {
+	const pendingRoomId = matrix.takePendingRoomId();
+	if (pendingRoomId != null && rooms.value.some(room => room.roomId === pendingRoomId)) {
+		selectRoom(pendingRoomId, false);
+		return;
+	}
+	if (rooms.value.length === 0) mobileConversationOpen.value = false;
+	if (selectedRoomId.value == null && rooms.value.length > 0) selectRoom(rooms.value[0]!.roomId, false);
+}, { deep: true, immediate: true });
+
 onBeforeUnmount(() => {
 	componentActive = false;
 	sendOperation++;
-	syncController?.abort();
+	matrix.releaseSync();
 });
-
-function loadStoredSessions(stored: unknown, legacy: unknown): MatrixSession[] {
-	const storedCandidates = Array.isArray(stored) ? stored.filter(isMatrixSession) : [];
-	const candidates = storedCandidates.length > 0 ? storedCandidates : isMatrixSession(legacy) ? [legacy] : [];
-	return candidates.reduce<MatrixSession[]>((result, item) => {
-		if (result.some(session => matrixSessionKey(session) === matrixSessionKey(item))) return result;
-		result.push(item);
-		return result;
-	}, []);
-}
-
-function persistSessions() {
-	miLocalStorage.setItemAsJson('matrixSessions', sessions.value);
-	miLocalStorage.removeItem('matrixSession');
-}
 
 async function login() {
 	if (loggingIn.value) return;
 	loggingIn.value = true;
 	loginError.value = null;
 	try {
-		const newSession = await MatrixClient.login(homeserverUrl.value, userId.value, password.value);
+		await matrix.login(homeserverUrl.value, userId.value, password.value);
 		password.value = '';
-		if (!componentActive) {
-			void new MatrixClient(newSession).logout().catch(() => undefined);
-			return;
-		}
-		const replacedSession = sessions.value.find(savedSession => matrixSessionKey(savedSession) === matrixSessionKey(newSession));
-		activateSession(newSession);
-		if (replacedSession && replacedSession.accessToken !== newSession.accessToken) {
-			void new MatrixClient(replacedSession).logout().catch(() => undefined);
-		}
+		if (!componentActive) return;
+		selectedRoomId.value = null;
+		showLogin.value = false;
 	} catch (error) {
-		loginError.value = describeError(i18n.ts._matrix.connectionError, error);
+		loginError.value = matrix.reportError(i18n.ts._matrix.connectionError, error);
 	} finally {
 		loggingIn.value = false;
 	}
@@ -318,6 +314,13 @@ function beginAddAccount() {
 	password.value = '';
 }
 
+function switchSession(nextSession: MatrixSession) {
+	selectedRoomId.value = null;
+	mobileConversationOpen.value = false;
+	homeserverUrl.value = nextSession.homeserverUrl;
+	matrix.activateSession(nextSession);
+}
+
 function showAccountMenu(event: PointerEvent) {
 	const activeKey = session.value == null ? null : matrixSessionKey(session.value);
 	const menu: MenuItem[] = [{
@@ -329,7 +332,7 @@ function showAccountMenu(event: PointerEvent) {
 		icon: 'ti ti-user-circle',
 		active: matrixSessionKey(savedSession) === activeKey,
 		action: () => {
-			if (matrixSessionKey(savedSession) !== activeKey) activateSession(savedSession);
+			if (matrixSessionKey(savedSession) !== activeKey) switchSession(savedSession);
 		},
 	})), {
 		type: 'divider',
@@ -341,134 +344,16 @@ function showAccountMenu(event: PointerEvent) {
 	os.popupMenu(menu, event.currentTarget ?? event.target);
 }
 
-function resetRuntime() {
-	sendOperation++;
-	sending.value = false;
-	syncController?.abort();
-	syncController = null;
-	client = null;
-	syncToken = undefined;
-	initialSync.value = false;
-	rooms.value = [];
-	messages.value = {};
-	latestTimelineEventIds.clear();
-	selectedRoomId.value = null;
-	messageDraft.value = '';
-	roomSearch.value = '';
-	mobileConversationOpen.value = false;
-	connectionError.value = null;
-	stickToTimelineBottom = true;
-}
-
-function activateSession(nextSession: MatrixSession) {
-	resetRuntime();
-	sessions.value = upsertMatrixSession(sessions.value, nextSession);
-	session.value = nextSession;
-	homeserverUrl.value = nextSession.homeserverUrl;
-	showLogin.value = false;
-	loginError.value = null;
-	persistSessions();
-	startSync();
-}
-
-function startSync() {
-	if (session.value == null) return;
-	syncController?.abort();
-	client = new MatrixClient(session.value);
-	syncController = new AbortController();
-	initialSync.value = true;
-	void syncLoop(client, syncController);
-}
-
-async function syncLoop(activeClient: MatrixClient, controller: AbortController) {
-	while (!controller.signal.aborted && client === activeClient) {
-		try {
-			const result = await activeClient.sync(syncToken, controller.signal);
-			if (controller.signal.aborted || client !== activeClient) return;
-			applySync(result.rooms?.join ?? {}, Object.keys(result.rooms?.leave ?? {}));
-			syncToken = result.next_batch;
-			connectionError.value = null;
-			initialSync.value = false;
-		} catch (error) {
-			if (controller.signal.aborted || client !== activeClient) return;
-			initialSync.value = false;
-			connectionError.value = describeError(i18n.ts._matrix.connectionError, error);
-			await new Promise(resolve => window.setTimeout(resolve, 3000));
-		}
+async function respondToInvite(invite: MatrixInvite, accept: boolean) {
+	if (respondingInviteIds.value.includes(invite.roomId)) return;
+	respondingInviteIds.value = [...respondingInviteIds.value, invite.roomId];
+	try {
+		await matrix.respondToInvite(invite.roomId, accept);
+	} catch (error) {
+		connectionError.value = matrix.reportError(i18n.ts._matrix.connectionError, error);
+	} finally {
+		respondingInviteIds.value = respondingInviteIds.value.filter(roomId => roomId !== invite.roomId);
 	}
-}
-
-function applySync(joinedRooms: Record<string, MatrixJoinedRoom>, leftRoomIds: string[]) {
-	if (leftRoomIds.length > 0) {
-		rooms.value = rooms.value.filter(room => !leftRoomIds.includes(room.roomId));
-		for (const roomId of leftRoomIds) {
-			delete messages.value[roomId];
-			latestTimelineEventIds.delete(roomId);
-		}
-		if (selectedRoomId.value != null && leftRoomIds.includes(selectedRoomId.value)) {
-			selectedRoomId.value = null;
-			mobileConversationOpen.value = false;
-		}
-	}
-	for (const [roomId, joinedRoom] of Object.entries(joinedRooms)) {
-		const previousRoom = rooms.value.find(room => room.roomId === roomId);
-		const events = [...(joinedRoom.state?.events ?? []), ...(joinedRoom.timeline?.events ?? [])];
-		const latestTimelineEventId = joinedRoom.timeline?.events?.findLast(event => typeof event.event_id === 'string')?.event_id;
-		if (latestTimelineEventId) latestTimelineEventIds.set(roomId, latestTimelineEventId);
-		const roomName = findStringContent(events, 'm.room.name', 'name') ?? previousRoom?.name ?? findMemberName(events) ?? roomId;
-		const roomTopic = findStringContent(events, 'm.room.topic', 'topic') ?? previousRoom?.topic;
-		const encrypted = previousRoom?.encrypted === true || events.some(event => event.type === 'm.room.encryption');
-		const summary: MatrixRoomSummary = {
-			roomId,
-			name: roomName,
-			topic: roomTopic,
-			encrypted,
-			unreadCount: joinedRoom.unread_notifications?.notification_count ?? previousRoom?.unreadCount ?? 0,
-		};
-		const index = rooms.value.findIndex(room => room.roomId === roomId);
-		if (index === -1) rooms.value.push(summary);
-		else rooms.value[index] = summary;
-
-		const newMessages = events.flatMap(event => toMessage(event));
-		if (newMessages.length > 0) {
-			const merged = [...(messages.value[roomId] ?? []), ...newMessages];
-			messages.value[roomId] = [...new Map(merged.map(message => [message.eventId, message])).values()]
-				.sort((a, b) => a.timestamp - b.timestamp)
-				.slice(-300);
-		}
-		if (selectedRoomId.value === roomId && summary.unreadCount > 0) markRoomAsRead(roomId);
-	}
-	rooms.value.sort((a, b) => a.name.localeCompare(b.name));
-	if (rooms.value.length === 0) mobileConversationOpen.value = false;
-	if (selectedRoomId.value == null && rooms.value.length > 0) selectRoom(rooms.value[0]!.roomId, false);
-}
-
-function findStringContent(events: MatrixEvent[], type: string, key: string): string | undefined {
-	for (let i = events.length - 1; i >= 0; i--) {
-		const event = events[i];
-		const value = event?.type === type ? event.content?.[key] : undefined;
-		if (typeof value === 'string' && value.length > 0) return value;
-	}
-	return undefined;
-}
-
-function findMemberName(events: MatrixEvent[]): string | undefined {
-	const event = events.find(item => item.type === 'm.room.member' && item.state_key !== session.value?.userId && item.content?.membership === 'join');
-	const displayName = event?.content?.displayname;
-	return typeof displayName === 'string' && displayName.length > 0 ? displayName : event?.state_key;
-}
-
-function toMessage(event: MatrixEvent): MatrixMessage[] {
-	if (event.type !== 'm.room.message' || typeof event.event_id !== 'string' || typeof event.sender !== 'string') return [];
-	if (event.content?.msgtype !== 'm.text' && event.content?.msgtype !== 'm.notice') return [];
-	if (typeof event.content.body !== 'string') return [];
-	return [{
-		eventId: event.event_id,
-		sender: event.sender,
-		body: event.content.body,
-		timestamp: event.origin_server_ts ?? Date.now(),
-		own: event.sender === session.value?.userId,
-	}];
 }
 
 function selectRoom(roomId: string, openConversation = true) {
@@ -476,9 +361,7 @@ function selectRoom(roomId: string, openConversation = true) {
 	if (selectedRoomId.value !== roomId) messageDraft.value = '';
 	selectedRoomId.value = roomId;
 	if (openConversation) mobileConversationOpen.value = true;
-	const room = rooms.value.find(item => item.roomId === roomId);
-	if (room) room.unreadCount = 0;
-	markRoomAsRead(roomId);
+	matrix.markRoomAsRead(roomId);
 }
 
 function onTimelineScroll() {
@@ -491,21 +374,12 @@ function showRoomList() {
 	mobileConversationOpen.value = false;
 }
 
-function markRoomAsRead(roomId: string) {
-	const latestEventId = latestTimelineEventIds.get(roomId);
-	if (client == null || latestEventId == null) return;
-	void client.markAsRead(roomId, latestEventId).catch(() => undefined);
-}
-
 function restartSync() {
 	if (sending.value) return;
-	startSync();
+	matrix.restartSync();
 }
 
 async function createDirectMessage() {
-	if (client == null) return;
-	const activeClient = client;
-	const activeSession = session.value;
 	const { canceled, result } = await os.inputText({
 		title: i18n.ts._matrix.newDirectMessage,
 		text: i18n.ts._matrix.directMessageUserId,
@@ -513,43 +387,30 @@ async function createDirectMessage() {
 		minLength: 3,
 	});
 	if (canceled || !result) return;
-	if (!componentActive || client !== activeClient || session.value !== activeSession || activeSession == null) return;
+	if (!componentActive) return;
 	try {
-		const room = await activeClient.createDirectRoom(result);
-		if (!componentActive || client !== activeClient || session.value !== activeSession) return;
-		rooms.value.push({ roomId: room.room_id, name: result, encrypted: false, unreadCount: 0 });
-		selectRoom(room.room_id);
-		restartSync();
+		const roomId = await matrix.createDirectRoom(result);
+		if (!componentActive || roomId == null) return;
+		selectRoom(roomId);
 	} catch (error) {
-		if (componentActive && client === activeClient && session.value === activeSession) {
-			await os.alert({ type: 'error', text: describeError(i18n.ts._matrix.createRoomError, error) });
+		if (componentActive) {
+			await os.alert({ type: 'error', text: matrix.reportError(i18n.ts._matrix.createRoomError, error) });
 		}
 	}
 }
 
 async function sendMessage() {
-	if (!canSend.value || client == null || selectedRoomId.value == null || session.value == null) return;
-	const activeClient = client;
+	if (!canSend.value || selectedRoomId.value == null) return;
 	const roomId = selectedRoomId.value;
-	const ownUserId = session.value.userId;
 	const operation = ++sendOperation;
 	const body = messageDraft.value.trim();
 	sending.value = true;
 	try {
-		const result = await activeClient.sendText(roomId, body);
-		if (client !== activeClient || session.value == null) return;
-		const ownMessage: MatrixMessage = {
-			eventId: result.event_id,
-			sender: ownUserId,
-			body,
-			timestamp: Date.now(),
-			own: true,
-		};
-		messages.value[roomId] = [...(messages.value[roomId] ?? []), ownMessage];
-		messageDraft.value = '';
+		await matrix.sendText(roomId, body);
+		if (operation === sendOperation) messageDraft.value = '';
 	} catch (error) {
-		if (operation === sendOperation && client === activeClient) {
-			await os.alert({ type: 'error', text: describeError(i18n.ts._matrix.sendError, error) });
+		if (operation === sendOperation) {
+			await os.alert({ type: 'error', text: matrix.reportError(i18n.ts._matrix.sendError, error) });
 		}
 	} finally {
 		if (operation === sendOperation) sending.value = false;
@@ -565,7 +426,6 @@ function onComposerKeydown(event: KeyboardEvent) {
 async function logout() {
 	if (loggingOut.value || session.value == null) return;
 	const activeSession = session.value;
-	const activeClient = client;
 	loggingOut.value = true;
 	const { canceled } = await os.confirm({
 		type: 'warning',
@@ -575,18 +435,9 @@ async function logout() {
 	loggingOut.value = false;
 	if (canceled || session.value !== activeSession) return;
 
-	const activeKey = matrixSessionKey(activeSession);
-	const remainingSessions = sessions.value.filter(savedSession => matrixSessionKey(savedSession) !== activeKey);
-	resetRuntime();
-	sessions.value = remainingSessions;
-	session.value = null;
-	persistSessions();
-	void activeClient?.logout().catch(() => undefined);
-	if (remainingSessions[0]) activateSession(remainingSessions[0]);
-}
-
-function describeError(prefix: string, error: unknown): string {
-	return error instanceof Error && error.message ? `${prefix} (${error.message})` : prefix;
+	selectedRoomId.value = null;
+	mobileConversationOpen.value = false;
+	await matrix.logout();
 }
 
 function formatTime(timestamp: number): string {
@@ -823,6 +674,27 @@ function roomInitial(value: string): string {
 	color: var(--MI_THEME-fgTransparentWeak);
 	font-size: 0.8em;
 	font-weight: 700;
+}
+
+.inviteList {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 0 16px 8px;
+}
+
+.invite {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border-radius: 8px;
+	background: var(--MI_THEME-buttonBg);
+}
+
+.inviteActions {
+	display: flex;
+	gap: 8px;
 }
 
 .roomList {

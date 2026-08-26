@@ -65,6 +65,12 @@ export const ROUTE_DEF = [{
 	component: chatPage(() => import('@/pages/chat/room.vue')),
 	loginRequired: true,
 }, {
+	// Matrix conversations open as their own page rather than inside the Matrix tab, so that a
+	// conversation reached from the unified direct-message list behaves like any other one.
+	path: '/chat/matrix/:matrixRoomId',
+	component: chatPage(() => import('@/pages/chat/matrix-room.vue')),
+	loginRequired: true,
+}, {
 	path: '/chat/messages/:messageId',
 	component: chatPage(() => import('@/pages/chat/message.vue')),
 	loginRequired: true,

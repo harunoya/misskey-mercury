@@ -6258,6 +6258,30 @@ export interface Locale extends ILocale {
          */
         "noRooms": string;
         /**
+         * 招待
+         */
+        "invites": string;
+        /**
+         * {user} からの招待
+         */
+        "invitedBy": ParameterizedString<"user">;
+        /**
+         * 参加
+         */
+        "acceptInvite": string;
+        /**
+         * 拒否
+         */
+        "declineInvite": string;
+        /**
+         * Matrixのセッションが失効しました。再度ログインしてください。
+         */
+        "sessionExpired": string;
+        /**
+         * Matrixに接続していません。「Matrix」タブから接続してください。
+         */
+        "notConnected": string;
+        /**
          * 新しいDM
          */
         "newDirectMessage": string;
