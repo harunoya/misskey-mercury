@@ -12,6 +12,7 @@ import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { DI } from '@/di-symbols.js';
 import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '@/server/api/error.js';
+import { isSafeWebhookUrl } from '@/misc/check-webhook-url.js';
 
 // TODO: UserWebhook schemaの適用
 export const meta = {
@@ -26,6 +27,11 @@ export const meta = {
 			message: 'You cannot create webhook any more.',
 			code: 'TOO_MANY_WEBHOOKS',
 			id: '87a9bb19-111e-4e37-81d3-a3e7426453b0',
+		},
+		invalidUrl: {
+			message: 'Invalid URL.',
+			code: 'INVALID_URL',
+			id: '8f3c2e1a-9b47-4d6e-a1c5-2d8f0b7e4a91',
 		},
 	},
 
@@ -83,6 +89,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!isSafeWebhookUrl(ps.url)) {
+				throw new ApiError(meta.errors.invalidUrl);
+			}
+
 			const currentWebhooksCount = await this.webhooksRepository.countBy({
 				userId: me.id,
 			});

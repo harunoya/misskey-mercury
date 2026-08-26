@@ -10,6 +10,7 @@ import { webhookEventTypes } from '@/models/Webhook.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { DI } from '@/di-symbols.js';
 import { ApiError } from '../../../error.js';
+import { isSafeWebhookUrl } from '@/misc/check-webhook-url.js';
 
 export const meta = {
 	tags: ['webhooks'],
@@ -23,6 +24,11 @@ export const meta = {
 			message: 'No such webhook.',
 			code: 'NO_SUCH_WEBHOOK',
 			id: 'fb0fea69-da18-45b1-828d-bd4fd1612518',
+		},
+		invalidUrl: {
+			message: 'Invalid URL.',
+			code: 'INVALID_URL',
+			id: 'c4e8a91b-2f06-4d7a-8e3c-1b9f5d0a7c22',
 		},
 	},
 
@@ -61,6 +67,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (webhook == null) {
 				throw new ApiError(meta.errors.noSuchWebhook);
+			}
+
+			if (ps.url !== undefined && !isSafeWebhookUrl(ps.url)) {
+				throw new ApiError(meta.errors.invalidUrl);
 			}
 
 			await this.webhooksRepository.update(webhook.id, {
