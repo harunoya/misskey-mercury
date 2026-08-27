@@ -191,6 +191,47 @@ function normalizeEmojis(value: unknown, instanceEmojis: readonly unknown[]): un
 	return value;
 }
 
+/**
+ * Puts custom emoji reactions back into the shape v11 resolves them in.
+ *
+ * v11 wrote a local custom emoji reaction as `:name:` and `reaction-icon.vue` looks the name up in
+ * `meta.emojis` by exact match. The current backend appends the emoji's host to the key —
+ * `:name@.:` for a local one — so every lookup misses and the reaction falls back to being drawn as
+ * its own literal text. Only the local marker is dropped: a remote reaction really is `:name@host:`,
+ * and upstream v11 could not resolve those from `meta.emojis` either, so it keeps rendering them
+ * the way v11 did.
+ */
+const LOCAL_REACTION = /^:([^:@]+)@\.:$/;
+
+function toV11Reaction(reaction: string): string {
+	const match = LOCAL_REACTION.exec(reaction);
+	return match == null ? reaction : `:${match[1]}:`;
+}
+
+function normalizeReactions(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		for (const entry of value) normalizeReactions(entry);
+		return value;
+	}
+	if (!isPlainObject(value)) return value;
+
+	for (const [key, child] of Object.entries(value)) {
+		if (key === 'reactions' && isPlainObject(child)) {
+			value[key] = Object.fromEntries(Object.entries(child).map(([name, count]) => [toV11Reaction(name), count]));
+			continue;
+		}
+		// `myReaction` decides which reaction is drawn as the reader's own, so it has to be
+		// rewritten alongside the keys it is compared against.
+		if ((key === 'myReaction' || key === 'reaction') && typeof child === 'string') {
+			value[key] = toV11Reaction(child);
+			continue;
+		}
+		normalizeReactions(child);
+	}
+
+	return value;
+}
+
 // `/api/meta` no longer carries the emoji list (it moved to `/api/emojis`), but `reaction-icon.vue`
 // still reads `meta.emojis`. Fetched once and shared by reference: it is also the fallback injected
 // into notes, and v11 re-fetches meta every minute.
@@ -320,6 +361,7 @@ export function installApiCompatibility(): void {
 		}
 
 		normalizeEmojis(body, instanceEmojis);
+		normalizeReactions(body);
 
 		if (requested === 'meta' && isPlainObject(body)) {
 			await backfillMeta(body, nativeFetch);
