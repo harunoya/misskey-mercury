@@ -12,6 +12,7 @@ import { DI } from '@/di-symbols.js';
 import { secureRndstr } from '@/misc/secure-rndstr.js';
 import { RoleService } from '@/core/RoleService.js';
 import { ModerationLogService } from '@/core/ModerationLogService.js';
+import { LinkedAccountService } from '@/core/LinkedAccountService.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -69,6 +70,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 		private roleService: RoleService,
 		private moderationLogService: ModerationLogService,
+		private linkedAccountService: LinkedAccountService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const user = await this.usersRepository.findOneBy({ id: ps.userId });
@@ -86,11 +88,17 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			// Generate hash of password
 			const hash = bcrypt.hashSync(passwd);
 
-			await this.userProfilesRepository.update({
-				userId: user.id,
-			}, {
-				password: hash,
-			});
+			// 関連アカウント機能: サブアカウントのパスワードリセットは、独立したアカウントへ戻す
+			// リカバリ操作として扱う (関連付けたままだとこの新パスワードは使われないため)
+			if (user.linkedToUserId != null) {
+				await this.linkedAccountService.unlink(user, hash);
+			} else {
+				await this.userProfilesRepository.update({
+					userId: user.id,
+				}, {
+					password: hash,
+				});
+			}
 
 			this.moderationLogService.log(me, 'resetPassword', {
 				userId: user.id,

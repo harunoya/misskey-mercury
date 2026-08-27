@@ -67,6 +67,7 @@ import { UserMutingService } from './UserMutingService.js';
 import { UserRenoteMutingService } from './UserRenoteMutingService.js';
 import { UserSuspendService } from './UserSuspendService.js';
 import { UserAuthService } from './UserAuthService.js';
+import { LinkedAccountService } from './LinkedAccountService.js';
 import { VideoProcessingService } from './VideoProcessingService.js';
 import { UserWebhookService } from './UserWebhookService.js';
 import { UtilityService } from './UtilityService.js';
@@ -371,6 +372,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		UserSearchService,
 		UserSuspendService,
 		UserAuthService,
+		LinkedAccountService,
 		VideoProcessingService,
 		UserWebhookService,
 		SystemWebhookService,
@@ -677,6 +679,7 @@ const $ApQuestionService: Provider = { provide: 'ApQuestionService', useExisting
 		UserSearchService,
 		UserSuspendService,
 		UserAuthService,
+		LinkedAccountService,
 		VideoProcessingService,
 		UserWebhookService,
 		SystemWebhookService,

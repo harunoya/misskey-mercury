@@ -440,6 +440,13 @@ import type {
 	IImportFollowingRequest,
 	IImportMutingRequest,
 	IImportUserListsRequest,
+	ILinkedAccountsCreateSubRequest,
+	ILinkedAccountsCreateSubResponse,
+	ILinkedAccountsLinkRequest,
+	ILinkedAccountsLinkResponse,
+	ILinkedAccountsListResponse,
+	ILinkedAccountsUnlinkRequest,
+	ILinkedAccountsUnlinkResponse,
 	IMoveRequest,
 	IMoveResponse,
 	INotificationsRequest,
@@ -969,6 +976,10 @@ export type Endpoints = {
 	'i/import-following': { req: IImportFollowingRequest; res: EmptyResponse };
 	'i/import-muting': { req: IImportMutingRequest; res: EmptyResponse };
 	'i/import-user-lists': { req: IImportUserListsRequest; res: EmptyResponse };
+	'i/linked-accounts/create-sub': { req: ILinkedAccountsCreateSubRequest; res: ILinkedAccountsCreateSubResponse };
+	'i/linked-accounts/link': { req: ILinkedAccountsLinkRequest; res: ILinkedAccountsLinkResponse };
+	'i/linked-accounts/list': { req: EmptyRequest; res: ILinkedAccountsListResponse };
+	'i/linked-accounts/unlink': { req: ILinkedAccountsUnlinkRequest; res: ILinkedAccountsUnlinkResponse };
 	'i/move': { req: IMoveRequest; res: IMoveResponse };
 	'i/notifications': { req: INotificationsRequest; res: INotificationsResponse };
 	'i/notifications-grouped': { req: INotificationsGroupedRequest; res: INotificationsGroupedResponse };

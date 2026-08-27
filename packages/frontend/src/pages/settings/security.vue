@@ -14,7 +14,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<FormSection first>
 				<template #label><SearchLabel>{{ i18n.ts.password }}</SearchLabel></template>
 
-				<SearchMarker>
+				<SearchMarker v-if="linkedTo != null">
+					<MkInfo>{{ i18n.tsx._linkedAccounts.passwordManagedByMain({ name: linkedTo.username }) }}</MkInfo>
+				</SearchMarker>
+				<SearchMarker v-else>
 					<MkButton primary @click="change()">
 						<SearchLabel>{{ i18n.ts.changePassword }}</SearchLabel>
 					</MkButton>
@@ -57,11 +60,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, markRaw } from 'vue';
+import { computed, markRaw, ref } from 'vue';
+import * as Misskey from 'misskey-js';
 import X2fa from './2fa.vue';
 import FormSection from '@/components/form/section.vue';
 import FormSlot from '@/components/form/slot.vue';
 import MkButton from '@/components/MkButton.vue';
+import MkInfo from '@/components/MkInfo.vue';
 import MkPagination from '@/components/MkPagination.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -73,6 +78,11 @@ import { Paginator } from '@/utility/paginator.js';
 const paginator = markRaw(new Paginator('i/signin-history', {
 	limit: 5,
 }));
+
+const linkedTo = ref<Misskey.entities.UserLite | null>(null);
+misskeyApi('i/linked-accounts/list', {}).then(res => {
+	linkedTo.value = res.linkedTo;
+});
 
 async function change() {
 	const { canceled: canceled2, result: newPassword } = await os.inputText({

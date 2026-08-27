@@ -5,10 +5,11 @@
 
 import bcrypt from 'bcryptjs';
 import { Inject, Injectable } from '@nestjs/common';
-import type { UserProfilesRepository, PasswordResetRequestsRepository } from '@/models/_.js';
+import type { UsersRepository, UserProfilesRepository, PasswordResetRequestsRepository } from '@/models/_.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
 import { IdService } from '@/core/IdService.js';
+import { LinkedAccountService } from '@/core/LinkedAccountService.js';
 
 export const meta = {
 	tags: ['reset password'],
@@ -37,10 +38,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject(DI.passwordResetRequestsRepository)
 		private passwordResetRequestsRepository: PasswordResetRequestsRepository,
 
+		@Inject(DI.usersRepository)
+		private usersRepository: UsersRepository,
+
 		@Inject(DI.userProfilesRepository)
 		private userProfilesRepository: UserProfilesRepository,
 
 		private idService: IdService,
+		private linkedAccountService: LinkedAccountService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const req = await this.passwordResetRequestsRepository.findOneByOrFail({
@@ -56,9 +61,16 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const salt = await bcrypt.genSalt(8);
 			const hash = await bcrypt.hash(ps.password, salt);
 
-			await this.userProfilesRepository.update(req.userId, {
-				password: hash,
-			});
+			// 関連アカウント機能: サブアカウントのパスワードリセットは、独立したアカウントへ戻す
+			// リカバリ操作として扱う (関連付けたままだとこの新パスワードは使われないため)
+			const user = await this.usersRepository.findOneByOrFail({ id: req.userId });
+			if (user.linkedToUserId != null) {
+				await this.linkedAccountService.unlink(user, hash);
+			} else {
+				await this.userProfilesRepository.update(req.userId, {
+					password: hash,
+				});
+			}
 
 			this.passwordResetRequestsRepository.delete(req.id);
 		});
