@@ -6246,22 +6246,6 @@ export interface Locale extends ILocale {
          */
         "tokenStorageNotice": string;
         /**
-         * {userId} として接続中
-         */
-        "loggedInAs": ParameterizedString<"userId">;
-        /**
-         * ルーム
-         */
-        "rooms": string;
-        /**
-         * 参加中のルームはありません
-         */
-        "noRooms": string;
-        /**
-         * 招待
-         */
-        "invites": string;
-        /**
          * {user} からの招待
          */
         "invitedBy": ParameterizedString<"user">;
@@ -6286,25 +6270,117 @@ export interface Locale extends ILocale {
          */
         "newDirectMessage": string;
         /**
+         * MatrixのIDを指定して1対1の会話を始めます。
+         */
+        "newDirectMessageDescription": string;
+        /**
          * 相手のID
          */
         "directMessageUserId": string;
         /**
-         * 同期
+         * Matrixアカウントに接続して、Matrixの会話をこの一覧に表示します。
          */
-        "sync": string;
+        "connectDescription": string;
         /**
-         * 同期中
+         * ルームに参加
          */
-        "syncing": string;
+        "joinRoom": string;
+        /**
+         * ルームIDまたはエイリアスを指定して参加します。
+         */
+        "joinRoomDescription": string;
+        /**
+         * ルームID または エイリアス
+         */
+        "joinRoomPrompt": string;
+        /**
+         * ルームに参加できませんでした。
+         */
+        "joinRoomError": string;
         /**
          * 表示できるメッセージはありません
          */
         "noMessages": string;
         /**
-         * このルームは暗号化されています。現在は暗号化ルームの読み書きに対応していません。
+         * このルームは暗号化されています。このブラウザではIndexedDBが使えないため、暗号化ルームの読み書きができません。
          */
         "encryptedRoomUnsupported": string;
+        /**
+         * このルームは暗号化されています。メッセージはこの端末で復号されます。
+         */
+        "encryptedRoom": string;
+        /**
+         * このメッセージは復号できません。鍵が届いていないか、この端末に鍵がありません。
+         */
+        "undecryptableMessage": string;
+        /**
+         * 未検証の端末が{count}台あります。なりすましを防ぐため検証してください。
+         */
+        "unverifiedDevices": ParameterizedString<"count">;
+        /**
+         * 端末を検証
+         */
+        "verifyDevices": string;
+        /**
+         * 絵文字が相手の端末と同じなら一致を選んでください。
+         */
+        "verifyDevicesDescription": string;
+        /**
+         * 絵文字が一致した
+         */
+        "sasMatch": string;
+        /**
+         * 一致しない
+         */
+        "sasMismatch": string;
+        /**
+         * 端末の検証が完了しました。
+         */
+        "verificationSuccess": string;
+        /**
+         * 端末の検証に失敗しました。
+         */
+        "verificationFailed": string;
+        /**
+         * 鍵のバックアップ
+         */
+        "keyBackup": string;
+        /**
+         * ブラウザのデータを消すと暗号化された履歴が読めなくなります。リカバリキーを保存してください。
+         */
+        "keyBackupDescription": string;
+        /**
+         * リカバリキーを作成
+         */
+        "keyBackupCreate": string;
+        /**
+         * リカバリキーで復元
+         */
+        "keyBackupRestore": string;
+        /**
+         * アカウントのパスワード
+         */
+        "accountPassword": string;
+        /**
+         * ホームサーバーが本人確認を求める場合にのみ使用します。
+         */
+        "accountPasswordCaption": string;
+        /**
+         * リカバリキー
+         */
+        "recoveryKey": string;
+        /**
+         * このキーは再表示できません。パスワードマネージャーなどに保存してください。
+         */
+        "recoveryKeySaveWarning": string;
+        /**
+         * リカバリキーを入力
+         */
+        "restoreKeyBackupPrompt": string;
+        /**
+         * 検索はMisskeyのダイレクトメッセージのみが対象です。暗号化されたMatrixルームはサーバー側検索に載りません。
+         */
+        "searchSkipsEncrypted": string;
         /**
          * メッセージを送信
          */
@@ -6325,6 +6401,130 @@ export interface Locale extends ILocale {
          * メッセージを送信できませんでした。
          */
         "sendError": string;
+        /**
+         * 添付ファイル
+         */
+        "attachment": string;
+        /**
+         * ファイルを添付
+         */
+        "attachFile": string;
+        /**
+         * ファイルをアップロードできませんでした。
+         */
+        "uploadError": string;
+        /**
+         * このメッセージは削除されました
+         */
+        "messageDeleted": string;
+        /**
+         * 編集済み
+         */
+        "edited": string;
+        /**
+         * メッセージを編集
+         */
+        "editMessage": string;
+        /**
+         * メッセージを編集できませんでした。
+         */
+        "editError": string;
+        /**
+         * メッセージを削除
+         */
+        "deleteMessage": string;
+        /**
+         * このメッセージを削除しますか？
+         */
+        "deleteMessageConfirm": string;
+        /**
+         * メッセージを削除できませんでした。
+         */
+        "deleteError": string;
+        /**
+         * リアクション
+         */
+        "addReaction": string;
+        /**
+         * リアクションを送信できませんでした。
+         */
+        "reactionError": string;
+        /**
+         * 過去のメッセージを読み込む
+         */
+        "loadOlder": string;
+        /**
+         * 過去のメッセージを読み込めませんでした。
+         */
+        "historyError": string;
+        /**
+         * これ以上前のメッセージはありません
+         */
+        "noMoreHistory": string;
+        /**
+         * 送信に失敗しました
+         */
+        "sendFailed": string;
+        /**
+         * {user} が入力中
+         */
+        "typingOne": ParameterizedString<"user">;
+        /**
+         * {count}人が入力中
+         */
+        "typingMany": ParameterizedString<"count">;
+        /**
+         * 返信
+         */
+        "reply": string;
+        /**
+         * {user} に返信
+         */
+        "replyingTo": ParameterizedString<"user">;
+        /**
+         * 返信元のメッセージを表示できません
+         */
+        "replyUnavailable": string;
+        /**
+         * 返信をやめる
+         */
+        "cancelReply": string;
+        /**
+         * 再送する
+         */
+        "retrySend": string;
+        /**
+         * 破棄する
+         */
+        "discardMessage": string;
+        /**
+         * 端末
+         */
+        "devices": string;
+        /**
+         * このアカウントの端末
+         */
+        "deviceList": string;
+        /**
+         * 認証済み
+         */
+        "deviceVerified": string;
+        /**
+         * 未認証
+         */
+        "deviceUnverified": string;
+        /**
+         * この端末
+         */
+        "thisDevice": string;
+        /**
+         * フィンガープリント
+         */
+        "deviceFingerprint": string;
+        /**
+         * 端末一覧を取得できませんでした。
+         */
+        "deviceLoadError": string;
     };
     "_emojiPalette": {
         /**

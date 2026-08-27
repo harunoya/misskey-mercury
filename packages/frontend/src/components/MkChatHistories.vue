@@ -15,7 +15,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		class="_panel"
 		:to="`/chat/matrix/${entry.roomId}`"
 	>
-		<span :class="[$style.messageAvatar, $style.matrixAvatar]">{{ entry.initial }}</span>
+		<MatrixAvatar :class="$style.messageAvatar" :name="entry.name" :mxcUrl="entry.avatarUrl" :size="52"/>
 		<div :class="$style.messageBody">
 			<header :class="$style.messageHeader">
 				<span :class="$style.messageHeaderName">{{ entry.name }}</span>
@@ -56,6 +56,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import { useInterval } from '@@/js/use-interval.js';
+import MatrixAvatar from '@/pages/chat/matrix-avatar.vue';
 import * as matrix from '@/pages/chat/matrix-store.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
@@ -75,7 +76,7 @@ const matrixEntries = computed(() => matrix.rooms.value
 		unreadCount: room.unreadCount,
 		lastActivityAt: room.lastActivityAt,
 		lastMessage: room.lastMessage,
-		initial: Array.from(room.name.trim().replace(/^[@#!]/, ''))[0]?.toLocaleUpperCase() ?? 'M',
+		avatarUrl: room.avatarUrl,
 	}))
 	.toSorted((a, b) => b.lastActivityAt - a.lastActivityAt));
 
@@ -186,17 +187,6 @@ onMounted(() => {
 	width: 50px;
 	height: 50px;
 	margin: 0 16px 0 0;
-}
-
-// Matrix rooms have no Misskey avatar to show, so stand in with the room's initial.
-.matrixAvatar {
-	flex-shrink: 0;
-	display: grid;
-	place-items: center;
-	border-radius: 50%;
-	background: var(--MI_THEME-accentedBg);
-	color: var(--MI_THEME-accent);
-	font-weight: 700;
 }
 
 .networkBadge {
