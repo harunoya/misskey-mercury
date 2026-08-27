@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, test, vi } from 'vitest';
-import { isMatrixSession, MatrixApiError, MatrixClient, matrixSessionKey, normalizeHomeserverUrl, upsertMatrixSession } from '@/pages/chat/matrix-client.js';
+import { discoverHomeserver, isMatrixSession, MatrixApiError, MatrixClient, matrixSessionKey, normalizeHomeserverUrl, parseMxcUrl, upsertMatrixSession } from '@/pages/chat/matrix-client.js';
 
 function jsonResponse(body: unknown, init?: ResponseInit): Response {
 	return new Response(JSON.stringify(body), {
@@ -84,15 +84,18 @@ describe('Matrix session storage', () => {
 describe('MatrixClient', () => {
 	test('logs in with a password after checking the homeserver', async () => {
 		const fetchMock = vi.fn<typeof fetch>()
+			// Login now resolves the homeserver first; this one has no discovery document.
+			.mockResolvedValueOnce(new Response('', { status: 404 }))
 			.mockResolvedValueOnce(jsonResponse({ versions: ['v1.15'] }))
 			.mockResolvedValueOnce(jsonResponse({ access_token: 'secret', user_id: '@alice:example.com', device_id: 'DEVICE' }));
 
 		const session = await MatrixClient.login('https://matrix.example/', '@alice:example.com', 'password', fetchMock);
 
-		expect(fetchMock).toHaveBeenCalledTimes(2);
-		expect(fetchMock.mock.calls[0]?.[0]).toBe('https://matrix.example/_matrix/client/versions');
-		expect(fetchMock.mock.calls[1]?.[0]).toBe('https://matrix.example/_matrix/client/v3/login');
-		expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toMatchObject({
+		expect(fetchMock).toHaveBeenCalledTimes(3);
+		expect(fetchMock.mock.calls[0]?.[0]).toBe('https://matrix.example/.well-known/matrix/client');
+		expect(fetchMock.mock.calls[1]?.[0]).toBe('https://matrix.example/_matrix/client/versions');
+		expect(fetchMock.mock.calls[2]?.[0]).toBe('https://matrix.example/_matrix/client/v3/login');
+		expect(JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body))).toMatchObject({
 			type: 'm.login.password',
 			identifier: { type: 'm.id.user', user: '@alice:example.com' },
 		});
@@ -106,6 +109,7 @@ describe('MatrixClient', () => {
 
 	test('rejects an invalid login response', async () => {
 		const fetchMock = vi.fn<typeof fetch>()
+			.mockResolvedValueOnce(new Response('', { status: 404 }))
 			.mockResolvedValueOnce(jsonResponse({ versions: ['v1.15'] }))
 			.mockResolvedValueOnce(jsonResponse({ user_id: '@alice:example.com' }));
 
@@ -178,5 +182,179 @@ describe('MatrixClient', () => {
 				message: 'Invalid password',
 			}),
 		);
+	});
+});
+
+function testClient(fetchImpl: typeof fetch): MatrixClient {
+	return new MatrixClient({ homeserverUrl: 'https://matrix.example', accessToken: 'secret', userId: '@alice:example.com' }, fetchImpl);
+}
+
+describe('parseMxcUrl', () => {
+	test('splits a media URL', () => {
+		expect(parseMxcUrl('mxc://example.com/abc123')).toEqual({ serverName: 'example.com', mediaId: 'abc123' });
+	});
+
+	test('rejects anything else', () => {
+		expect(parseMxcUrl('https://example.com/abc')).toBeNull();
+		expect(parseMxcUrl('mxc://example.com')).toBeNull();
+		expect(parseMxcUrl(undefined)).toBeNull();
+	});
+});
+
+describe('history', () => {
+	test('reads backwards from a pagination token', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ chunk: [], end: 'older' }));
+
+		await testClient(fetchMock).messages('!room:example.com', 'token', 20);
+
+		const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+		expect(url.pathname).toBe('/_matrix/client/v3/rooms/!room%3Aexample.com/messages');
+		expect(url.searchParams.get('dir')).toBe('b');
+		expect(url.searchParams.get('from')).toBe('token');
+		expect(url.searchParams.get('limit')).toBe('20');
+	});
+});
+
+describe('message actions', () => {
+	test('an edit carries both the fallback and the replacement', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ event_id: '$new' }));
+
+		await testClient(fetchMock).editText('!room:example.com', '$old', 'fixed');
+
+		const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+		// Clients without edit support show `body`, so it has to read as an edit on its own.
+		expect(body.body).toBe('* fixed');
+		expect(body['m.new_content']).toEqual({ msgtype: 'm.text', body: 'fixed' });
+		expect(body['m.relates_to']).toEqual({ rel_type: 'm.replace', event_id: '$old' });
+	});
+
+	test('a reaction is an annotation on the target event', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ event_id: '$r' }));
+
+		await testClient(fetchMock).sendReaction('!room:example.com', '$target', '👍');
+
+		expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/send/m.reaction/');
+		expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))['m.relates_to']).toEqual({
+			rel_type: 'm.annotation', event_id: '$target', key: '👍',
+		});
+	});
+
+	test('redacting targets the event being removed', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ event_id: '$r' }));
+
+		await testClient(fetchMock).redact('!room:example.com', '$target');
+
+		expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/rooms/!room%3Aexample.com/redact/%24target/');
+		expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('PUT');
+	});
+
+	test('two sends never reuse a transaction id', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ event_id: '$e' }));
+		const client = testClient(fetchMock);
+
+		await client.sendText('!room:example.com', 'one');
+		await client.sendText('!room:example.com', 'two');
+
+		expect(String(fetchMock.mock.calls[0]?.[0])).not.toBe(String(fetchMock.mock.calls[1]?.[0]));
+	});
+});
+
+describe('media', () => {
+	test('uploads with the file content type rather than JSON', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ content_uri: 'mxc://example.com/id' }));
+		const file = new File(['hello'], 'note.txt', { type: 'text/plain' });
+
+		await testClient(fetchMock).upload(file);
+
+		const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+		expect(url.pathname).toBe('/_matrix/media/v3/upload');
+		expect(url.searchParams.get('filename')).toBe('note.txt');
+		const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+		expect(headers.get('Content-Type')).toBe('text/plain');
+		expect(headers.get('Authorization')).toBe('Bearer secret');
+	});
+
+	test('falls back to the unauthenticated media path on an older homeserver', async () => {
+		const fetchMock = vi.fn<typeof fetch>()
+			.mockResolvedValueOnce(new Response(JSON.stringify({ errcode: 'M_UNRECOGNIZED' }), { status: 404, headers: { 'Content-Type': 'application/json' } }))
+			.mockResolvedValueOnce(new Response(new Blob(['bytes']), { status: 200 }));
+
+		await testClient(fetchMock).downloadMedia('mxc://example.com/abc');
+
+		expect(String(fetchMock.mock.calls[0]?.[0])).toBe('https://matrix.example/_matrix/client/v1/media/download/example.com/abc');
+		expect(String(fetchMock.mock.calls[1]?.[0])).toBe('https://matrix.example/_matrix/media/v3/download/example.com/abc');
+	});
+
+	test('asks for a thumbnail when one is wanted', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(new Blob(['bytes']), { status: 200 }));
+
+		await testClient(fetchMock).downloadMedia('mxc://example.com/abc', { width: 64, height: 64 });
+
+		const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+		expect(url.pathname).toBe('/_matrix/client/v1/media/thumbnail/example.com/abc');
+		expect(url.searchParams.get('width')).toBe('64');
+	});
+
+	test('does not retry a rejected token against the old path', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+			new Response(JSON.stringify({ errcode: 'M_UNKNOWN_TOKEN' }), { status: 401, headers: { 'Content-Type': 'application/json' } }),
+		);
+
+		await expect(testClient(fetchMock).downloadMedia('mxc://example.com/abc')).rejects.toMatchObject({ status: 401 });
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('typing notifications', () => {
+	test('sends a timeout while typing and none when stopping', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({}));
+		const client = testClient(fetchMock);
+
+		await client.setTyping('!room:example.com', true);
+		await client.setTyping('!room:example.com', false);
+
+		expect(String(fetchMock.mock.calls[0]?.[0])).toBe('https://matrix.example/_matrix/client/v3/rooms/!room%3Aexample.com/typing/%40alice%3Aexample.com');
+		expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({ typing: true, timeout: 20000 });
+		expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({ typing: false });
+	});
+});
+
+describe('homeserver discovery', () => {
+	test('follows .well-known to the real client API', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ 'm.homeserver': { base_url: 'https://matrix.example.com/' } }));
+
+		// People type their own domain; the client API commonly lives on another host.
+		expect(await discoverHomeserver('example.com', fetchMock)).toBe('https://matrix.example.com');
+		expect(String(fetchMock.mock.calls[0]?.[0])).toBe('https://example.com/.well-known/matrix/client');
+	});
+
+	test('accepts a Matrix id and discovers from its domain', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ 'm.homeserver': { base_url: 'https://matrix.example.com' } }));
+
+		expect(await discoverHomeserver('@alice:example.com', fetchMock)).toBe('https://matrix.example.com');
+	});
+
+	test('falls back to the input when there is no discovery document', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 404 }));
+
+		expect(await discoverHomeserver('https://matrix.example', fetchMock)).toBe('https://matrix.example');
+	});
+
+	test('falls back when the document is unreachable', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockRejectedValue(new TypeError('network'));
+
+		expect(await discoverHomeserver('matrix.example', fetchMock)).toBe('https://matrix.example');
+	});
+
+	test('login resolves the homeserver before authenticating', async () => {
+		const fetchMock = vi.fn<typeof fetch>()
+			.mockResolvedValueOnce(jsonResponse({ 'm.homeserver': { base_url: 'https://matrix.example.com' } }))
+			.mockResolvedValueOnce(jsonResponse({ versions: ['v1.15'] }))
+			.mockResolvedValueOnce(jsonResponse({ access_token: 'secret', user_id: '@alice:example.com' }));
+
+		const session = await MatrixClient.login('example.com', '@alice:example.com', 'password', fetchMock);
+
+		expect(session.homeserverUrl).toBe('https://matrix.example.com');
+		expect(String(fetchMock.mock.calls[1]?.[0])).toBe('https://matrix.example.com/_matrix/client/versions');
 	});
 });
