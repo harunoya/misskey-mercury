@@ -173,6 +173,12 @@ export function getConfig(): UserConfig {
 			},
 		},
 
+		optimizeDeps: {
+			// Instantiating the WASM module during dep pre-bundling fails; load it only from the
+			// dynamically imported Matrix session runtime.
+			exclude: ['@matrix-org/matrix-sdk-crypto-wasm'],
+		},
+
 		css: {
 			lightningcss: {
 				exclude: Features.LightDark,

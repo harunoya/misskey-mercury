@@ -19,6 +19,7 @@
 	},
 	"dependencies": {
 		"@analytics/google-analytics": "1.1.0",
+		"@matrix-org/matrix-sdk-crypto-wasm": "18.5.0",
 		"@mcaptcha/core-glue": "0.1.0-alpha-5",
 		"@misskey-dev/browser-image-resizer": "2024.1.0",
 		"@misskey-dev/emoji-data": "17.0.3",
@@ -51,6 +52,7 @@
 		"ios-haptics": "0.1.5",
 		"is-file-animated": "1.0.2",
 		"json5": "2.2.3",
+		"matrix-js-sdk": "42.2.0",
 		"matter-js": "0.20.0",
 		"mediabunny": "1.53.0",
 		"mfm-js": "0.26.0",
