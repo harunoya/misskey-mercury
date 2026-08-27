@@ -26,8 +26,6 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/misskey-dev/misskey)
 
-<a href="https://flatt.tech/oss/gmo/trampoline" target="_blank"><img src="https://flatt.tech/assets/images/badges/gmo-oss.svg" height="24px"/></a>
-
 </div>
 
 ## このリポジトリについて
@@ -37,7 +35,13 @@ CherryPickなどから一部機能をマージしているほか、マイグレ�
 
 ## Thanks
 
+<a href="https://github.com/kokonect-link/cherrypick"><img src="./assets/title_float_cherrypick.svg" height="32" alt="CherryPick" /></a>
+
 Thanks to [CherryPick](https://github.com/kokonect-link/cherrypick)
+
+<a href="https://github.com/Misskey-art/misskey"><img src="./assets/misskey-art-logo.jpg" height="36" alt="Misskey-art" /></a>
+
+Thanks to [Misskey-art](https://github.com/Misskey-art/misskey)
 
 <a href="https://sentry.io/"><img src="https://github.com/misskey-dev/misskey/assets/4439005/98576556-222f-467a-94be-e98dbda1d852" height="30" alt="Sentry" /></a>
 
