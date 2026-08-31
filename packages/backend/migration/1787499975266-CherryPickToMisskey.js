@@ -111,6 +111,17 @@ const missingUpstreamColumns = [
     ['meta', 'urlPreviewSensitiveList', `character varying(3072) array NOT NULL DEFAULT '{}'`],
 ];
 
+// Same story again, but for column width rather than presence: yojo-art/cherrypick's `migrations`
+// table can record tweakVarcharLength1678426061773 as applied while the columns are still at their
+// pre-widen length. Verified against a real yojo-art/cherrypick database (smtpHost/smtpUser/smtpPass
+// stayed at varchar(256) despite the widening migration being marked done). `ALTER COLUMN ... TYPE`
+// to a wider varchar is a no-op cost-wise when the column is already at (or past) that width.
+const missingUpstreamColumnWidths = [
+    ['meta', 'smtpHost', 'character varying(1024)'],
+    ['meta', 'smtpUser', 'character varying(1024)'],
+    ['meta', 'smtpPass', 'character varying(1024)'],
+];
+
 // Same story, but for defaults rather than whole columns.
 const missingUpstreamDefaults = [
     ['hashtag', 'mentionedUserIds', `'{}'`],
@@ -160,6 +171,10 @@ export class CherryPickToMisskey1787499975266 {
 
         for (const [table, column, definition] of missingUpstreamColumns) {
             await queryRunner.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "${column}" ${definition}`);
+        }
+
+        for (const [table, column, definition] of missingUpstreamColumnWidths) {
+            await queryRunner.query(`ALTER TABLE "${table}" ALTER COLUMN "${column}" TYPE ${definition}`);
         }
 
         for (const [table, column, value] of missingUpstreamDefaults) {
