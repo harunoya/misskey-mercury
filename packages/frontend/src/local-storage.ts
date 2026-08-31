@@ -44,7 +44,8 @@ export type Keys = (
 	'lastEmojisFetchedAt' | // DEPRECATED, stored in indexeddb (13.9.0~)
 	'emojis' | // DEPRECATED, stored in indexeddb (13.9.0~);
 	`channelLastReadedAt:${string}` |
-	`idbfallback::${string}`
+	`idbfallback::${string}` |
+	'linkedTl'
 );
 
 // セッション毎に廃棄されるLocalStorage代替（セーフモードなどで使用できそう）

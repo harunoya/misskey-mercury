@@ -10452,6 +10452,10 @@ export interface Locale extends ILocale {
          * ダイレクトメッセージ
          */
         "chat": string;
+        /**
+         * リンクタイムライン
+         */
+        "linkedTl": string;
     };
     "_widgetOptions": {
         /**
@@ -11726,12 +11730,12 @@ export interface Locale extends ILocale {
              */
             "chat": string;
             /**
-             * 別アカウントのTL
+             * リンクタイムライン
              */
-            "subAccountTl": string;
+            "linkedTl": string;
         };
     };
-    "_subAccountTl": {
+    "_linkedTl": {
         /**
          * 表示するアカウントが選択されていません。
          */

@@ -2744,6 +2744,7 @@ _widgets:
   clicker: "クリッカー"
   birthdayFollowings: "もうすぐ誕生日のユーザー"
   chat: "ダイレクトメッセージ"
+  linkedTl: "リンクタイムライン"
 
 _widgetOptions:
   showHeader: "ヘッダーを表示"
@@ -3097,9 +3098,9 @@ _deck:
     direct: "指名"
     roleTimeline: "ロールタイムライン"
     chat: "ダイレクトメッセージ"
-    subAccountTl: "別アカウントのTL"
+    linkedTl: "リンクタイムライン"
 
-_subAccountTl:
+_linkedTl:
   noAccount: "表示するアカウントが選択されていません。"
   selectAccount: "アカウントを選択"
   noOtherAccounts: "他に追加されているアカウントがありません。"
