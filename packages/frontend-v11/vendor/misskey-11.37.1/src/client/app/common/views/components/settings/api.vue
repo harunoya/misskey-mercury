@@ -65,7 +65,7 @@ export default defineComponent({
 				}
 			}).then(({ canceled, result: password }) => {
 				if (canceled) return;
-				this.$root.api('i/regenerate_token', {
+				this.$root.api('i/regenerate-token', {
 					password: password
 				});
 			});

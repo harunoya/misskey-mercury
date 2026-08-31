@@ -81,9 +81,9 @@ export default defineComponent({
 					userId: this.user.id,
 					untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
 					withFiles: this.withFiles,
-					includeMyRenotes: this.$store.state.settings.showMyRenotes,
-					includeRenotedMyNotes: this.$store.state.settings.showRenotedMyNotes,
-					includeLocalRenotes: this.$store.state.settings.showLocalRenotes
+					withRenotes: this.$store.state.settings.showMyRenotes
+						|| this.$store.state.settings.showRenotedMyNotes
+						|| this.$store.state.settings.showLocalRenotes
 				})
 			}
 		}
@@ -111,8 +111,7 @@ export default defineComponent({
 
 			this.$root.api('users/notes', {
 				userId: this.user.id,
-				fileType: image,
-				excludeNsfw: !this.$store.state.device.alwaysShowNsfw,
+				withFiles: true,
 				limit: 9,
 			}).then(notes => {
 				for (const note of notes) {
@@ -121,7 +120,9 @@ export default defineComponent({
 					}
 				}
 				const files = concat(notes.map((n: any): any[] => n.files));
-				this.images = files.filter(f => image.includes(f.type)).slice(0, 9);
+				this.images = files
+					.filter(f => image.includes(f.type) && (this.$store.state.device.alwaysShowNsfw || !f.isSensitive))
+					.slice(0, 9);
 			});
 
 			this.$root.api('charts/user/notes', {

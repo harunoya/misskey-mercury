@@ -32,3 +32,25 @@ body {
 	font-size: medium;
 	line-height: normal;
 }
+@keyframes mercury-v11-marquee-scroll {
+	from { transform: translateX(0); }
+	to { transform: translateX(-50%); }
+}
+
+.mercury-v11-marquee {
+	overflow: hidden;
+}
+
+.mercury-v11-marquee-track {
+	display: flex;
+	width: max-content;
+	animation: mercury-v11-marquee-scroll 20s linear infinite;
+}
+
+.mercury-v11-marquee:hover .mercury-v11-marquee-track {
+	animation-play-state: paused;
+}
+
+.mercury-v11-marquee-copy {
+	display: inline-flex;
+}

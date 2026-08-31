@@ -67,7 +67,7 @@ export default defineComponent({
 		this.fetch();
 
 		if (this.$store.getters.isSignedIn) {
-			this.connection = this.$root.stream.useSharedConnection('gamesReversi');
+			this.connection = this.$root.stream.useSharedConnection('reversi');
 
 			this.connection.on('matched', this.onMatched);
 
@@ -94,7 +94,7 @@ export default defineComponent({
 				this.game = null;
 			} else {
 				Progress.start();
-				this.$root.api('games/reversi/games/show', {
+				this.$root.api('reversi/show-game', {
 					gameId: this.gameId
 				}).then(game => {
 					this.game = game;
@@ -107,7 +107,7 @@ export default defineComponent({
 			if (this.selfNav) {
 				// 受け取ったゲーム情報が省略されたものなら完全な情報を取得する
 				if (game != null && game.map == null) {
-					game = await this.$root.api('games/reversi/games/show', {
+					game = await this.$root.api('reversi/show-game', {
 						gameId: game.id
 					});
 				}
@@ -124,11 +124,11 @@ export default defineComponent({
 
 		cancel() {
 			this.matching = null;
-			this.$root.api('games/reversi/match/cancel');
+			this.$root.api('reversi/cancel-match');
 		},
 
 		accept(invitation) {
-			this.$root.api('games/reversi/match', {
+			this.$root.api('reversi/match', {
 				userId: invitation.parent.id
 			}).then(game => {
 				if (game) {

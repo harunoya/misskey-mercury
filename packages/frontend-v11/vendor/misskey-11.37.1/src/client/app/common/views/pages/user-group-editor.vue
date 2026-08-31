@@ -67,8 +67,8 @@ export default defineComponent({
 	},
 
 	created() {
-		this.$root.api('users/groups/show', {
-			groupId: this.groupId
+		this.$root.api('chat/rooms/show', {
+			roomId: this.groupId
 		}).then(group => {
 			this.group = group;
 			this.fetchUsers();
@@ -81,18 +81,19 @@ export default defineComponent({
 
 	methods: {
 		fetchGroup() {
-			this.$root.api('users/groups/show', {
-				groupId: this.group.id
+			this.$root.api('chat/rooms/show', {
+				roomId: this.group.id
 			}).then(group => {
 				this.group = group;
 			})
 		},
 
 		fetchUsers() {
-			this.$root.api('users/show', {
-				userIds: this.group.userIds
-			}).then(users => {
-				this.users = users;
+			this.$root.api('chat/rooms/members', {
+				roomId: this.group.id,
+				limit: 100
+			}).then(memberships => {
+				this.users = memberships.map(membership => membership.user).filter(Boolean);
 			});
 		},
 
@@ -104,8 +105,8 @@ export default defineComponent({
 				}
 			}).then(({ canceled, result: name }) => {
 				if (canceled) return;
-				this.$root.api('users/groups/update', {
-					groupId: this.group.id,
+				this.$root.api('chat/rooms/update', {
+					roomId: this.group.id,
 					name: name
 				}).then(() => {
 					this.fetchGroup();
@@ -126,8 +127,8 @@ export default defineComponent({
 			}).then(({ canceled }) => {
 				if (canceled) return;
 
-				this.$root.api('users/groups/delete', {
-					groupId: this.group.id
+				this.$root.api('chat/rooms/delete', {
+					roomId: this.group.id
 				}).then(() => {
 					this.$root.dialog({
 						type: 'success',
@@ -143,17 +144,9 @@ export default defineComponent({
 		},
 
 		remove(user: any) {
-			this.$root.api('users/groups/pull', {
-				groupId: this.group.id,
-				userId: user.id
-			}).then(() => {
-				this.fetchGroup();
-				this.fetchUsers();
-			}).catch(e => {
-				this.$root.dialog({
-					type: 'error',
-					text: e
-				});
+			this.$root.dialog({
+				type: 'info',
+				text: '現在のサーバーAPIでは、ルーム所有者によるメンバー削除には対応していません。'
 			});
 		},
 
@@ -165,8 +158,8 @@ export default defineComponent({
 				}
 			});
 			if (user == null) return;
-			this.$root.api('users/groups/invite', {
-				groupId: this.group.id,
+			this.$root.api('chat/rooms/invitations/create', {
+				roomId: this.group.id,
 				userId: user.id
 			}).then(() => {
 				this.$root.dialog({
@@ -182,34 +175,9 @@ export default defineComponent({
 		},
 
 		async transfer() {
-			const { result: user } = await this.$root.dialog({
-				user: {
-					local: true
-				}
-			});
-			if (user == null) return;
-
 			this.$root.dialog({
-				type: 'warning',
-				text: this.$t('transfer-are-you-sure').replace('$1', this.group.name).replace('$2', user.username),
-				showCancelButton: true
-			}).then(({ canceled }) => {
-				if (canceled) return;
-
-				this.$root.api('users/groups/transfer', {
-					groupId: this.group.id,
-					userId: user.id
-				}).then(() => {
-					this.$root.dialog({
-						type: 'success',
-						text: this.$t('transferred')
-					});
-				}).catch(e => {
-					this.$root.dialog({
-						type: 'error',
-						text: e
-					});
-				});
+				text: '現在のサーバーAPIでは、チャットルーム所有権の移譲には対応していません。',
+				showCancelButton: false
 			});
 		}
 	}

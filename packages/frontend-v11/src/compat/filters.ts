@@ -48,4 +48,6 @@ export const filters = {
 
 export function installFilters(app: App): void {
 	Object.assign(app.config.globalProperties, filters);
+	// Templates call these as functions (see `notePage(...)`). Keep a `$` alias for v-html sites.
+	app.config.globalProperties.$sanitizeHtml = filters.sanitizeHtml;
 }

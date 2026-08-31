@@ -215,7 +215,7 @@ init(async (launch, os) => {
 			registerNotifications(os);
 		}
 	}
-}, true);
+});
 
 function registerNotifications(os: MiOS) {
 	const stream = os.stream;
@@ -242,7 +242,7 @@ function registerNotifications(os: MiOS) {
 		setTimeout(n.close.bind(n), 5000);
 	});
 
-	connection.on('unreadMessagingMessage', message => {
+	connection.on('newChatMessage', message => {
 		const _n = composeNotification('unreadMessagingMessage', message);
 		const n = new Notification(_n.title, {
 			body: _n.body,

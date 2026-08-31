@@ -6,9 +6,14 @@
 			<ui-input :value="username" @input="username = $event" type="text">
 				<template #prefix>@</template>
 			</ui-input>
+			<ui-select :value="roleId" @input="roleId = $event">
+				<template #label>Moderator role</template>
+				<option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+			</ui-select>
+			<ui-info v-if="roles.length === 0">現在のロール設定に、手動割り当て可能なモデレーターロールがありません。</ui-info>
 			<ui-horizon-group>
-				<ui-button @click="add" :disabled="changing">{{ $t('add-moderator.add') }}</ui-button>
-				<ui-button @click="remove" :disabled="changing">{{ $t('add-moderator.remove') }}</ui-button>
+				<ui-button @click="add" :disabled="changing || !roleId">{{ $t('add-moderator.add') }}</ui-button>
+				<ui-button @click="remove" :disabled="changing || !roleId">{{ $t('add-moderator.remove') }}</ui-button>
 			</ui-horizon-group>
 		</section>
 	</ui-card>
@@ -52,6 +57,8 @@ export default defineComponent({
 		return {
 			username: '',
 			changing: false,
+			roles: [],
+			roleId: null,
 			logs: [],
 			untilLogId: null,
 			existMoreLogs: false
@@ -59,6 +66,10 @@ export default defineComponent({
 	},
 
 	created() {
+		this.$root.api('admin/roles/list').then(roles => {
+			this.roles = roles.filter(role => role.target === 'manual' && role.isModerator);
+			this.roleId = this.roles[0]?.id ?? null;
+		});
 		this.fetchLogs();
 	},
 
@@ -68,7 +79,7 @@ export default defineComponent({
 
 			const process = async () => {
 				const user = await this.$root.api('users/show', parseAcct(this.username));
-				await this.$root.api('admin/moderators/add', { userId: user.id });
+				await this.$root.api('admin/roles/assign', { roleId: this.roleId, userId: user.id });
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('add-moderator.added')
@@ -90,7 +101,7 @@ export default defineComponent({
 
 			const process = async () => {
 				const user = await this.$root.api('users/show', parseAcct(this.username));
-				await this.$root.api('admin/moderators/remove', { userId: user.id });
+				await this.$root.api('admin/roles/unassign', { roleId: this.roleId, userId: user.id });
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('add-moderator.removed')
@@ -109,7 +120,7 @@ export default defineComponent({
 
 		fetchLogs() {
 			this.$root.api('admin/show-moderation-logs', {
-				untilId: this.untilId,
+				untilId: this.untilLogId,
 				limit: 10 + 1
 			}).then(logs => {
 				if (logs.length == 10 + 1) {

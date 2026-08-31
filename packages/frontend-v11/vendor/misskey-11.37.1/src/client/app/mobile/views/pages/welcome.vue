@@ -7,7 +7,7 @@
 		<p class="host">{{ host }}</p>
 		<div class="about">
 			<h2>{{ name || 'Misskey' }}</h2>
-			<p v-html="description || this.$t('@.about')"></p>
+			<p v-html="$sanitizeHtml(description || this.$t('@.about'))"></p>
 			<router-link class="signup" to="/signup">{{ $t('@.signup') }}</router-link>
 		</div>
 		<div class="signin">
@@ -28,7 +28,7 @@
 		</div>
 		<div class="announcements" v-if="announcements && announcements.length > 0">
 			<article v-for="announcement in announcements">
-				<span class="title" v-html="announcement.title"></span>
+				<span class="title">{{ announcement.title }}</span>
 				<mfm :text="announcement.text"/>
 				<img v-if="announcement.image" :src="announcement.image" alt="" style="display: block; max-height: 120px; max-width: 100%;"/>
 			</article>
@@ -116,12 +116,11 @@ export default defineComponent({
 		];
 
 		this.$root.api('notes/local-timeline', {
-			fileType: image,
-			excludeNsfw: true,
+			withFiles: true,
 			limit: 6
 		}).then((notes: any[]) => {
 			const files = concat(notes.map((n: any): any[] => n.files));
-			this.photos = files.filter(f => image.includes(f.type)).slice(0, 6);
+			this.photos = files.filter(f => image.includes(f.type) && !f.isSensitive).slice(0, 6);
 		});
 	},
 	methods: {

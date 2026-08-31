@@ -26,14 +26,15 @@
 			</optgroup>
 			<optgroup :label="$t('network')">
 				<option value="network-requests">{{ $t('charts.network-requests') }}</option>
-				<option value="network-time">{{ $t('charts.network-time') }}</option>
-				<option value="network-usage">{{ $t('charts.network-usage') }}</option>
+				<option value="network-time" disabled>{{ $t('charts.network-time') }} (not collected)</option>
+				<option value="network-usage" disabled>{{ $t('charts.network-usage') }} (not collected)</option>
 			</optgroup>
 		</select>
 		<div>
 			<span @click="span = 'day'" :class="{ active: span == 'day' }">{{ $t('per-day') }}</span> | <span @click="span = 'hour'" :class="{ active: span == 'hour' }">{{ $t('per-hour') }}</span>
 		</div>
 	</header>
+	<p v-if="unsupportedNetworkMetric" class="unsupported">The current backend does not collect this metric.</p>
 	<div ref="chart"></div>
 </div>
 </template>
@@ -43,6 +44,7 @@ import Vue, { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import * as tinycolor from 'tinycolor2';
 import ApexCharts from 'apexcharts';
+import { toV11NetworkChart } from '@compat/charts';
 
 const limit = 90;
 
@@ -61,6 +63,10 @@ export default defineComponent({
 	},
 
 	computed: {
+		unsupportedNetworkMetric(): boolean {
+			return this.src === 'network-time' || this.src === 'network-usage';
+		},
+
 		data(): any {
 			if (this.chart == null) return null;
 			switch (this.src) {
@@ -78,8 +84,8 @@ export default defineComponent({
 				case 'drive-files': return this.driveFilesChart();
 				case 'drive-files-total': return this.driveFilesTotalChart();
 				case 'network-requests': return this.networkRequestsChart();
-				case 'network-time': return this.networkTimeChart();
-				case 'network-usage': return this.networkUsageChart();
+				case 'network-time': return { series: [] };
+				case 'network-usage': return { series: [] };
 			}
 		},
 
@@ -112,14 +118,14 @@ export default defineComponent({
 			this.$root.api('charts/active-users', { limit: limit, span: 'hour' }),
 			this.$root.api('charts/notes', { limit: limit, span: 'hour' }),
 			this.$root.api('charts/drive', { limit: limit, span: 'hour' }),
-			this.$root.api('charts/network', { limit: limit, span: 'hour' })
+			this.$root.api('charts/ap-request', { limit: limit, span: 'hour' }).then(toV11NetworkChart)
 		]), Promise.all([
 			this.$root.api('charts/federation', { limit: limit, span: 'day' }),
 			this.$root.api('charts/users', { limit: limit, span: 'day' }),
 			this.$root.api('charts/active-users', { limit: limit, span: 'day' }),
 			this.$root.api('charts/notes', { limit: limit, span: 'day' }),
 			this.$root.api('charts/drive', { limit: limit, span: 'day' }),
-			this.$root.api('charts/network', { limit: limit, span: 'day' })
+			this.$root.api('charts/ap-request', { limit: limit, span: 'day' }).then(toV11NetworkChart)
 		])]);
 
 		const chart = {
@@ -460,34 +466,12 @@ export default defineComponent({
 				series: [{
 					name: 'Incoming',
 					data: this.format(this.stats.network.incomingRequests)
-				}]
-			};
-		},
-
-		networkTimeChart(): any {
-			const data = [];
-
-			for (let i = 0; i < limit; i++) {
-				data.push(this.stats.network.incomingRequests[i] != 0 ? (this.stats.network.totalTime[i] / this.stats.network.incomingRequests[i]) : 0);
-			}
-
-			return {
-				series: [{
-					name: 'Avg time',
-					data: this.format(data)
-				}]
-			};
-		},
-
-		networkUsageChart(): any {
-			return {
-				bytes: true,
-				series: [{
-					name: 'Incoming',
-					data: this.format(this.stats.network.incomingBytes)
 				}, {
 					name: 'Outgoing',
-					data: this.format(this.stats.network.outgoingBytes)
+					data: this.format(this.stats.network.outgoingRequests)
+				}, {
+					name: 'Failed',
+					data: this.format(this.stats.network.failedRequests)
 				}]
 			};
 		},
@@ -523,5 +507,10 @@ export default defineComponent({
 				&:not(.active)
 					color var(--primary)
 					cursor pointer
+
+	> .unsupported
+		margin 16px 8px 0
+		color var(--text)
+		opacity 0.7
 
 </style>

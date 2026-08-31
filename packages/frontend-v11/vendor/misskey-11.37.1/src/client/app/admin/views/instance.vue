@@ -35,7 +35,8 @@
 	<ui-card>
 		<template #title><fa :icon="faPencilAlt"/> {{ $t('note-and-tl') }}</template>
 		<section class="fit-top fit-bottom">
-			<ui-input :value="maxNoteTextLength" @input="maxNoteTextLength = $event">{{ $t('max-note-text-length') }}</ui-input>
+			<ui-input :value="maxNoteTextLength" disabled>{{ $t('max-note-text-length') }}</ui-input>
+			<ui-info>ノート文字数上限は現在のサーバーでは起動設定で管理され、REST APIからは変更できません。</ui-info>
 		</section>
 		<section>
 			<ui-switch :value="disableLocalTimeline" @change="disableLocalTimeline = $event">{{ $t('disable-local-timeline') }}</ui-switch>
@@ -43,8 +44,9 @@
 			<ui-info>{{ $t('disabling-timelines-info') }}</ui-info>
 		</section>
 		<section>
-			<ui-switch :value="enableEmojiReaction" @change="enableEmojiReaction = $event">{{ $t('enable-emoji-reaction') }}</ui-switch>
-			<ui-switch :value="useStarForReactionFallback" @change="useStarForReactionFallback = $event">{{ $t('use-star-for-reaction-fallback') }}</ui-switch>
+			<ui-switch :value="enableEmojiReaction" disabled>{{ $t('enable-emoji-reaction') }}</ui-switch>
+			<ui-switch :value="useStarForReactionFallback" disabled>{{ $t('use-star-for-reaction-fallback') }}</ui-switch>
+			<ui-info>現在のサーバーではリアクション可否をこの旧インスタンス設定では管理しません。</ui-info>
 		</section>
 		<section>
 			<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -85,7 +87,8 @@
 		</section>
 		<section class="fit-top fit-bottom">
 			<ui-input :value="localDriveCapacityMb" @input="localDriveCapacityMb = $event" type="number">{{ $t('local-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
-			<ui-input :value="remoteDriveCapacityMb" @input="remoteDriveCapacityMb = $event" type="number" :disabled="!cacheRemoteFiles">{{ $t('remote-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
+			<ui-input :value="remoteDriveCapacityMb" type="number" disabled>{{ $t('remote-drive-capacity-mb') }}<template #suffix>MB</template><template #desc>{{ $t('mb') }}</template></ui-input>
+			<ui-info>現在のサーバーではドライブ容量をローカル・リモート別に分けず、既定ロールの容量として管理します。</ui-info>
 		</section>
 		<section>
 			<ui-button @click="updateMeta"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
@@ -106,7 +109,8 @@
 		<template #title><fa :icon="faGhost"/> {{ $t('proxy-account-config') }}</template>
 		<section>
 			<ui-info>{{ $t('proxy-account-info') }}</ui-info>
-			<ui-input :value="proxyAccount" @input="proxyAccount = $event"><template #prefix>@</template>{{ $t('proxy-account-username') }}<template #desc>{{ $t('proxy-account-username-desc') }}</template></ui-input>
+			<ui-input :value="proxyAccount" disabled><template #prefix>@</template>{{ $t('proxy-account-username') }}<template #desc>{{ $t('proxy-account-username-desc') }}</template></ui-input>
+			<ui-info>現在のサーバーではプロキシアカウントをシステムアカウントとして管理し、REST APIからユーザー名を変更できません。</ui-info>
 			<ui-info warn>{{ $t('proxy-account-warn') }}</ui-info>
 		</section>
 		<section>
@@ -180,8 +184,9 @@
 	<ui-card>
 		<template #title><fa :icon="faShieldAlt"/> {{ $t('external-service-integration-config') }}</template>
 		<section>
+			<ui-info>旧Twitter・GitHub・Discord連携に対応するbackend機能は現在のサーバーにはありません。</ui-info>
 			<header><fa :icon="['fab', 'twitter']"/> {{ $t('twitter-integration-config') }}</header>
-			<ui-switch :value="enableTwitterIntegration" @change="enableTwitterIntegration = $event">{{ $t('enable-twitter-integration') }}</ui-switch>
+			<ui-switch :value="enableTwitterIntegration" disabled>{{ $t('enable-twitter-integration') }}</ui-switch>
 			<template v-if="enableTwitterIntegration">
 				<ui-horizon-group>
 					<ui-input :value="twitterConsumerKey" @input="twitterConsumerKey = $event" :disabled="!enableTwitterIntegration"><template #icon><fa icon="key"/></template>{{ $t('twitter-integration-consumer-key') }}</ui-input>
@@ -192,7 +197,7 @@
 		</section>
 		<section>
 			<header><fa :icon="['fab', 'github']"/> {{ $t('github-integration-config') }}</header>
-			<ui-switch :value="enableGithubIntegration" @change="enableGithubIntegration = $event">{{ $t('enable-github-integration') }}</ui-switch>
+			<ui-switch :value="enableGithubIntegration" disabled>{{ $t('enable-github-integration') }}</ui-switch>
 			<template v-if="enableGithubIntegration">
 				<ui-horizon-group>
 					<ui-input :value="githubClientId" @input="githubClientId = $event" :disabled="!enableGithubIntegration"><template #icon><fa icon="key"/></template>{{ $t('github-integration-client-id') }}</ui-input>
@@ -203,7 +208,7 @@
 		</section>
 		<section>
 			<header><fa :icon="['fab', 'discord']"/> {{ $t('discord-integration-config') }}</header>
-			<ui-switch :value="enableDiscordIntegration" @change="enableDiscordIntegration = $event">{{ $t('enable-discord-integration') }}</ui-switch>
+			<ui-switch :value="enableDiscordIntegration" disabled>{{ $t('enable-discord-integration') }}</ui-switch>
 			<template v-if="enableDiscordIntegration">
 				<ui-horizon-group>
 					<ui-input :value="discordClientId" @input="discordClientId = $event" :disabled="!enableDiscordIntegration"><template #icon><fa icon="key"/></template>{{ $t('discord-integration-client-id') }}</ui-input>
@@ -250,6 +255,7 @@ import { url, host } from '../../config';
 import { toUnicode } from 'punycode';
 import { faHeadset, faShieldAlt, faGhost, faUserPlus, faBolt, faThumbtack, faPencilAlt, faHashtag } from '@fortawesome/free-solid-svg-icons';
 import { faEnvelope as farEnvelope, faSave } from '@fortawesome/free-regular-svg-icons';
+import { loadV11AdminMeta, saveV11AdminMeta } from '@compat/admin-meta';
 
 export default defineComponent({
 	i18n: i18n('admin/views/instance.vue'),
@@ -317,72 +323,13 @@ export default defineComponent({
 			objectStorageAccessKey: null,
 			objectStorageSecretKey: null,
 			objectStorageUseSSL: false,
+			__currentPolicies: {},
 			faHeadset, faShieldAlt, faGhost, faUserPlus, farEnvelope, faBolt, faThumbtack, faPencilAlt, faSave, faHashtag
 		};
 	},
 
 	created() {
-		this.$root.getMeta(true).then(meta => {
-			this.maintainerName = meta.maintainerName;
-			this.maintainerEmail = meta.maintainerEmail;
-			this.ToSUrl = meta.ToSUrl;
-			this.repositoryUrl = meta.repositoryUrl;
-			this.feedbackUrl = meta.feedbackUrl;
-			this.disableRegistration = meta.disableRegistration;
-			this.disableLocalTimeline = meta.disableLocalTimeline;
-			this.disableGlobalTimeline = meta.disableGlobalTimeline;
-			this.enableEmojiReaction = meta.enableEmojiReaction;
-			this.useStarForReactionFallback = meta.useStarForReactionFallback;
-			this.mascotImageUrl = meta.mascotImageUrl;
-			this.bannerUrl = meta.bannerUrl;
-			this.errorImageUrl = meta.errorImageUrl;
-			this.iconUrl = meta.iconUrl;
-			this.name = meta.name;
-			this.description = meta.description;
-			this.languages = meta.langs.join(' ');
-			this.cacheRemoteFiles = meta.cacheRemoteFiles;
-			this.proxyRemoteFiles = meta.proxyRemoteFiles;
-			this.localDriveCapacityMb = meta.driveCapacityPerLocalUserMb;
-			this.remoteDriveCapacityMb = meta.driveCapacityPerRemoteUserMb;
-			this.maxNoteTextLength = meta.maxNoteTextLength;
-			this.enableRecaptcha = meta.enableRecaptcha;
-			this.recaptchaSiteKey = meta.recaptchaSiteKey;
-			this.recaptchaSecretKey = meta.recaptchaSecretKey;
-			this.proxyAccount = meta.proxyAccount;
-			this.enableTwitterIntegration = meta.enableTwitterIntegration;
-			this.twitterConsumerKey = meta.twitterConsumerKey;
-			this.twitterConsumerSecret = meta.twitterConsumerSecret;
-			this.enableGithubIntegration = meta.enableGithubIntegration;
-			this.githubClientId = meta.githubClientId;
-			this.githubClientSecret = meta.githubClientSecret;
-			this.enableDiscordIntegration = meta.enableDiscordIntegration;
-			this.discordClientId = meta.discordClientId;
-			this.discordClientSecret = meta.discordClientSecret;
-			this.summalyProxy = meta.summalyProxy;
-			this.enableEmail = meta.enableEmail;
-			this.email = meta.email;
-			this.smtpSecure = meta.smtpSecure;
-			this.smtpHost = meta.smtpHost;
-			this.smtpPort = meta.smtpPort;
-			this.smtpUser = meta.smtpUser;
-			this.smtpPass = meta.smtpPass;
-			this.smtpAuth = meta.smtpUser != null && meta.smtpUser !== '';
-			this.enableServiceWorker = meta.enableServiceWorker;
-			this.swPublicKey = meta.swPublickey;
-			this.swPrivateKey = meta.swPrivateKey;
-			this.pinnedUsers = meta.pinnedUsers.join('\n');
-			this.hiddenTags = meta.hiddenTags.join('\n');
-			this.useObjectStorage = meta.useObjectStorage;
-			this.objectStorageBaseUrl = meta.objectStorageBaseUrl;
-			this.objectStorageBucket = meta.objectStorageBucket;
-			this.objectStoragePrefix = meta.objectStoragePrefix;
-			this.objectStorageEndpoint = meta.objectStorageEndpoint;
-			this.objectStorageRegion = meta.objectStorageRegion;
-			this.objectStoragePort = meta.objectStoragePort;
-			this.objectStorageAccessKey = meta.objectStorageAccessKey;
-			this.objectStorageSecretKey = meta.objectStorageSecretKey;
-			this.objectStorageUseSSL = meta.objectStorageUseSSL;
-		});
+		loadV11AdminMeta(this.$root).then(meta => Object.assign(this, meta));
 	},
 
 	mounted() {
@@ -415,10 +362,10 @@ export default defineComponent({
 
 	methods: {
 		invite() {
-			this.$root.api('admin/invite').then(x => {
+			this.$root.api('admin/invite/create', { count: 1 }).then(invitations => {
 				this.$root.dialog({
 					type: 'info',
-					text: x.code
+					text: invitations[0].code
 				});
 			}).catch(e => {
 				this.$root.dialog({
@@ -447,66 +394,7 @@ export default defineComponent({
 		},
 
 		updateMeta() {
-			this.$root.api('admin/update-meta', {
-				maintainerName: this.maintainerName,
-				maintainerEmail: this.maintainerEmail,
-				ToSUrl: this.ToSUrl,
-				repositoryUrl: this.repositoryUrl,
-				feedbackUrl: this.feedbackUrl,
-				disableRegistration: this.disableRegistration,
-				disableLocalTimeline: this.disableLocalTimeline,
-				disableGlobalTimeline: this.disableGlobalTimeline,
-				enableEmojiReaction: this.enableEmojiReaction,
-				useStarForReactionFallback: this.useStarForReactionFallback,
-				mascotImageUrl: this.mascotImageUrl,
-				bannerUrl: this.bannerUrl,
-				errorImageUrl: this.errorImageUrl,
-				iconUrl: this.iconUrl,
-				name: this.name,
-				description: this.description,
-				langs: this.languages ? this.languages.split(' ') : [],
-				cacheRemoteFiles: this.cacheRemoteFiles,
-				proxyRemoteFiles: this.proxyRemoteFiles,
-				localDriveCapacityMb: parseInt(this.localDriveCapacityMb, 10),
-				remoteDriveCapacityMb: parseInt(this.remoteDriveCapacityMb, 10),
-				maxNoteTextLength: parseInt(this.maxNoteTextLength, 10),
-				enableRecaptcha: this.enableRecaptcha,
-				recaptchaSiteKey: this.recaptchaSiteKey,
-				recaptchaSecretKey: this.recaptchaSecretKey,
-				proxyAccount: this.proxyAccount,
-				enableTwitterIntegration: this.enableTwitterIntegration,
-				twitterConsumerKey: this.twitterConsumerKey,
-				twitterConsumerSecret: this.twitterConsumerSecret,
-				enableGithubIntegration: this.enableGithubIntegration,
-				githubClientId: this.githubClientId,
-				githubClientSecret: this.githubClientSecret,
-				enableDiscordIntegration: this.enableDiscordIntegration,
-				discordClientId: this.discordClientId,
-				discordClientSecret: this.discordClientSecret,
-				summalyProxy: this.summalyProxy,
-				enableEmail: this.enableEmail,
-				email: this.email,
-				smtpSecure: this.smtpSecure,
-				smtpHost: this.smtpHost,
-				smtpPort: parseInt(this.smtpPort, 10),
-				smtpUser: this.smtpAuth ? this.smtpUser : '',
-				smtpPass: this.smtpAuth ? this.smtpPass : '',
-				enableServiceWorker: this.enableServiceWorker,
-				swPublicKey: this.swPublicKey,
-				swPrivateKey: this.swPrivateKey,
-				pinnedUsers: this.pinnedUsers ? this.pinnedUsers.split('\n') : [],
-				hiddenTags: this.hiddenTags ? this.hiddenTags.split('\n') : [],
-				useObjectStorage: this.useObjectStorage,
-				objectStorageBaseUrl: this.objectStorageBaseUrl ? this.objectStorageBaseUrl : null,
-				objectStorageBucket: this.objectStorageBucket ? this.objectStorageBucket : null,
-				objectStoragePrefix: this.objectStoragePrefix ? this.objectStoragePrefix : null,
-				objectStorageEndpoint: this.objectStorageEndpoint ? this.objectStorageEndpoint : null,
-				objectStorageRegion: this.objectStorageRegion ? this.objectStorageRegion : null,
-				objectStoragePort: this.objectStoragePort ? this.objectStoragePort : null,
-				objectStorageAccessKey: this.objectStorageAccessKey ? this.objectStorageAccessKey : null,
-				objectStorageSecretKey: this.objectStorageSecretKey ? this.objectStorageSecretKey : null,
-				objectStorageUseSSL: this.objectStorageUseSSL,
-			}).then(() => {
+			saveV11AdminMeta(this.$root, this).then(() => {
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('saved')

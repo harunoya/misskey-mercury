@@ -38,10 +38,7 @@ export default defineComponent({
 				endpoint: 'notes/mentions',
 				limit: 10,
 				params: init => ({
-					untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
-					includeMyRenotes: this.$store.state.settings.showMyRenotes,
-					includeRenotedMyNotes: this.$store.state.settings.showRenotedMyNotes,
-					includeLocalRenotes: this.$store.state.settings.showLocalRenotes
+					untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined)
 				})
 			}
 		};

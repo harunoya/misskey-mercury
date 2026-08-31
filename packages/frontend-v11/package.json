@@ -8,9 +8,11 @@
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"lint": "pnpm typecheck",
 		"test": "vitest --run",
+		"audit-api": "node scripts/audit-api-compat.mjs",
 		"capture-baseline": "node scripts/capture-baseline.mjs"
 	},
 	"dependencies": {
+		"@simplewebauthn/browser": "13.3.0",
 		"@fortawesome/fontawesome-svg-core": "1.2.26",
 		"@fortawesome/free-brands-svg-icons": "5.12.0",
 		"@fortawesome/free-regular-svg-icons": "5.12.0",
@@ -69,6 +71,7 @@
 		"html-webpack-plugin": "5.6.4",
 		"js-yaml": "3.15.1",
 		"json5-loader": "4.0.1",
+		"misskey-js": "workspace:*",
 		"playwright": "1.62.1",
 		"style-loader": "4.0.0",
 		"stylus": "0.64.0",

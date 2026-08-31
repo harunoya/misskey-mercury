@@ -181,12 +181,14 @@ export default defineComponent({
 
 		send() {
 			this.sending = true;
-			this.$root.api('messaging/messages/create', {
-				userId: this.user ? this.user.id : undefined,
-				groupId: this.group ? this.group.id : undefined,
+			const content = {
 				text: this.text ? this.text : undefined,
-				fileId: this.file ? this.file.id : undefined
-			}).then(message => {
+				fileId: this.file ? this.file.id : undefined,
+			};
+			const request = this.user
+				? this.$root.api('chat/messages/create-to-user', { ...content, toUserId: this.user.id })
+				: this.$root.api('chat/messages/create-to-room', { ...content, toRoomId: this.group.id });
+			request.then(message => {
 				this.clear();
 			}).catch(err => {
 				console.error(err);

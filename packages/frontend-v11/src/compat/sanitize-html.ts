@@ -69,3 +69,11 @@ export function sanitizeHtml(dirty: string | null | undefined): string {
 	sanitizeElement(template.content);
 	return template.innerHTML;
 }
+
+/** Announcement titles are plain text in the current UI; strip tags so v11 cannot reintroduce HTML. */
+export function toPlainText(dirty: string | null | undefined): string {
+	if (dirty == null || dirty === '') return '';
+	const template = document.createElement('template');
+	template.innerHTML = dirty;
+	return template.content.textContent ?? '';
+}

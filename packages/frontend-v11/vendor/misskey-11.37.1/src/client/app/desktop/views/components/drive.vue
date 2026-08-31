@@ -343,7 +343,7 @@ export default defineComponent({
 				}
 			}).then(({ canceled, result: url }) => {
 				if (canceled) return;
-				this.$root.api('drive/files/upload_from_url', {
+				this.$root.api('drive/files/upload-from-url', {
 					url: url,
 					folderId: this.folder ? this.folder.id : undefined
 				});

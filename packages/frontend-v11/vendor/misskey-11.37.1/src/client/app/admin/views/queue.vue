@@ -43,7 +43,7 @@
 				<ui-select :value="state" @input="state = $event">
 					<template #label>{{ $t('state') }}</template>
 					<option value="active">{{ $t('states.active') }}</option>
-					<option value="waiting">{{ $t('states.waiting') }}</option>
+					<option value="wait">{{ $t('states.waiting') }}</option>
 					<option value="delayed">{{ $t('states.delayed') }}</option>
 				</ui-select>
 			</ui-horizon-group>
@@ -56,7 +56,7 @@
 					<template v-if="domain === 'inbox'">
 						<span>{{ job.data.activity.id }}</span>
 					</template>
-					<span>{{ `(${job.attempts}/${job.maxAttempts}, ${Math.floor((jobsFetched - job.timestamp) / 1000 / 60)}min)` }}</span>
+					<span>{{ `(${job.attempts}/${job.opts.attempts || '-'}, ${Math.floor((jobsFetched - job.timestamp) / 1000 / 60)}min)` }}</span>
 				</div>
 			</sequential-entrance>
 			<ui-info v-if="jobs.length == jobsLimit">{{ $t('result-is-truncated', { n: jobsLimit }) }}</ui-info>
@@ -84,7 +84,7 @@ export default defineComponent({
 			connection: null,
 			chartLimit: 200,
 			jobs: [],
-			jobsLimit: 50,
+			jobsLimit: 100,
 			jobsFetched: Date.now(),
 			domain: 'deliver',
 			state: 'delayed',
@@ -121,7 +121,10 @@ export default defineComponent({
 	methods: {
 		async removeAllJobs() {
 			const process = async () => {
-				await this.$root.api('admin/queue/clear');
+				await this.$root.api('admin/queue/clear', {
+					queue: this.domain,
+					state: '*'
+				});
 				this.$root.dialog({
 					type: 'success',
 					splash: true
@@ -138,9 +141,8 @@ export default defineComponent({
 
 		fetchJobs() {
 			this.$root.api('admin/queue/jobs', {
-				domain: this.domain,
-				state: this.state,
-				limit: this.jobsLimit
+				queue: this.domain,
+				state: [this.state]
 			}).then(jobs => {
 				this.jobsFetched = Date.now(),
 				this.jobs = jobs;

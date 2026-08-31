@@ -40,14 +40,22 @@ export default defineComponent({
 	props: ['user'],
 	data() {
 		return {
-			makeFrequentlyRepliedUsersPromise: () => this.$root.api('users/get_frequently_replied_users', {
+			makeFrequentlyRepliedUsersPromise: () => this.$root.api('users/get-frequently-replied-users', {
 				userId: this.user.id
 			}).then(res => res.map(x => x.user)),
-			makeFollowersYouKnowPromise: () => this.$root.api('users/followers', {
-				userId: this.user.id,
-				iknow: true,
-				limit: 30
-			}).then(res => res.users),
+			makeFollowersYouKnowPromise: async () => {
+				const followings = await this.$root.api('users/followers', {
+					userId: this.user.id,
+					limit: 30
+				});
+				const users = followings.map(following => following.follower);
+				if (users.length === 0) return [];
+				const relations = await this.$root.api('users/relation', {
+					userId: users.map(user => user.id)
+				});
+				const knownIds = new Set(relations.filter(relation => relation.isFollowing).map(relation => relation.id));
+				return users.filter(user => knownIds.has(user.id));
+			},
 		};
 	}
 });

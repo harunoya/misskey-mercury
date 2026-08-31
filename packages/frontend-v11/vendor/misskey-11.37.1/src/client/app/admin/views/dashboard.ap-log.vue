@@ -1,5 +1,6 @@
 <template>
 <div class="hyhctythnmwihguaaapnbrbszsjqxpio">
+	<p class="unsupported">The current backend exposes aggregate ActivityPub request charts, but not per-request AP logs.</p>
 	<table>
 		<thead>
 			<tr>
@@ -34,33 +35,6 @@ export default defineComponent({
 		};
 	},
 
-	mounted() {
-		this.connection = this.$root.stream.useSharedConnection('apLog');
-		this.connection.on('log', this.onLog);
-		this.connection.on('logs', this.onLogs);
-		this.connection.send('requestLog', {
-			id: Math.random().toString().substr(2, 8),
-			length: 50
-		});
-	},
-
-	beforeUnmount() {
-		this.connection.dispose();
-	},
-
-	methods: {
-		onLog(log) {
-			log.id = Math.random();
-			this.logs.unshift(log);
-			if (this.logs.length > 50) this.logs.pop();
-		},
-
-		onLogs(logs) {
-			for (const log of logs.reverse()) {
-				this.onLog(log)
-			}
-		}
-	}
 });
 </script>
 
@@ -73,6 +47,11 @@ export default defineComponent({
 	box-shadow 0 2px 4px rgba(0, 0, 0, 0.1)
 	background var(--adminDashboardCardBg)
 	border-radius 8px
+
+	> .unsupported
+		margin 0 0 12px
+		color var(--adminDashboardCardFg)
+		opacity 0.7
 
 	> table
 		width 100%

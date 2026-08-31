@@ -23,9 +23,9 @@
 				<fa :icon="faQuestionCircle" v-if="type === 'question'"/>
 				<fa icon="spinner" pulse v-if="type === 'waiting'"/>
 			</div>
-			<header v-if="title" v-html="title"></header>
+			<header v-if="title" v-html="$sanitizeHtml(title)"></header>
 			<header v-if="title == null && user">{{ $t('@.enter-username') }}</header>
-			<div class="body" v-if="text" v-html="text"></div>
+			<div class="body" v-if="text" v-html="$sanitizeHtml(text)"></div>
 			<ui-input v-if="input" :value="inputValue" @input="inputValue = $event" autofocus :type="input.type || 'text'" :placeholder="input.placeholder" @keydown="onInputKeydown"></ui-input>
 			<ui-input v-if="user" :value="userInputValue" @input="userInputValue = $event" autofocus @keydown="onInputKeydown"><template #prefix>@</template></ui-input>
 			<ui-select v-if="select" :value="selectedValue" @input="selectedValue = $event" autofocus>

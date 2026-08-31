@@ -65,8 +65,9 @@ export default defineComponent({
 		},
 
 		removeReport(report) {
-			this.$root.api('admin/remove-abuse-user-report', {
-				reportId: report.id
+			this.$root.api('admin/resolve-abuse-user-report', {
+				reportId: report.id,
+				resolvedAs: null
 			}).then(() => {
 				this.userReports = this.userReports.filter(r => r.id != report.id);
 			});

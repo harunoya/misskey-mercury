@@ -62,6 +62,7 @@ import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faGrin } from '@fortawesome/free-regular-svg-icons';
 import { unique } from '../../../../prelude/array';
+import { fetchAllCustomEmojis, uploadEmojiSource } from '@compat/admin-emoji';
 
 export default defineComponent({
 	i18n: i18n('admin/views/emoji.vue'),
@@ -87,53 +88,62 @@ export default defineComponent({
 	},
 
 	methods: {
-		add() {
-			this.$root.api('admin/emoji/add', {
-				name: this.name,
-				category: this.category,
-				url: this.url,
-				aliases: this.aliases.split(' ').filter(x => x.length > 0)
-			}).then(() => {
+		async add() {
+			try {
+				const file = await uploadEmojiSource(this.$root, this.url);
+				await this.$root.api('admin/emoji/add', {
+					name: this.name,
+					category: this.category || null,
+					fileId: file.id,
+					aliases: this.aliases.split(' ').filter(x => x.length > 0)
+				});
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('add-emoji.added')
 				});
-				this.fetchEmojis();
-			}).catch(e => {
+				await this.fetchEmojis();
+			} catch (e) {
 				this.$root.dialog({
 					type: 'error',
-					text: e
+					text: e.toString()
 				});
-			});
+			}
 		},
 
-		fetchEmojis() {
-			this.$root.api('admin/emoji/list').then(emojis => {
+		async fetchEmojis() {
+			try {
+				const emojis = await fetchAllCustomEmojis(this.$root);
 				for (const e of emojis) {
 					e.aliases = (e.aliases || []).join(' ');
+					e._savedUrl = e.url;
 				}
 				this.emojis = emojis;
-			});
+			} catch (e) {
+				this.$root.dialog({ type: 'error', text: e.toString() });
+			}
 		},
 
-		updateEmoji(emoji) {
-			this.$root.api('admin/emoji/update', {
-				id: emoji.id,
-				name: emoji.name,
-				category: emoji.category,
-				url: emoji.url,
-				aliases: emoji.aliases.split(' ').filter(x => x.length > 0)
-			}).then(() => {
+		async updateEmoji(emoji) {
+			try {
+				const file = emoji.url !== emoji._savedUrl ? await uploadEmojiSource(this.$root, emoji.url) : null;
+				await this.$root.api('admin/emoji/update', {
+					id: emoji.id,
+					name: emoji.name,
+					category: emoji.category || null,
+					...(file ? { fileId: file.id } : {}),
+					aliases: emoji.aliases.split(' ').filter(x => x.length > 0)
+				});
+				emoji._savedUrl = emoji.url;
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('updated')
 				});
-			}).catch(e => {
+			} catch (e) {
 				this.$root.dialog({
 					type: 'error',
-					text: e
+					text: e.toString()
 				});
-			});
+			}
 		},
 
 		removeEmoji(emoji) {
@@ -144,7 +154,7 @@ export default defineComponent({
 			}).then(({ canceled }) => {
 				if (canceled) return;
 
-				this.$root.api('admin/emoji/remove', {
+				this.$root.api('admin/emoji/delete', {
 					id: emoji.id
 				}).then(() => {
 					this.$root.dialog({

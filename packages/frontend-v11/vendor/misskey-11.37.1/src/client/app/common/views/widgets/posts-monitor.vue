@@ -87,7 +87,7 @@ export default defineComponent({
 
 	data() {
 		return {
-			connection: null,
+			refreshTimer: null,
 			viewBoxY: 30,
 			stats: [],
 			fediGradientId: uuid(),
@@ -114,17 +114,12 @@ export default defineComponent({
 			this.draw();
 		}
 	},
-	mounted() {
-		this.connection = this.$root.stream.useSharedConnection('notesStats');
-
-		this.connection.on('stats', this.onStats);
-		this.connection.on('statsLog', this.onStatsLog);
-		this.connection.send('requestLog',{
-			id: Math.random().toString().substr(2, 8)
-		});
+	async mounted() {
+		await this.refreshStats();
+		this.refreshTimer = setInterval(this.refreshStats, 60_000);
 	},
 	beforeUnmount() {
-		this.connection.dispose();
+		clearInterval(this.refreshTimer);
 	},
 	methods: {
 		toggle() {
@@ -143,8 +138,22 @@ export default defineComponent({
 			}
 			this.save();
 		},
+		async refreshStats() {
+			const chart = await this.$root.api('charts/notes', { span: 'hour', limit: 100 });
+			const localInc = chart.local?.inc || [];
+			const localDec = chart.local?.dec || [];
+			const remoteInc = chart.remote?.inc || [];
+			const remoteDec = chart.remote?.dec || [];
+			this.stats = localInc.map((value, index) => {
+				const local = Math.max(0, value - (localDec[index] || 0));
+				const remote = Math.max(0, (remoteInc[index] || 0) - (remoteDec[index] || 0));
+				return { local, all: local + remote };
+			}).reverse();
+			this.draw();
+		},
 		draw() {
 			const stats = this.props.view == 0 ? this.stats.slice(-50) : this.stats;
+			if (stats.length === 0) return;
 			const fediPeak = Math.max.apply(null, stats.map(x => x.all)) || 1;
 			const localPeak = Math.max.apply(null, stats.map(x => x.local)) || 1;
 
@@ -161,14 +170,6 @@ export default defineComponent({
 			this.localHeadX = localPolylinePoints[localPolylinePoints.length - 1][0];
 			this.localHeadY = localPolylinePoints[localPolylinePoints.length - 1][1];
 		},
-		onStats(stats) {
-			this.stats.push(stats);
-			if (this.stats.length > 100) this.stats.shift();
-			this.draw();
-		},
-		onStatsLog(statsLog) {
-			for (const stats of statsLog) this.onStats(stats);
-		}
 	}
 });
 </script>

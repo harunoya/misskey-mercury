@@ -3,6 +3,7 @@ import { EventEmitter } from 'eventemitter3';
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import { wsUrl } from '../../config';
 import MiOS from '../../mios';
+import { toV11StreamEvents } from '@compat/stream';
 
 /**
  * Misskey stream connection
@@ -13,6 +14,7 @@ export default class Stream extends EventEmitter {
 	private sharedConnectionPools: Pool[] = [];
 	private sharedConnections: SharedConnection[] = [];
 	private nonSharedConnections: NonSharedConnection[] = [];
+	private me: any;
 
 	constructor(os: MiOS) {
 		super();
@@ -20,6 +22,7 @@ export default class Stream extends EventEmitter {
 		this.state = 'initializing';
 
 		const user = os.store.state.i;
+		this.me = user;
 
 		this.stream = new ReconnectingWebsocket(wsUrl + (user ? `?i=${user.token}` : ''), '', { minReconnectionDelay: 1 }); // https://github.com/pladaria/reconnecting-websocket/issues/91
 		this.stream.addEventListener('open', this.onOpen);
@@ -112,7 +115,9 @@ export default class Stream extends EventEmitter {
 			}
 
 			for (const c of connections.filter(c => c != null)) {
-				c.emit(body.type, body.body);
+				for (const event of toV11StreamEvents(c.channel, body.type, body.body, this.me)) {
+					c.emit(event.type, event.body);
+				}
 			}
 		} else {
 			this.emit(type, body);

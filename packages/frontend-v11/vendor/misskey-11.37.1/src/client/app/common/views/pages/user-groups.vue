@@ -30,8 +30,8 @@
 		<div class="fvlojuur" v-for="(invite, i) in invites" :key="invite.id">
 			<ui-hr v-if="i != 0"/>
 			<ui-margin>
-				<div class="name" style="color:var(--text);">{{ invite.group.name }}</div>
-				<x-avatars :user-ids="invite.group.userIds" style="margin-top:8px;"/>
+				<div class="name" style="color:var(--text);">{{ invite.room.name }}</div>
+				<x-avatars :user-ids="invite.room.userIds" style="margin-top:8px;"/>
 				<ui-horizon-group>
 					<ui-button @click="acceptInvite(invite)"><fa :icon="faCheck"/> {{ $t('accept-invite') }}</ui-button>
 					<ui-button @click="rejectInvite(invite)"><fa :icon="faBan"/> {{ $t('reject-invite') }}</ui-button>
@@ -47,6 +47,7 @@ import { defineComponent } from 'vue';
 import { faUsers, faPlus, faCheck, faBan, faEnvelopeOpenText } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../i18n';
 import XAvatars from '../../views/components/avatars.vue';
+import { roomsFromMemberships } from '@compat/chat';
 
 export default defineComponent({
 	i18n: i18n('common/views/components/user-groups.vue'),
@@ -64,16 +65,19 @@ export default defineComponent({
 	mounted() {
 		document.title = this.$root.instanceName;
 
-		this.$root.api('users/groups/owned').then(groups => {
-			this.ownedGroups = groups;
+		this.$root.api('chat/rooms/owned', { limit: 100 }).then(async groups => {
+			this.ownedGroups = await Promise.all(groups.map(this.withMemberIds));
 		});
 
-		this.$root.api('users/groups/joined').then(groups => {
-			this.joinedGroups = groups;
+		this.$root.api('chat/rooms/joining', { limit: 100 }).then(async memberships => {
+			this.joinedGroups = await Promise.all(roomsFromMemberships(memberships).map(this.withMemberIds));
 		});
 
-		this.$root.api('i/user-group-invites').then(invites => {
-			this.invites = invites;
+		this.$root.api('chat/rooms/invitations/inbox', { limit: 100 }).then(async invites => {
+			this.invites = await Promise.all(invites.map(async invite => ({
+				...invite,
+				room: await this.withMemberIds(invite.room),
+			})));
 		});
 
 		this.$emit('init', {
@@ -82,41 +86,51 @@ export default defineComponent({
 		});
 	},
 	methods: {
+		async withMemberIds(room) {
+			try {
+				const memberships = await this.$root.api('chat/rooms/members', { roomId: room.id, limit: 100 });
+				return { ...room, userIds: memberships.map(membership => membership.userId) };
+			} catch {
+				return { ...room, userIds: room.ownerId ? [room.ownerId] : [] };
+			}
+		},
+
 		add() {
 			this.$root.dialog({
 				title: this.$t('group-name'),
 				input: true
 			}).then(async ({ canceled, result: name }) => {
 				if (canceled) return;
-				const group = await this.$root.api('users/groups/create', {
-					name
+				const group = await this.$root.api('chat/rooms/create', {
+					name,
+					description: ''
 				});
 
-				this.ownedGroups.push(group)
+				this.ownedGroups.push(await this.withMemberIds(group));
 			});
 		},
 		acceptInvite(invite) {
-			this.$root.api('users/groups/invitations/accept', {
-				inviteId: invite.id
+			this.$root.api('chat/rooms/join', {
+				roomId: invite.roomId
 			}).then(() => {
 				this.$root.dialog({
 					type: 'success',
 					splash: true
 				});
-				this.$root.api('i/user-group-invites').then(invites => {
+				this.$root.api('chat/rooms/invitations/inbox', { limit: 100 }).then(invites => {
 					this.invites = invites;
 				}).then(() => {
-					this.$root.api('users/groups/joined').then(groups => {
-						this.joinedGroups = groups;
+					this.$root.api('chat/rooms/joining', { limit: 100 }).then(memberships => {
+						this.joinedGroups = roomsFromMemberships(memberships);
 					});
 				});
 			});
 		},
 		rejectInvite(invite) {
-			this.$root.api('users/groups/invitations/reject', {
-				inviteId: invite.id
+			this.$root.api('chat/rooms/invitations/ignore', {
+				roomId: invite.roomId
 			}).then(() => {
-				this.$root.api('i/user-group-invites').then(invites => {
+				this.$root.api('chat/rooms/invitations/inbox', { limit: 100 }).then(invites => {
 					this.invites = invites;
 				});
 			});

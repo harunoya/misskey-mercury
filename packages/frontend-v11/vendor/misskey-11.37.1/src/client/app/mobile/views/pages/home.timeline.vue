@@ -111,14 +111,24 @@ export default defineComponent({
 		this.pagination = {
 			endpoint: this.endpoint,
 			limit: 10,
-			params: init => ({
-				untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
-				...this.baseQuery, ...this.query
-			})
+			params: init => this.getPaginationParams(init)
 		};
 	},
 
 	methods: {
+		getPaginationParams(init) {
+			const params = {
+				untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
+				...this.query
+			};
+			if (['notes/timeline', 'notes/hybrid-timeline'].includes(this.endpoint)) {
+				Object.assign(params, this.baseQuery);
+			} else if (['notes/local-timeline', 'notes/global-timeline'].includes(this.endpoint)) {
+				params.withRenotes = Object.values(this.baseQuery).some(Boolean);
+			}
+			return params;
+		},
+
 		focus() {
 			(this.$refs.timeline as any).focus();
 		},

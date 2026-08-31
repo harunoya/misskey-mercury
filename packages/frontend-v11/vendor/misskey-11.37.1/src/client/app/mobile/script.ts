@@ -181,4 +181,4 @@ init((launch, os) => {
 
 	// Launch the app
 	launch(router);
-}, true);
+});

@@ -25,7 +25,7 @@
 					</div>
 
 					<div class="desc">
-						<span class="desc" v-html="description || $t('@.about')"></span>
+						<span class="desc" v-html="$sanitizeHtml(description || $t('@.about'))"></span>
 						<a class="about" @click="about">{{ $t('about') }}</a>
 					</div>
 
@@ -43,7 +43,7 @@
 				<header><fa icon="broadcast-tower"/> {{ $t('announcements') }}</header>
 				<div v-if="announcements && announcements.length > 0">
 					<div v-for="announcement in announcements">
-						<h1 v-html="announcement.title"></h1>
+						<h1>{{ announcement.title }}</h1>
 						<mfm :text="announcement.text"/>
 						<img v-if="announcement.image" :src="announcement.image" alt="" style="display: block; max-height: 130px; max-width: 100%;"/>
 					</div>
@@ -192,12 +192,11 @@ export default defineComponent({
 		];
 
 		this.$root.api('notes/local-timeline', {
-			fileType: image,
-			excludeNsfw: true,
+			withFiles: true,
 			limit: 6
 		}).then((notes: any[]) => {
 			const files = concat(notes.map((n: any): any[] => n.files));
-			this.photos = files.filter(f => image.includes(f.type)).slice(0, 6);
+			this.photos = files.filter(f => image.includes(f.type) && !f.isSensitive).slice(0, 6);
 		});
 	},
 

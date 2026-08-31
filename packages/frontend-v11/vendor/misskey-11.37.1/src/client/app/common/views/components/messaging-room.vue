@@ -35,6 +35,7 @@ import XMessage from './messaging-room.message.vue';
 import XForm from './messaging-room.form.vue';
 import { url } from '../../../config';
 import { faArrowCircleDown, faFlag } from '@fortawesome/free-solid-svg-icons';
+import { toV11ChatMessage } from '@compat/chat';
 
 export default defineComponent({
 	i18n: i18n('common/views/components/messaging-room.vue'),
@@ -89,10 +90,9 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.connection = this.$root.stream.connectToChannel('messaging', {
-			otherparty: this.user ? this.user.id : undefined,
-			group: this.group ? this.group.id : undefined,
-		});
+		this.connection = this.user
+			? this.$root.stream.connectToChannel('chatUser', { otherId: this.user.id })
+			: this.$root.stream.connectToChannel('chatRoom', { roomId: this.group.id });
 
 		this.connection.on('message', this.onMessage);
 		this.connection.on('read', this.onRead);
@@ -162,12 +162,15 @@ export default defineComponent({
 			return new Promise((resolve, reject) => {
 				const max = this.existMoreMessages ? 20 : 10;
 
-				this.$root.api('messaging/messages', {
-					userId: this.user ? this.user.id : undefined,
-					groupId: this.group ? this.group.id : undefined,
+				const pagination = {
 					limit: max + 1,
-					untilId: this.existMoreMessages ? this.messages[0].id : undefined
-				}).then(messages => {
+					untilId: this.existMoreMessages ? this.messages[0].id : undefined,
+				};
+				const request = this.user
+					? this.$root.api('chat/messages/user-timeline', { ...pagination, userId: this.user.id })
+					: this.$root.api('chat/messages/room-timeline', { ...pagination, roomId: this.group.id });
+				request.then(messages => {
+					messages = messages.map(message => toV11ChatMessage(message, this.$store.state.i, this.user));
 					if (messages.length == max + 1) {
 						this.existMoreMessages = true;
 						messages.pop();
@@ -189,6 +192,7 @@ export default defineComponent({
 		},
 
 		onMessage(message) {
+			message = toV11ChatMessage(message, this.$store.state.i, this.user);
 			// サウンドを再生する
 			if (this.$store.state.device.enableSounds) {
 				const sound = new Audio(`${url}/assets/message.mp3`);
@@ -200,9 +204,7 @@ export default defineComponent({
 
 			this.messages.push(message);
 			if (message.userId != this.$store.state.i.id && !document.hidden) {
-				this.connection.send('read', {
-					id: message.id
-				});
+				this.connection.send('read', {});
 			}
 
 			if (isBottom) {
@@ -288,9 +290,7 @@ export default defineComponent({
 			if (document.hidden) return;
 			for (const message of this.messages) {
 				if (message.userId !== this.$store.state.i.id && !message.isRead) {
-					this.connection.send('read', {
-						id: message.id
-					});
+					this.connection.send('read', {});
 				}
 			}
 		}

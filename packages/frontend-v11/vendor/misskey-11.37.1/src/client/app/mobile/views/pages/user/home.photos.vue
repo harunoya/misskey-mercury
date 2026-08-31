@@ -36,13 +36,14 @@ export default defineComponent({
 		];
 		this.$root.api('users/notes', {
 			userId: this.user.id,
-			fileType: image,
-			excludeNsfw: !this.$store.state.device.alwaysShowNsfw,
+			withFiles: true,
 			limit: 9,
 		}).then(notes => {
 			for (const note of notes) {
 				for (const file of note.files) {
-					if (this.images.length < 9) {
+					if (image.includes(file.type)
+						&& (this.$store.state.device.alwaysShowNsfw || !file.isSensitive)
+						&& this.images.length < 9) {
 						this.images.push({
 							note,
 							file
@@ -96,4 +97,3 @@ export default defineComponent({
 			margin-right 4px
 
 </style>
-

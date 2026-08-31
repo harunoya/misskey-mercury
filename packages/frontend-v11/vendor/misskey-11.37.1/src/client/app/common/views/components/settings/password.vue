@@ -43,7 +43,7 @@ export default defineComponent({
 				});
 				return;
 			}
-			this.$root.api('i/change_password', {
+			this.$root.api('i/change-password', {
 				currentPassword,
 				newPassword
 			}).then(() => {

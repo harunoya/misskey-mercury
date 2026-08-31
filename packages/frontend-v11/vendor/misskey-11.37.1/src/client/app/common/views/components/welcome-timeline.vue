@@ -64,7 +64,7 @@ export default defineComponent({
 				local: true,
 				reply: false,
 				renote: false,
-				file: false,
+				withFiles: false,
 				poll: false
 			}).then(notes => {
 				this.notes = notes;

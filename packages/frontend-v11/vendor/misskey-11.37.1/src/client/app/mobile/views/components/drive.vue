@@ -457,7 +457,7 @@ export default defineComponent({
 		urlUpload() {
 			const url = window.prompt(this.$t('url-prompt'));
 			if (url == null || url == '') return;
-			this.$root.api('drive/files/upload_from_url', {
+			this.$root.api('drive/files/upload-from-url', {
 				url: url,
 				folderId: this.folder ? this.folder.id : undefined
 			});

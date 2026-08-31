@@ -19,7 +19,7 @@
 			<span class="emoji" v-if="emoji.isCustomEmoji"><img :src="$store.state.device.disableShowingAnimatedImages ? getStaticImageUrl(emoji.url) : emoji.url" :alt="emoji.emoji"/></span>
 			<span class="emoji" v-else-if="!useOsDefaultEmojis"><img :src="emoji.url" :alt="emoji.emoji"/></span>
 			<span class="emoji" v-else>{{ emoji.emoji }}</span>
-			<span class="name" v-html="emoji.name.replace(q, `<b>${q}</b>`)"></span>
+			<span class="name" v-html="$sanitizeHtml(emoji.name.replace(q, `<b>${q}</b>`))"></span>
 			<span class="alias" v-if="emoji.aliasOf">({{ emoji.aliasOf }})</span>
 		</li>
 	</ol>

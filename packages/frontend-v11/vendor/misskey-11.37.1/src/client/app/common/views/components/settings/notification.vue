@@ -31,7 +31,7 @@ export default defineComponent({
 
 	methods: {
 		readAllNotifications() {
-			this.$root.api('notifications/mark_all_as_read');
+			this.$root.api('notifications/mark-all-as-read');
 		}
 	}
 });

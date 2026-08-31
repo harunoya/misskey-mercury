@@ -1,7 +1,7 @@
 <template>
 <div class="form">
 	<header>
-		<h1 v-html="$t('share-access', { name })"></h1>
+		<h1 v-html="$sanitizeHtml($t('share-access', { name }))"></h1>
 		<img :src="app.iconUrl"/>
 	</header>
 	<div class="app">
@@ -45,11 +45,9 @@ export default defineComponent({
 	},
 	methods: {
 		cancel() {
-			this.$root.api('auth/deny', {
-				token: this.session.token
-			}).then(() => {
-				this.$emit('denied');
-			});
+			// The current backend intentionally has no deny endpoint; the current client also
+			// rejects authorization by leaving this page without accepting the session.
+			this.$emit('denied');
 		},
 
 		accept() {

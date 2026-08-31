@@ -22,7 +22,7 @@ export default defineComponent({
 		};
 	},
 	mounted() {
-		this.$root.api('i/authorized_apps').then(apps => {
+		this.$root.api('i/authorized-apps').then(apps => {
 			this.apps = apps;
 			this.fetching = false;
 		});

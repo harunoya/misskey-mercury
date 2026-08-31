@@ -34,8 +34,8 @@ export default defineComponent({
 				params: init => ({
 					userId: this.user.id,
 					untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
-					includeReplies: this.mode == 'with-replies',
-					includeMyRenotes: this.mode != 'my-posts',
+					withReplies: this.mode == 'with-replies',
+					withRenotes: this.mode != 'my-posts',
 					withFiles: this.mode == 'with-media',
 				})
 			}

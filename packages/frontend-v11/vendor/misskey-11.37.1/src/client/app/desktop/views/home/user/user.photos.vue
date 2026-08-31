@@ -45,8 +45,7 @@ export default defineComponent({
 
 		this.$root.api('users/notes', {
 			userId: this.user.id,
-			fileType: image,
-			excludeNsfw: !this.$store.state.device.alwaysShowNsfw,
+			withFiles: true,
 			limit: 9,
 		}).then(notes => {
 			for (const note of notes) {
@@ -55,7 +54,9 @@ export default defineComponent({
 				}
 			}
 			const files = concat(notes.map((n: any): any[] => n.files));
-			this.images = files.filter(f => image.includes(f.type)).slice(0, 9);
+			this.images = files
+				.filter(f => image.includes(f.type) && (this.$store.state.device.alwaysShowNsfw || !f.isSensitive))
+				.slice(0, 9);
 			this.fetching = false;
 		});
 	},

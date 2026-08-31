@@ -74,13 +74,7 @@ export default defineComponent({
 		this.pagination = {
 			endpoint: this.endpoint,
 			limit: 10,
-			params: init => ({
-				untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
-				withFiles: this.mediaOnly,
-				includeMyRenotes: this.$store.state.settings.showMyRenotes,
-				includeRenotedMyNotes: this.$store.state.settings.showRenotedMyNotes,
-				includeLocalRenotes: this.$store.state.settings.showLocalRenotes
-			})
+			params: init => this.getPaginationParams(init)
 		};
 	},
 
@@ -105,6 +99,24 @@ export default defineComponent({
 	},
 
 	methods: {
+		getPaginationParams(init) {
+			const params = {
+				untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
+				withFiles: this.mediaOnly
+			};
+			const renoteSettings = {
+				includeMyRenotes: this.$store.state.settings.showMyRenotes,
+				includeRenotedMyNotes: this.$store.state.settings.showRenotedMyNotes,
+				includeLocalRenotes: this.$store.state.settings.showLocalRenotes
+			};
+			if (['notes/timeline', 'notes/hybrid-timeline'].includes(this.endpoint)) {
+				Object.assign(params, renoteSettings);
+			} else {
+				params.withRenotes = Object.values(renoteSettings).some(Boolean);
+			}
+			return params;
+		},
+
 		onNote(note) {
 			if (this.mediaOnly && note.files.length == 0) return;
 			(this.$refs.timeline as any).prepend(note);

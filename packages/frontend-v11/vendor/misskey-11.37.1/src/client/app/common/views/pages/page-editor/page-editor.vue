@@ -229,6 +229,7 @@ export default defineComponent({
 				alignCenter: this.alignCenter,
 				content: this.content,
 				variables: this.variables,
+				script: '',
 				eyeCatchingImageId: this.eyeCatchingImageId,
 			};
 

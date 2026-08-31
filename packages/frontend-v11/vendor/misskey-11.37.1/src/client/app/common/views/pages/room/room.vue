@@ -27,6 +27,7 @@
 	</div>
 
 	<div class="menu" v-if="isMyRoom">
+		<ui-info warn>This room is stored only in this browser because the current backend has no room API.</ui-info>
 		<section>
 			<ui-button @click="add()"><fa :icon="faBoxOpen"/> {{ $t('add-furniture') }}</ui-button>
 		</section>
@@ -59,6 +60,7 @@ const storeItems = require('../../../scripts/room/furnitures.json5');
 import { faBoxOpen, faUndo, faArrowsAlt, faBan, faBroom } from '@fortawesome/free-solid-svg-icons';
 import { faSave, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { query as urlQuery } from '../../../../../../prelude/url';
+import { loadLocalV11Room, saveLocalV11Room } from '@compat/room';
 
 let room: Room;
 
@@ -88,6 +90,7 @@ export default defineComponent({
 			isRotateMode: false,
 			isMyRoom: false,
 			changed: false,
+			userId: null,
 			faBoxOpen, faSave, faTrashAlt, faUndo, faArrowsAlt, faBan, faBroom,
 		};
 	},
@@ -100,10 +103,9 @@ export default defineComponent({
 		});
 
 		this.isMyRoom = this.$store.getters.isSignedIn && this.$store.state.i.id === user.id;
+		this.userId = user.id;
 
-		const roomInfo = await this.$root.api('room/show', {
-			userId: user.id
-		});
+		const roomInfo = loadLocalV11Room(user.id);
 
 		this.roomType = roomInfo.roomType;
 		this.carpetColor = roomInfo.carpetColor;
@@ -183,20 +185,19 @@ export default defineComponent({
 		},
 
 		save() {
-			this.$root.api('room/update', {
-				room: room.getRoomInfo()
-			}).then(() => {
+			try {
+				saveLocalV11Room(this.userId, room.getRoomInfo());
 				this.changed = false;
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('saved')
 				});
-			}).catch((e: any) => {
+			} catch (e) {
 				this.$root.dialog({
 					type: 'error',
 					text: e.message
 				});
-			});
+			}
 		},
 
 		clear() {

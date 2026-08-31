@@ -3,11 +3,12 @@
 	<ui-card>
 		<template #title><fa :icon="faStream"/> {{ $t('logs') }}</template>
 		<section class="fit-top">
+			<ui-info warn>The current backend does not expose its process logs through the REST API. Use the server's configured log collector.</ui-info>
 			<ui-horizon-group inputs>
-				<ui-input :value="domain" @input="domain = $event" :debounce="true">
+				<ui-input :value="domain" @input="domain = $event" :debounce="true" :disabled="true">
 					<span>{{ $t('domain') }}</span>
 				</ui-input>
-				<ui-select :value="level" @input="level = $event">
+				<ui-select :value="level" @input="level = $event" :disabled="true">
 					<template #label>{{ $t('level') }}</template>
 					<option value="all">{{ $t('levels.all') }}</option>
 					<option value="info">{{ $t('levels.info') }}</option>
@@ -22,12 +23,12 @@
 				<code v-for="log in logs" :key="log.id" :class="log.level">
 					<details>
 						<summary><mk-time :time="log.createdAt"/> [{{ log.domain.join('.') }}] {{ log.message }}</summary>
-						<vue-json-pretty v-if="log.data" :data="log.data"></vue-json-pretty>
+						<pre v-if="log.data">{{ JSON.stringify(log.data, null, 2) }}</pre>
 					</details>
 				</code>
 			</div>
 
-			<ui-button @click="deleteAll()">{{ $t('delete-all') }}</ui-button>
+			<ui-button :disabled="true">{{ $t('delete-all') }}</ui-button>
 		</section>
 	</ui-card>
 </div>
@@ -37,14 +38,9 @@
 import { defineComponent } from 'vue';
 import i18n from '../../i18n';
 import { faStream } from '@fortawesome/free-solid-svg-icons';
-import VueJsonPretty from 'vue-json-pretty';
 
 export default defineComponent({
 	i18n: i18n('admin/views/logs.vue'),
-
-	components: {
-		VueJsonPretty
-	},
 
 	data() {
 		return {
@@ -67,28 +63,9 @@ export default defineComponent({
 		}
 	},
 
-	mounted() {
-		this.fetch();
-	},
-
 	methods: {
 		fetch() {
-			this.$root.api('admin/logs', {
-				level: this.level === 'all' ? null : this.level,
-				domain: this.domain === '' ? null : this.domain,
-				limit: 100
-			}).then(logs => {
-				this.logs = logs.reverse();
-			});
-		},
-
-		deleteAll() {
-			this.$root.api('admin/delete-logs').then(() => {
-				this.$root.dialog({
-					type: 'success',
-					splash: true
-				});
-			});
+			this.logs = [];
 		}
 	}
 });

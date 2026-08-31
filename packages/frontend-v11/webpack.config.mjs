@@ -124,6 +124,7 @@ export default {
 			'v-animate-css': resolve(packageRoot, 'src/compat/shim-animate-css.ts'),
 			'v-debounce': resolve(packageRoot, 'src/compat/shim-debounce.ts'),
 			'vue-js-modal': resolve(packageRoot, 'src/compat/shim-modal.ts'),
+			'vue-marquee-text-component': resolve(packageRoot, 'src/compat/shim-marquee.ts'),
 			// The shim re-exports the real Vue and adds back the Vue 2 global API that v11's
 			// bootstrap calls before an app instance exists.
 			vue$: resolve(packageRoot, 'src/compat/vue-global.ts'),

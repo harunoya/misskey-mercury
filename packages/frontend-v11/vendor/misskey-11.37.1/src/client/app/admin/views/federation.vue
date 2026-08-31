@@ -15,7 +15,7 @@
 						<span>{{ $t('host') }}</span>
 						<template #prefix><fa :icon="faServer"/></template>
 					</ui-input>
-					<ui-input :value="instance.caughtAt | date" type="text" readonly>
+				<ui-input :value="instance.firstRetrievedAt | date" type="text" readonly>
 						<span>{{ $t('caught-at') }}</span>
 						<template #prefix><fa :icon="faCrosshairs"/></template>
 					</ui-input>
@@ -41,11 +41,11 @@
 					</ui-input>
 				</ui-horizon-group>
 				<ui-horizon-group inputs>
-					<ui-input :value="instance.latestRequestSentAt | date" type="text" readonly>
+					<ui-input :value="instance.infoUpdatedAt | date" type="text" readonly>
 						<span>{{ $t('latest-request-sent-at') }}</span>
 						<template #prefix><fa :icon="faPaperPlane"/></template>
 					</ui-input>
-					<ui-input :value="instance.latestStatus" type="text" readonly>
+					<ui-input :value="instance.suspensionState" type="text" readonly>
 						<span>{{ $t('status') }}</span>
 						<template #prefix><fa :icon="faTrafficLight"/></template>
 					</ui-input>
@@ -54,7 +54,7 @@
 					<span>{{ $t('latest-request-received-at') }}</span>
 					<template #prefix><fa :icon="faInbox"/></template>
 				</ui-input>
-				<ui-switch :value="instance.isMarkedAsClosed" @change="instance.isMarkedAsClosed = $event; updateInstance()">{{ $t('marked-as-closed') }}</ui-switch>
+				<ui-switch :value="instance.isSuspended" @change="instance.isSuspended = $event; updateInstance()">{{ $t('marked-as-closed') }}</ui-switch>
 				<details>
 					<summary>{{ $t('charts') }}</summary>
 					<ui-horizon-group inputs>
@@ -97,10 +97,10 @@
 			<ui-horizon-group inputs>
 				<ui-select :value="sort" @input="sort = $event">
 					<template #label>{{ $t('sort') }}</template>
-					<option value="-caughtAt">{{ $t('sorts.caughtAtAsc') }}</option>
-					<option value="+caughtAt">{{ $t('sorts.caughtAtDesc') }}</option>
-					<option value="-lastCommunicatedAt">{{ $t('sorts.lastCommunicatedAtAsc') }}</option>
-					<option value="+lastCommunicatedAt">{{ $t('sorts.lastCommunicatedAtDesc') }}</option>
+					<option value="-firstRetrievedAt">{{ $t('sorts.caughtAtAsc') }}</option>
+					<option value="+firstRetrievedAt">{{ $t('sorts.caughtAtDesc') }}</option>
+					<option value="-latestRequestReceivedAt">{{ $t('sorts.lastCommunicatedAtAsc') }}</option>
+					<option value="+latestRequestReceivedAt">{{ $t('sorts.lastCommunicatedAtDesc') }}</option>
 					<option value="-notes">{{ $t('sorts.notesAsc') }}</option>
 					<option value="+notes">{{ $t('sorts.notesDesc') }}</option>
 					<option value="-users">{{ $t('sorts.usersAsc') }}</option>
@@ -109,17 +109,17 @@
 					<option value="+following">{{ $t('sorts.followingDesc') }}</option>
 					<option value="-followers">{{ $t('sorts.followersAsc') }}</option>
 					<option value="+followers">{{ $t('sorts.followersDesc') }}</option>
-					<option value="-driveUsage">{{ $t('sorts.driveUsageAsc') }}</option>
-					<option value="+driveUsage">{{ $t('sorts.driveUsageDesc') }}</option>
-					<option value="-driveFiles">{{ $t('sorts.driveFilesAsc') }}</option>
-					<option value="+driveFiles">{{ $t('sorts.driveFilesDesc') }}</option>
+					<option value="-driveUsage" disabled>{{ $t('sorts.driveUsageAsc') }}</option>
+					<option value="+driveUsage" disabled>{{ $t('sorts.driveUsageDesc') }}</option>
+					<option value="-driveFiles" disabled>{{ $t('sorts.driveFilesAsc') }}</option>
+					<option value="+driveFiles" disabled>{{ $t('sorts.driveFilesDesc') }}</option>
 				</ui-select>
 				<ui-select :value="state" @input="state = $event">
 					<template #label>{{ $t('state') }}</template>
 					<option value="all">{{ $t('states.all') }}</option>
 					<option value="blocked">{{ $t('states.blocked') }}</option>
 					<option value="notResponding">{{ $t('states.not-responding') }}</option>
-					<option value="markedAsClosed">{{ $t('states.marked-as-closed') }}</option>
+					<option value="suspended">{{ $t('states.marked-as-closed') }}</option>
 				</ui-select>
 			</ui-horizon-group>
 
@@ -181,7 +181,7 @@ export default defineComponent({
 		return {
 			instance: null,
 			target: null,
-			sort: '+lastCommunicatedAt',
+			sort: '+latestRequestReceivedAt',
 			state: 'all',
 			limit: 100,
 			instances: [],
@@ -292,7 +292,7 @@ export default defineComponent({
 			this.$root.api('federation/instances', {
 				blocked: this.state === 'blocked' ? true : null,
 				notResponding: this.state === 'notResponding' ? true : null,
-				markedAsClosed: this.state === 'markedAsClosed' ? true : null,
+				suspended: this.state === 'suspended' ? true : null,
 				sort: this.sort,
 				limit: this.limit
 			}).then(instances => {
@@ -325,8 +325,8 @@ export default defineComponent({
 		updateInstance() {
 			this.$root.api('admin/federation/update-instance', {
 				host: this.instance.host,
-				isBlocked: this.instance.isBlocked || false,
-				isClosed: this.instance.isMarkedAsClosed || false
+				isSuspended: this.instance.isSuspended || false,
+				moderationNote: this.instance.moderationNote || ''
 			});
 		},
 

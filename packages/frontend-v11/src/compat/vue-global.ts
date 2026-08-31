@@ -160,7 +160,7 @@ class VueAppImpl {
 	$mount(selector?: string | Element) {
 		const target = selector ?? document.createElement('div');
 		if (typeof target !== 'string' && !target.isConnected) document.body.appendChild(target);
-		this.instance = this.app.mount(target as never) as Record<string, unknown>;
+		this.instance = this.app.mount(target as never) as unknown as Record<string, unknown>;
 
 		// Detached components redirect their `$root` here, and that needs the internal instance —
 		// `mount` hands back the public proxy. Read it off the container, which holds the mounted

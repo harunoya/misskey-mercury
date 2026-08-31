@@ -60,6 +60,7 @@ import { defineComponent } from 'vue';
 import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
 import i18n from '../../../i18n';
 import getAcct from '../../../../../misc/acct/render';
+import { roomsFromMemberships, toV11ChatMessage } from '@compat/chat';
 
 export default defineComponent({
 	i18n: i18n('common/views/components/messaging.vue'),
@@ -85,14 +86,15 @@ export default defineComponent({
 		};
 	},
 	mounted() {
-		this.connection = this.$root.stream.useSharedConnection('messagingIndex');
+		this.connection = this.$root.stream.useSharedConnection('main');
+		this.$store.dispatch('mergeMe', { hasUnreadMessagingMessage: false });
 
-		this.connection.on('message', this.onMessage);
-		this.connection.on('read', this.onRead);
+		this.connection.on('newChatMessage', this.onMessage);
 
-		this.$root.api('messaging/history', { group: false }).then(userMessages => {
-			this.$root.api('messaging/history', { group: true }).then(groupMessages => {
-				const messages = userMessages.concat(groupMessages);
+		this.$root.api('chat/history', { room: false }).then(userMessages => {
+			this.$root.api('chat/history', { room: true }).then(groupMessages => {
+				const messages = userMessages.concat(groupMessages)
+					.map(message => toV11ChatMessage(message, this.$store.state.i));
 				messages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 				this.messages = messages;
 				this.fetching = false;
@@ -108,6 +110,7 @@ export default defineComponent({
 			return message.userId == this.$store.state.i.id;
 		},
 		onMessage(message) {
+			message = toV11ChatMessage(message, this.$store.state.i);
 			if (message.recipientId) {
 				this.messages = this.messages.filter(m => !(
 					(m.recipientId == message.recipientId && m.userId == message.userId) ||
@@ -138,7 +141,7 @@ export default defineComponent({
 			}
 			this.$root.api('users/search', {
 				query: this.q,
-				localOnly: false,
+				origin: 'combined',
 				limit: 10,
 				detail: false
 			}).then(users => {
@@ -198,8 +201,8 @@ export default defineComponent({
 			this.navigate(user);
 		},
 		async startGroup() {
-			const groups1 = await this.$root.api('users/groups/owned');
-			const groups2 = await this.$root.api('users/groups/joined');
+			const groups1 = await this.$root.api('chat/rooms/owned', { limit: 100 });
+			const groups2 = roomsFromMemberships(await this.$root.api('chat/rooms/joining', { limit: 100 }));
 			const { canceled, result: group } = await this.$root.dialog({
 				type: null,
 				title: this.$t('select-group'),

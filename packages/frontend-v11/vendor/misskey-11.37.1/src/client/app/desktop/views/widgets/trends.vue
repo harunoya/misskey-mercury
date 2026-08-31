@@ -49,15 +49,10 @@ export default defineComponent({
 			this.fetching = true;
 			this.note = null;
 
-			this.$root.api('notes/trend', {
-				limit: 1,
-				offset: this.offset,
-				renote: false,
-				reply: false,
-				file: false,
-				poll: false
+			this.$root.api('notes/featured', {
+				limit: Math.min(this.offset + 1, 100)
 			}).then(notes => {
-				const note = notes ? notes[0] : null;
+				const note = notes ? notes[this.offset] : null;
 				if (note == null) {
 					this.offset = 0;
 				} else {

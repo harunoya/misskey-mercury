@@ -40,7 +40,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
-import { apiUrl } from '../../../config';
 
 export default defineComponent({
 	i18n: i18n('common/views/components/connect-failed.troubleshooter.vue'),
@@ -65,7 +64,7 @@ export default defineComponent({
 			this.internet = true;
 
 			// Check misskey server is available
-			fetch(`${apiUrl}/meta`).then(() => {
+			this.$root.api('meta', {}, true).then(() => {
 				this.end = true;
 				this.server = true;
 			})

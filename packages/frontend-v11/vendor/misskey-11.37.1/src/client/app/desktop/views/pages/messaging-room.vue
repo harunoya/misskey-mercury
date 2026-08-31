@@ -58,7 +58,7 @@ export default defineComponent({
 					Progress.done();
 				});
 			} else {
-				this.$root.api('users/groups/show', { groupId: this.$route.params.group }).then(group => {
+				this.$root.api('chat/rooms/show', { roomId: this.$route.params.group }).then(group => {
 					this.group = group;
 					this.fetching = false;
 

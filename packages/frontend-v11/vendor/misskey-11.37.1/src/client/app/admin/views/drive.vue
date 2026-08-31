@@ -95,7 +95,7 @@ export default defineComponent({
 			sort: '+createdAt',
 			origin: 'combined',
 			limit: 10,
-			offset: 0,
+			untilId: undefined,
 			files: [],
 			existMore: false,
 			faCloud, faTrashAlt, faEye, faEyeSlash, faTerminal, faSearch
@@ -105,13 +105,13 @@ export default defineComponent({
 	watch: {
 		sort() {
 			this.files = [];
-			this.offset = 0;
+			this.untilId = undefined;
 			this.fetch();
 		},
 
 		origin() {
 			this.files = [];
-			this.offset = 0;
+			this.untilId = undefined;
 			this.fetch();
 		}
 	},
@@ -142,8 +142,7 @@ export default defineComponent({
 		fetch() {
 			this.$root.api('admin/drive/files', {
 				origin: this.origin,
-				sort: this.sort,
-				offset: this.offset,
+				untilId: this.untilId,
 				limit: this.limit + 1
 			}).then(files => {
 				if (files.length == this.limit + 1) {
@@ -155,8 +154,21 @@ export default defineComponent({
 				for (const x of files) {
 					x._open = false;
 				}
+				this.untilId = files.length > 0 ? files[files.length - 1].id : this.untilId;
 				this.files = this.files.concat(files);
-				this.offset += this.limit;
+				this.sortFiles();
+			});
+		},
+
+		sortFiles() {
+			const descending = this.sort.startsWith('+');
+			const key = this.sort.slice(1);
+			this.files.sort((a, b) => {
+				const left = a[key];
+				const right = b[key];
+				if (left === right) return 0;
+				const order = left > right ? 1 : -1;
+				return descending ? -order : order;
 			});
 		},
 

@@ -305,7 +305,7 @@ export default defineComponent({
 		},
 
 		surrender() {
-			this.$root.api('games/reversi/games/surrender', {
+			this.$root.api('reversi/surrender', {
 				gameId: this.game.id
 			});
 		},

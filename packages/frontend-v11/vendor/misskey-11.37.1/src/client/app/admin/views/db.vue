@@ -3,14 +3,15 @@
 	<ui-card>
 		<template #title><fa :icon="faDatabase"/> {{ $t('tables') }}</template>
 		<section v-if="tables">
-			<div v-for="table in Object.keys(tables)"><b>{{ table }}</b> {{ tables[number(table].count) }} {{ tables[bytes(table].size) }}</div>
+			<div v-for="table in Object.keys(tables)" :key="table"><b>{{ table }}</b> {{ number(tables[table].count) }} {{ bytes(tables[table].size) }}</div>
 		</section>
 		<section>
 			<header><fa :icon="faBroom"/> {{ $t('vacuum') }}</header>
 			<ui-info>{{ $t('vacuum-info') }}</ui-info>
+			<ui-info warn>The current backend intentionally has no REST endpoint for database maintenance. Run VACUUM through PostgreSQL operations.</ui-info>
 			<ui-switch :value="fullVacuum" @change="fullVacuum = $event">FULL</ui-switch>
 			<ui-switch :value="analyzeVacuum" @change="analyzeVacuum = $event">ANALYZE</ui-switch>
-			<ui-button @click="vacuum()"><fa :icon="faBroom"/> {{ $t('vacuum') }}</ui-button>
+			<ui-button :disabled="true"><fa :icon="faBroom"/> {{ $t('vacuum') }}</ui-button>
 			<ui-info warn>{{ $t('vacuum-exclamation') }}</ui-info>
 		</section>
 	</ui-card>
@@ -45,17 +46,6 @@ export default defineComponent({
 			});
 		},
 
-		vacuum() {
-			this.$root.api('admin/vacuum', {
-				full: this.fullVacuum,
-				analyze: this.analyzeVacuum,
-			}).then(() => {
-				this.$root.dialog({
-					type: 'success',
-					splash: true
-				});
-			});
-		},
 	}
 });
 </script>

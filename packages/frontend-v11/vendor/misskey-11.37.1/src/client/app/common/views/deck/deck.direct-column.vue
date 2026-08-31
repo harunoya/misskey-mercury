@@ -38,9 +38,6 @@ export default defineComponent({
 				endpoint: 'notes/mentions',
 				limit: 10,
 				params: {
-					includeMyRenotes: this.$store.state.settings.showMyRenotes,
-					includeRenotedMyNotes: this.$store.state.settings.showRenotedMyNotes,
-					includeLocalRenotes: this.$store.state.settings.showLocalRenotes,
 					visibility: 'specified'
 				}
 			}

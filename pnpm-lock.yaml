@@ -1213,6 +1213,9 @@ importers:
       '@fortawesome/vue-fontawesome':
         specifier: 3.1.2
         version: 3.1.2(@fortawesome/fontawesome-svg-core@1.2.26)(vue@3.5.41(typescript@5.9.3))
+      '@simplewebauthn/browser':
+        specifier: 13.3.0
+        version: 13.3.0
       animejs:
         specifier: 3.1.0
         version: 3.1.0
@@ -1367,6 +1370,9 @@ importers:
       json5-loader:
         specifier: 4.0.1
         version: 4.0.1(webpack@5.101.3)
+      misskey-js:
+        specifier: workspace:*
+        version: link:../misskey-js
       playwright:
         specifier: 1.62.1
         version: 1.62.1
@@ -9706,7 +9712,7 @@ packages:
     engines: {node: '>= 0.4'}
 
   storybook-addon-misskey-theme@https://codeload.github.com/misskey-dev/storybook-addon-misskey-theme/tar.gz/cf583db098365b2ccc81a82f63ca9c93bc32b640:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/misskey-dev/storybook-addon-misskey-theme/tar.gz/cf583db098365b2ccc81a82f63ca9c93bc32b640}
+    resolution: {gitHosted: true, integrity: sha512-QaH1uZSlApQ2CZPkHfhmNm89I92L02s3MdbUPG66TmAyqMaqzxd/AvobORBjtTZ0ymUSa3ii482dRXi+fFb19w==, tarball: https://codeload.github.com/misskey-dev/storybook-addon-misskey-theme/tar.gz/cf583db098365b2ccc81a82f63ca9c93bc32b640}
     version: 0.0.0
     peerDependencies:
       '@storybook/blocks': ^7.0.0-rc.4
@@ -14373,9 +14379,9 @@ snapshots:
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(happy-dom@20.11.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.3))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(sass-embedded@1.100.0)(sass@1.100.0)(stylus@0.64.0(supports-color@5.5.0))(terser@5.48.0)(tsx@4.23.12))
+      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(happy-dom@20.11.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.2))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(sass-embedded@1.100.0)(sass@1.100.0)(stylus@0.64.0(supports-color@10.2.2))(terser@5.48.0)(tsx@4.23.12))
     optionalDependencies:
-      '@vitest/browser': 4.1.10(bufferutil@4.1.0)(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.3))(utf-8-validate@6.0.6)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(sass-embedded@1.100.0)(sass@1.100.0)(stylus@0.64.0(supports-color@5.5.0))(terser@5.48.0)(tsx@4.23.12))(vitest@4.1.10)
+      '@vitest/browser': 4.1.10(bufferutil@4.1.0)(msw@2.15.0(@types/node@26.2.0)(typescript@6.0.2))(utf-8-validate@6.0.6)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(sass-embedded@1.100.0)(sass@1.100.0)(stylus@0.64.0(supports-color@10.2.2))(terser@5.48.0)(tsx@4.23.12))(vitest@4.1.10)
 
   '@vitest/expect@2.0.5':
     dependencies:
@@ -16270,13 +16276,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.67.0(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@5.5.0))(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.67.0(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0):
     dependencies:
       debug: 3.2.7(supports-color@5.5.0)
     optionalDependencies:
       '@typescript-eslint/parser': 8.67.0(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)(typescript@6.0.3)
       eslint: 9.39.5(supports-color@5.5.0)
-      eslint-import-resolver-node: 0.3.10(supports-color@5.5.0)
+      eslint-import-resolver-node: 0.3.10(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -16349,7 +16355,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.5(supports-color@5.5.0)
       eslint-import-resolver-node: 0.3.10(supports-color@5.5.0)
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.67.0(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@5.5.0))(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.67.0(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.5(supports-color@5.5.0))(supports-color@5.5.0)
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3

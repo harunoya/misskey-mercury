@@ -14,7 +14,7 @@
 			<h2 class="heading">{{ $t('security-key-header') }}</h2>
 			<p>{{ $t('security-key') }}</p>
 			<div class="key-list">
-				<div class="key" v-for="key in $store.state.i.securityKeysList">
+				<div class="key" v-for="key in $store.state.i.securityKeysList" :key="key.id">
 					<h3>
 						{{ key.name }}
 					</h3>
@@ -28,7 +28,7 @@
 				</div>
 			</div>
 
-			<ui-switch :value="usePasswordLessLogin" v-if="$store.state.i.securityKeysList.length > 0" @change="usePasswordLessLogin = $event; updatePasswordLessLogin">
+			<ui-switch :value="usePasswordLessLogin" v-if="$store.state.i.securityKeysList.length > 0" @change="usePasswordLessLogin = $event; updatePasswordLessLogin()">
 				{{ $t('use-password-less-login') }}
 			</ui-switch>
 
@@ -70,20 +70,15 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
 import i18n from '../../../../i18n';
-import { hostname } from '../../../../config';
-import { hexifyAB } from '../../../scripts/2fa';
-
-function stringifyAB(buffer) {
-	return String.fromCharCode.apply(null, new Uint8Array(buffer));
-}
 
 export default defineComponent({
 	i18n: i18n('desktop/views/components/settings.2fa.vue'),
 	data() {
 		return {
 			data: null,
-			supportsCredentials: !!navigator.credentials,
+			supportsCredentials: browserSupportsWebAuthn(),
 			usePasswordLessLogin: this.$store.state.i.usePasswordLessLogin,
 			registration: null,
 			keyName: '',
@@ -91,40 +86,48 @@ export default defineComponent({
 		};
 	},
 	methods: {
-		register() {
-			this.$root.dialog({
+		async authenticate() {
+			const passwordResult = await this.$root.dialog({
 				title: this.$t('enter-password'),
 				input: {
 					type: 'password'
 				}
-			}).then(({ canceled, result: password }) => {
-				if (canceled) return;
-				this.$root.api('i/2fa/register', {
-					password: password
-				}).then(data => {
-					this.data = data;
-				});
 			});
+			if (passwordResult.canceled) return null;
+
+			let token = null;
+			if (this.$store.state.i.twoFactorEnabled) {
+				const tokenResult = await this.$root.dialog({
+					title: this.$t('token'),
+					input: { type: 'text' }
+				});
+				if (tokenResult.canceled) return null;
+				token = tokenResult.result;
+			}
+
+			return { password: passwordResult.result, token };
 		},
 
-		unregister() {
-			this.$root.dialog({
-				title: this.$t('enter-password'),
-				input: {
-					type: 'password'
-				}
-			}).then(({ canceled, result: password }) => {
-				if (canceled) return;
-				this.$root.api('i/2fa/unregister', {
-					password: password
-				}).then(() => {
-					this.usePasswordLessLogin = false;
-					this.updatePasswordLessLogin();
-				}).then(() => {
-					this.$notify(this.$t('unregistered'));
-					this.$store.state.i.twoFactorEnabled = false;
+		async register() {
+			const auth = await this.authenticate();
+			if (auth == null) return;
+			this.data = await this.$root.api('i/2fa/register', auth);
+		},
+
+		async unregister() {
+			if (this.$store.state.i.securityKeysList.length > 0) {
+				this.$root.dialog({
+					type: 'warning',
+					text: '先に登録済みのセキュリティキーを解除してください。'
 				});
-			});
+				return;
+			}
+			const auth = await this.authenticate();
+			if (auth == null) return;
+			await this.$root.api('i/2fa/unregister', auth);
+			this.usePasswordLessLogin = false;
+			this.$notify(this.$t('unregistered'));
+			this.$store.state.i.twoFactorEnabled = false;
 		},
 
 		submit() {
@@ -138,92 +141,54 @@ export default defineComponent({
 			});
 		},
 
-		registerKey() {
+		async registerKey() {
 			this.registration.saving = true;
+			const auth = await this.authenticate();
+			if (auth == null) {
+				this.registration.saving = false;
+				return;
+			}
 			this.$root.api('i/2fa/key-done', {
-				password: this.registration.password,
+				...auth,
 				name: this.keyName,
-				challengeId: this.registration.challengeId,
-				// we convert each 16 bits to a string to serialise
-				clientDataJSON: stringifyAB(this.registration.credential.response.clientDataJSON),
-				attestationObject: hexifyAB(this.registration.credential.response.attestationObject)
+				credential: this.registration.credential
 			}).then(key => {
 				this.registration = null;
-				key.lastUsed = new Date();
+				this.$store.state.i.securityKeysList.push({ ...key, lastUsed: new Date().toISOString() });
 				this.$notify(this.$t('success'));
-			})
-		},
-
-		unregisterKey(key) {
-			this.$root.dialog({
-				title: this.$t('enter-password'),
-				input: {
-					type: 'password'
-				}
-			}).then(({ canceled, result: password }) => {
-				if (canceled) return;
-				return this.$root.api('i/2fa/remove-key', {
-					password,
-					credentialId: key.id
-				}).then(() => {
-					this.usePasswordLessLogin = false;
-					this.updatePasswordLessLogin();
-				}).then(() => {
-					this.$notify(this.$t('key-unregistered'));
-				});
+			}).catch(err => {
+				this.registration.saving = false;
+				this.registration.error = err.message || err.toString();
 			});
 		},
 
-		addSecurityKey() {
-			this.$root.dialog({
-				title: this.$t('enter-password'),
-				input: {
-					type: 'password'
-				}
-			}).then(({ canceled, result: password }) => {
-				if (canceled) return;
-				this.$root.api('i/2fa/register-key', {
-					password
-				}).then(registration => {
-					this.registration = {
-						password,
-						challengeId: registration.challengeId,
-						stage: 0,
-						publicKeyOptions: {
-							challenge: Buffer.from(
-								registration.challenge
-									.replace(/\-/g, "+")
-									.replace(/_/g, "/"),
-								'base64'
-							),
-							rp: {
-								id: hostname,
-								name: 'Misskey'
-							},
-							user: {
-								id: Uint8Array.from(this.$store.state.i.id, c => c.charCodeAt(0)),
-								name: this.$store.state.i.username,
-								displayName: this.$store.state.i.name,
-							},
-							pubKeyCredParams: [{alg: -7, type: 'public-key'}],
-							timeout: 60000,
-							attestation: 'direct'
-						},
-						saving: true
-					};
-					return navigator.credentials.create({
-						publicKey: this.registration.publicKeyOptions
-					});
-				}).then(credential => {
-					this.registration.credential = credential;
-					this.registration.saving = false;
-					this.registration.stage = 1;
-				}).catch(err => {
-					console.warn('Error while registering?', err);
-					this.registration.error = err.message;
-					this.registration.stage = -1;
-				});
+		async unregisterKey(key) {
+			const auth = await this.authenticate();
+			if (auth == null) return;
+			await this.$root.api('i/2fa/remove-key', {
+				...auth,
+				credentialId: key.id
 			});
+			this.$store.state.i.securityKeysList = this.$store.state.i.securityKeysList.filter(item => item.id !== key.id);
+			if (this.$store.state.i.securityKeysList.length === 0) this.usePasswordLessLogin = false;
+			this.$notify(this.$t('key-unregistered'));
+		},
+
+		async addSecurityKey() {
+			const auth = await this.authenticate();
+			if (auth == null) return;
+			this.registration = { stage: 0, saving: true, error: null, credential: null };
+			try {
+				const registrationOptions = await this.$root.api('i/2fa/register-key', auth);
+				this.registration.credential = await startRegistration({ optionsJSON: registrationOptions });
+				this.registration.saving = false;
+				this.registration.stage = 1;
+			} catch (err) {
+				console.warn('Error while registering?', err);
+				this.registration.error = err.message || err.toString();
+				this.registration.saving = false;
+				this.registration.stage = -1;
+			}
 		},
 		updatePasswordLessLogin() {
 			this.$root.api('i/2fa/password-less', {

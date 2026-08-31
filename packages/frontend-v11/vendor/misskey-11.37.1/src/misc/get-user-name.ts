@@ -1,4 +1,7 @@
-import { User } from '../models/entities/user';
+type User = {
+	name?: string | null;
+	username: string;
+};
 
 export default function(user: User): string {
 	return user.name || user.username;

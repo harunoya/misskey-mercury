@@ -1,5 +1,8 @@
 import Vue from 'vue';
 
+const offsetPaginationEndpoints = new Set(['users', 'hashtags/users']);
+const unpagedEndpoints = new Set(['pinned-users']);
+
 export default (opts) => ({
 	data() {
 		return {
@@ -78,11 +81,12 @@ export default (opts) => ({
 			if (opts.beforeInit) opts.beforeInit(this);
 			let params = typeof this.pagination.params === 'function' ? this.pagination.params(true) : this.pagination.params;
 			if (params && params.then) params = await params;
+			const unpaged = unpagedEndpoints.has(this.pagination.endpoint);
 			await this.$root.api(this.pagination.endpoint, {
-				limit: (this.pagination.limit || 10) + 1,
+				...(unpaged ? {} : { limit: (this.pagination.limit || 10) + 1 }),
 				...params
 			}).then(x => {
-				if (x.length == (this.pagination.limit || 10) + 1) {
+				if (!unpaged && x.length == (this.pagination.limit || 10) + 1) {
 					x.pop();
 					this.items = x;
 					this.more = true;
@@ -107,7 +111,7 @@ export default (opts) => ({
 			if (params && params.then) params = await params;
 			await this.$root.api(this.pagination.endpoint, {
 				limit: (this.pagination.limit || 10) + 1,
-				...(this.pagination.endpoint === 'notes/search' ? {
+				...(offsetPaginationEndpoints.has(this.pagination.endpoint) ? {
 					offset: this.offset,
 				} : {
 					untilId: this.items[this.items.length - 1].id,

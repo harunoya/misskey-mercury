@@ -32,9 +32,6 @@ export default defineComponent({
 				params: init => ({
 					untilDate: init ? undefined : (this.date ? this.date.getTime() : undefined),
 					withFiles: this.mediaOnly,
-					includeMyRenotes: this.$store.state.settings.showMyRenotes,
-					includeRenotedMyNotes: this.$store.state.settings.showRenotedMyNotes,
-					includeLocalRenotes: this.$store.state.settings.showLocalRenotes,
 					query: this.tagTl.query
 				})
 			}

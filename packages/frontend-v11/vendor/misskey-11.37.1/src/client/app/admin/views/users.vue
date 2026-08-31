@@ -79,6 +79,7 @@ import parseAcct from "../../../../misc/acct/parse";
 import { faUsers, faTerminal, faSearch, faKey, faSync, faMicrophoneSlash } from '@fortawesome/free-solid-svg-icons';
 import { faSnowflake, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import XUser from './users.user.vue';
+import { fetchCurrentAdminUsers, silenceCurrentUser, unsilenceCurrentUser } from '@compat/admin-silence';
 
 export default defineComponent({
 	i18n: i18n('admin/views/users.vue'),
@@ -200,7 +201,7 @@ export default defineComponent({
 			if (!await this.getConfirmed(this.$t('silence-confirm'))) return;
 
 			const process = async () => {
-				await this.$root.api('admin/silence-user', { userId: this.user.id });
+				await silenceCurrentUser(this.$root, this.user.id);
 				this.$root.dialog({
 					type: 'success',
 					splash: true
@@ -221,7 +222,7 @@ export default defineComponent({
 			if (!await this.getConfirmed(this.$t('unsilence-confirm'))) return;
 
 			const process = async () => {
-				await this.$root.api('admin/unsilence-user', { userId: this.user.id });
+				await unsilenceCurrentUser(this.$root, this.user.id);
 				this.$root.dialog({
 					type: 'success',
 					splash: true
@@ -289,7 +290,7 @@ export default defineComponent({
 		},
 
 		async updateRemoteUser() {
-			this.$root.api('admin/update-remote-user', { userId: this.user.id }).then(res => {
+			this.$root.api('federation/update-remote-user', { userId: this.user.id }).then(res => {
 				this.$root.dialog({
 					type: 'success',
 					text: this.$t('remote-user-updated')
@@ -331,7 +332,7 @@ export default defineComponent({
 
 		fetchUsers(truncate?: boolean) {
 			if (truncate) this.offset = 0;
-			this.$root.api('admin/show-users', {
+			fetchCurrentAdminUsers(this.$root, {
 				state: this.state,
 				origin: this.origin,
 				sort: this.sort,

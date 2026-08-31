@@ -415,8 +415,9 @@ export default (os: MiOS) => new Vuex.Store({
 					ctx.commit('set', x);
 
 					if (ctx.rootGetters.isSignedIn) {
-						os.api('i/update-client-setting', {
-							name: x.key,
+						os.api('i/registry/set', {
+							scope: ['mercury', 'v11'],
+							key: x.key,
 							value: x.value
 						});
 					}
@@ -428,8 +429,9 @@ export default (os: MiOS) => new Vuex.Store({
 						key: 'homeProfiles',
 						value: profiles
 					});
-					os.api('i/update-client-setting', {
-						name: 'homeProfiles',
+					os.api('i/registry/set', {
+						scope: ['mercury', 'v11'],
+						key: 'homeProfiles',
 						value: profiles
 					});
 				},
@@ -440,8 +442,9 @@ export default (os: MiOS) => new Vuex.Store({
 						key: 'mobileHomeProfiles',
 						value: profiles
 					});
-					os.api('i/update-client-setting', {
-						name: 'mobileHomeProfiles',
+					os.api('i/registry/set', {
+						scope: ['mercury', 'v11'],
+						key: 'mobileHomeProfiles',
 						value: profiles
 					});
 				},
@@ -452,8 +455,9 @@ export default (os: MiOS) => new Vuex.Store({
 						key: 'deckProfiles',
 						value: profiles
 					});
-					os.api('i/update-client-setting', {
-						name: 'deckProfiles',
+					os.api('i/registry/set', {
+						scope: ['mercury', 'v11'],
+						key: 'deckProfiles',
 						value: profiles
 					});
 				},

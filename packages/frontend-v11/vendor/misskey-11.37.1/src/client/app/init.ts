@@ -14,7 +14,6 @@ import SequentialEntrance from 'vue-sequential-entrance';
 import VueHotkey from './common/hotkey';
 import VueSize from './common/size';
 import App from './app.vue';
-import checkForUpdate from './common/scripts/check-for-update';
 import MiOS from './mios';
 import { version, codename, lang, locale } from './config';
 import { builtinThemes, applyTheme, futureTheme } from './theme';
@@ -349,15 +348,9 @@ try {
 	Storage.prototype.setItem = () => { }; // noop
 }
 
-// クライアントを更新すべきならする
-if (localStorage.getItem('should-refresh') == 'true') {
-	localStorage.removeItem('should-refresh');
-	location.reload(true);
-}
-
 // MiOSを初期化してコールバックする
-export default (callback: (launch: (router: VueRouter) => [Vue, MiOS], os: MiOS) => void, sw = false) => {
-	const os = new MiOS(sw);
+export default (callback: (launch: (router: VueRouter) => [Vue, MiOS], os: MiOS) => void) => {
+	const os = new MiOS();
 
 	os.init(() => {
 		// アプリ基底要素マウント
@@ -488,12 +481,6 @@ export default (callback: (launch: (router: VueRouter) => [Vue, MiOS], os: MiOS)
 
 			// マウント
 			app.$mount('#app');
-
-			//#region 更新チェック
-			setTimeout(() => {
-				checkForUpdate(app);
-			}, 3000);
-			//#endregion
 
 			return [app, os] as [Vue, MiOS];
 		};

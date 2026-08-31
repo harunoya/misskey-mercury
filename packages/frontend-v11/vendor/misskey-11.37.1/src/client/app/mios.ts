@@ -2,9 +2,11 @@ import autobind from 'autobind-decorator';
 import Vue, { VueApp } from 'vue';
 import { EventEmitter } from 'eventemitter3';
 import { v4 as uuid } from 'uuid';
+import { CurrentApiClient, CurrentApiError } from '@compat/api';
+import type { ApiRequestData, V11ApiEndpoint } from '@compat/api';
 
 import initStore from './store';
-import { apiUrl, version, locale } from './config';
+import { locale } from './config';
 import Progress from './common/scripts/loading';
 
 import Err from './common/views/components/connect-failed.vue';
@@ -19,6 +21,8 @@ let pending = 0;
  * Misskey Operating System
  */
 export default class MiOS extends EventEmitter {
+	private readonly apiClient: CurrentApiClient;
+
 	/**
 	 * Misskeyの /meta で取得できるメタ情報
 	 */
@@ -57,12 +61,10 @@ export default class MiOS extends EventEmitter {
 	/**
 	 * A registration of service worker
 	 */
-	private swRegistration: ServiceWorkerRegistration = null;
 
 	/**
 	 * Whether should register ServiceWorker
 	 */
-	private shouldRegisterSw: boolean;
 
 	/**
 	 * ウィンドウシステム
@@ -73,10 +75,13 @@ export default class MiOS extends EventEmitter {
 	 * MiOSインスタンスを作成します
 	 * @param shouldRegisterSw ServiceWorkerを登録するかどうか
 	 */
-	constructor(shouldRegisterSw = false) {
+	constructor() {
 		super();
 
-		this.shouldRegisterSw = shouldRegisterSw;
+		this.apiClient = new CurrentApiClient({
+			getToken: () => this.store?.state.i?.token ?? localStorage.getItem('i'),
+		});
+		this.apiClient.warmCaches();
 
 		if (this.debug) {
 			(window as any).os = this;
@@ -130,29 +135,16 @@ export default class MiOS extends EventEmitter {
 				return done();
 			}
 
-			// Fetch user
-			fetch(`${apiUrl}/i`, {
-				method: 'POST',
-				body: JSON.stringify({
-					i: token
-				})
-			})
-			// When success
-			.then(res => {
-				// When failed to authenticate user
-				if (res.status !== 200 && res.status < 500) {
-					return this.signout();
+			this.apiClient.request('i').then(i => {
+				me = i;
+				me.token = token;
+				done();
+			}).catch(error => {
+				if (error instanceof CurrentApiError && error.status < 500) {
+					this.signout();
+					return;
 				}
 
-				// Parse response
-				res.json().then(i => {
-					me = i;
-					me.token = token;
-					done();
-				});
-			})
-			// When failure
-			.catch(() => {
 				// Render the error screen
 				document.body.innerHTML = '<div id="err"></div>';
 				new VueApp({
@@ -176,12 +168,6 @@ export default class MiOS extends EventEmitter {
 			// Finish init
 			callback();
 
-			// Init service worker
-			if (this.shouldRegisterSw) {
-				this.getMeta().then(data => {
-					if (data.swPublickey) this.registerSw(data.swPublickey);
-				});
-			}
 		};
 
 		// キャッシュがあったとき
@@ -240,13 +226,7 @@ export default class MiOS extends EventEmitter {
 				});
 			});
 
-			main.on('readAllMessagingMessages', () => {
-				this.store.dispatch('mergeMe', {
-					hasUnreadMessagingMessage: false
-				});
-			});
-
-			main.on('unreadMessagingMessage', () => {
+			main.on('newChatMessage', () => {
 				this.store.dispatch('mergeMe', {
 					hasUnreadMessagingMessage: true
 				});
@@ -276,7 +256,8 @@ export default class MiOS extends EventEmitter {
 				});
 			});
 
-			main.on('clientSettingUpdated', x => {
+			main.on('registryUpdated', x => {
+				if (!Array.isArray(x.scope) || x.scope.join('/') !== 'mercury/v11') return;
 				this.store.commit('settings/set', {
 					key: x.key,
 					value: x.value
@@ -292,85 +273,6 @@ export default class MiOS extends EventEmitter {
 		}
 	}
 
-	/**
-	 * Register service worker
-	 */
-	@autobind
-	private registerSw(swPublickey: string) {
-		// Check whether service worker and push manager supported
-		const isSwSupported =
-			('serviceWorker' in navigator) && ('PushManager' in window);
-
-		// Reject when browser not service worker supported
-		if (!isSwSupported) return;
-
-		// Reject when not signed in to Misskey
-		if (!this.store.getters.isSignedIn) return;
-
-		// When service worker activated
-		navigator.serviceWorker.ready.then(registration => {
-			this.log('[sw] ready: ', registration);
-
-			this.swRegistration = registration;
-
-			// Options of pushManager.subscribe
-			// SEE: https://developer.mozilla.org/en-US/docs/Web/API/PushManager/subscribe#Parameters
-			const opts = {
-				// A boolean indicating that the returned push subscription
-				// will only be used for messages whose effect is made visible to the user.
-				userVisibleOnly: true,
-
-				// A public key your push server will use to send
-				// messages to client apps via a push server.
-				applicationServerKey: urlBase64ToUint8Array(swPublickey)
-			};
-
-			// Subscribe push notification
-			this.swRegistration.pushManager.subscribe(opts).then(subscription => {
-				this.log('[sw] Subscribe OK:', subscription);
-
-				function encode(buffer: ArrayBuffer) {
-					return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)));
-				}
-
-				// Register
-				this.api('sw/register', {
-					endpoint: subscription.endpoint,
-					auth: encode(subscription.getKey('auth')),
-					publickey: encode(subscription.getKey('p256dh'))
-				});
-			})
-			// When subscribe failed
-			.catch(async (err: Error) => {
-				this.logError('[sw] Subscribe Error:', err);
-
-				// 通知が許可されていなかったとき
-				if (err.name == 'NotAllowedError') {
-					this.logError('[sw] Subscribe failed due to notification not allowed');
-					return;
-				}
-
-				// 違うapplicationServerKey (または gcm_sender_id)のサブスクリプションが
-				// 既に存在していることが原因でエラーになった可能性があるので、
-				// そのサブスクリプションを解除しておく
-				const subscription = await this.swRegistration.pushManager.getSubscription();
-				if (subscription) subscription.unsubscribe();
-			});
-		});
-
-		// The path of service worker script
-		const sw = `/sw.${version}.js`;
-
-		// Register service worker
-		navigator.serviceWorker.register(sw).then(registration => {
-			// 登録成功
-			this.logInfo('[sw] Registration successful with scope: ', registration.scope);
-		}).catch(err => {
-			// 登録失敗 :(
-			this.logError('[sw] Registration failed: ', err);
-		});
-	}
-
 	public requests = [];
 
 	/**
@@ -379,7 +281,7 @@ export default class MiOS extends EventEmitter {
 	 * @param data パラメータ
 	 */
 	@autobind
-	public api(endpoint: string, data: { [x: string]: any } = {}, silent = false): Promise<{ [x: string]: any }> {
+	public api(endpoint: string, data: ApiRequestData = {}, silent = false): Promise<any> {
 		if (!silent) {
 			if (++pending === 1) {
 				spinner = document.createElement('div');
@@ -395,9 +297,6 @@ export default class MiOS extends EventEmitter {
 		};
 
 		const promise = new Promise((resolve, reject) => {
-			// Append a credential
-			if (this.store.getters.isSignedIn) (data as any).i = this.store.state.i.token;
-
 			const req = {
 				id: uuid(),
 				date: new Date(),
@@ -411,28 +310,19 @@ export default class MiOS extends EventEmitter {
 				this.requests.push(req);
 			}
 
-			// Send request
-			fetch(endpoint.indexOf('://') > -1 ? endpoint : `${apiUrl}/${endpoint}`, {
-				method: 'POST',
-				body: JSON.stringify(data),
-				credentials: endpoint === 'signin' ? 'include' : 'omit',
-				cache: 'no-cache'
-			}).then(async (res) => {
-				const body = res.status === 204 ? null : await res.json();
-
+			this.apiClient.request(endpoint as V11ApiEndpoint, data).then(body => {
 				if (this.debug) {
-					req.status = res.status;
+					req.status = 200;
 					req.res = body;
 				}
-
-				if (res.status === 200) {
-					resolve(body);
-				} else if (res.status === 204) {
-					resolve();
-				} else {
-					reject(body.error);
+				resolve(body);
+			}).catch(error => {
+				if (this.debug) {
+					req.status = error instanceof CurrentApiError ? error.status : 0;
+					req.res = error;
 				}
-			}).catch(reject);
+				reject(error);
+			});
 		});
 
 		promise.then(onFinally, onFinally);
@@ -500,23 +390,4 @@ class WindowSystem extends EventEmitter {
 	public getAll() {
 		return this.windows;
 	}
-}
-
-/**
- * Convert the URL safe base64 string to a Uint8Array
- * @param base64String base64 string
- */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-	const padding = '='.repeat((4 - base64String.length % 4) % 4);
-	const base64 = (base64String + padding)
-		.replace(/-/g, '+')
-		.replace(/_/g, '/');
-
-	const rawData = window.atob(base64);
-	const outputArray = new Uint8Array(rawData.length);
-
-	for (let i = 0; i < rawData.length; ++i) {
-		outputArray[i] = rawData.charCodeAt(i);
-	}
-	return outputArray;
 }

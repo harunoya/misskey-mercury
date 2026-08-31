@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { installApiCompatibility } from './compat/api.js';
 import { installRecoveryControl } from './compat/recovery.js';
 import { installNamespacedStorage } from './compat/storage.js';
 import { leaveToCurrentUi, readMercuryToken } from './compat/session.js';
@@ -43,13 +42,15 @@ if (token == null) {
 
 	applyPersistedTheme(storage);
 
-	installApiCompatibility();
 	installRecoveryControl();
 
 	const mobile = /mobile|iphone|ipad|android/i.test(navigator.userAgent) || window.innerWidth < 576;
+	const admin = window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/');
 
 	try {
-		if (mobile) {
+		if (admin) {
+			await import('../vendor/misskey-11.37.1/src/client/app/admin/script.js');
+		} else if (mobile) {
 			await import('../vendor/misskey-11.37.1/src/client/app/mobile/script.js');
 		} else {
 			await import('../vendor/misskey-11.37.1/src/client/app/desktop/script.js');

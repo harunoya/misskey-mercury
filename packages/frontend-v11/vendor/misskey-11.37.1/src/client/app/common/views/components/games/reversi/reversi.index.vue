@@ -67,22 +67,22 @@ export default defineComponent({
 
 	mounted() {
 		if (this.$store.getters.isSignedIn) {
-			this.connection = this.$root.stream.useSharedConnection('gamesReversi');
+			this.connection = this.$root.stream.useSharedConnection('reversi');
 
 			this.connection.on('invited', this.onInvited);
 
-			this.$root.api('games/reversi/games', {
+			this.$root.api('reversi/games', {
 				my: true
 			}).then(games => {
 				this.myGames = games;
 			});
 
-			this.$root.api('games/reversi/invitations').then(invitations => {
+			this.$root.api('reversi/invitations').then(invitations => {
 				this.invitations = this.invitations.concat(invitations);
 			});
 		}
 
-		this.$root.api('games/reversi/games').then(games => {
+		this.$root.api('reversi/games').then(games => {
 			this.games = games;
 			this.gamesFetching = false;
 		});
@@ -107,7 +107,7 @@ export default defineComponent({
 				}
 			});
 			if (user == null) return;
-			this.$root.api('games/reversi/match', {
+			this.$root.api('reversi/match', {
 				userId: user.id
 			}).then(res => {
 				if (res == null) {
@@ -119,7 +119,7 @@ export default defineComponent({
 		},
 
 		accept(invitation) {
-			this.$root.api('games/reversi/match', {
+			this.$root.api('reversi/match', {
 				userId: invitation.parent.id
 			}).then(game => {
 				if (game) {

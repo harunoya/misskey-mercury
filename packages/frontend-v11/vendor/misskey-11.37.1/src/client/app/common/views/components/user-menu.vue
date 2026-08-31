@@ -9,6 +9,7 @@ import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { faExclamationCircle, faMicrophoneSlash } from '@fortawesome/free-solid-svg-icons';
 import { faSnowflake } from '@fortawesome/free-regular-svg-icons';
+import { silenceCurrentUser, unsilenceCurrentUser } from '@compat/admin-silence';
 
 export default defineComponent({
 	i18n: i18n('common/views/components/user-menu.vue'),
@@ -178,28 +179,30 @@ export default defineComponent({
 		async toggleSilence() {
 			if (!await this.getConfirmed(this.$t(this.user.isSilenced ? 'unsilence-confirm' : 'silence-confirm'))) return;
 
-			this.$root.api(this.user.isSilenced ? 'admin/unsilence-user' : 'admin/silence-user', {
-				userId: this.user.id
-			}).then(() => {
-				this.user.isSilenced = !this.user.isSilenced;
+			try {
+				if (this.user.isSilenced) await unsilenceCurrentUser(this.$root, this.user.id);
+				else await silenceCurrentUser(this.$root, this.user.id);
+				const info = await this.$root.api('admin/show-user', { userId: this.user.id });
+				this.user.isSilenced = info.isSilenced;
 				this.$root.dialog({
 					type: 'success',
 					splash: true
 				});
-			}, e => {
+			} catch (e) {
 				this.$root.dialog({
 					type: 'error',
-					text: e
+					text: e.toString()
 				});
-			});
+			}
 		},
 
 		async toggleSuspend() {
 			if (!await this.getConfirmed(this.$t(this.user.isSuspended ? 'unsuspend-confirm' : 'suspend-confirm'))) return;
 
-			this.$root.api(this.user.isSuspended ? 'admin/unsuspend-user' : 'admin/suspend-user', {
-				userId: this.user.id
-			}).then(() => {
+			const request = this.user.isSuspended
+				? this.$root.api('admin/unsuspend-user', { userId: this.user.id })
+				: this.$root.api('admin/suspend-user', { userId: this.user.id });
+			request.then(() => {
 				this.user.isSuspended = !this.user.isSuspended;
 				this.$root.dialog({
 					type: 'success',

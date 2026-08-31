@@ -119,7 +119,7 @@ export default defineComponent({
 			noteId: this.note.id
 		}).then(state => {
 			this.isFavorited = state.isFavorited;
-			this.isWatching = state.isWatching;
+			this.isWatching = false;
 		});
 	},
 
@@ -149,9 +149,10 @@ export default defineComponent({
 		},
 
 		togglePin(pin: boolean) {
-			this.$root.api(pin ? 'i/pin' : 'i/unpin', {
-				noteId: this.note.id
-			}).then(() => {
+			const request = pin
+				? this.$root.api('i/pin', { noteId: this.note.id })
+				: this.$root.api('i/unpin', { noteId: this.note.id });
+			request.then(() => {
 				this.$root.dialog({
 					type: 'success',
 					splash: true
@@ -203,9 +204,10 @@ export default defineComponent({
 		},
 
 		toggleFavorite(favorite: boolean) {
-			this.$root.api(favorite ? 'notes/favorites/create' : 'notes/favorites/delete', {
-				noteId: this.note.id
-			}).then(() => {
+			const request = favorite
+				? this.$root.api('notes/favorites/create', { noteId: this.note.id })
+				: this.$root.api('notes/favorites/delete', { noteId: this.note.id });
+			request.then(() => {
 				this.$root.dialog({
 					type: 'success',
 					splash: true
@@ -215,14 +217,9 @@ export default defineComponent({
 		},
 
 		toggleWatch(watch: boolean) {
-			this.$root.api(watch ? 'notes/watching/create' : 'notes/watching/delete', {
-				noteId: this.note.id
-			}).then(() => {
-				this.$root.dialog({
-					type: 'success',
-					splash: true
-				});
-				this.destroyDom();
+			this.$root.dialog({
+				type: 'info',
+				text: 'The current backend no longer provides note watching. Thread muting remains available in the current UI.'
 			});
 		},
 

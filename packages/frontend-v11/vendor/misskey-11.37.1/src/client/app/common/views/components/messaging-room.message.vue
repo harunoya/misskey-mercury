@@ -69,7 +69,7 @@ export default defineComponent({
 	},
 	methods: {
 		del() {
-			this.$root.api('messaging/messages/delete', {
+			this.$root.api('chat/messages/delete', {
 				messageId: this.message.id
 			});
 		}

@@ -294,26 +294,10 @@ export default (opts) => ({
 		},
 
 		setGeo() {
-			if (navigator.geolocation == null) {
-				this.$root.dialog({
-					type: 'warning',
-					text: this.$t('@.post-form.geolocation-alert')
-				});
-				return;
-			}
-
-			navigator.geolocation.getCurrentPosition(pos => {
-				this.geo = pos.coords;
-				this.$emit('geo-attached', this.geo);
-			}, err => {
-				this.$root.dialog({
-					type: 'error',
-					title: this.$t('@.post-form.error'),
-					text: err.message
-				});
-			}, {
-					enableHighAccuracy: true
-				});
+			this.$root.dialog({
+				type: 'warning',
+				text: '現在のサーバーは位置情報付きノートをサポートしていません。'
+			});
 		},
 
 		removeGeo() {
@@ -497,7 +481,6 @@ export default (opts) => ({
 
 		post() {
 			this.posting = true;
-			const viaMobile = opts.mobile && !this.$store.state.settings.disableViaMobile;
 			this.$root.api('notes/create', {
 				text: this.text == '' ? undefined : this.text,
 				fileIds: this.files.length > 0 ? this.files.map(f => f.id) : undefined,
@@ -507,16 +490,7 @@ export default (opts) => ({
 				cw: this.useCw ? this.cw || '' : undefined,
 				visibility: this.visibility,
 				visibleUserIds: this.visibility == 'specified' ? this.visibleUsers.map(u => u.id) : undefined,
-				localOnly: this.localOnly,
-				geo: this.geo ? {
-					coordinates: [this.geo.longitude, this.geo.latitude],
-					altitude: this.geo.altitude,
-					accuracy: this.geo.accuracy,
-					altitudeAccuracy: this.geo.altitudeAccuracy,
-					heading: isNaN(this.geo.heading) ? null : this.geo.heading,
-					speed: this.geo.speed,
-				} : null,
-				viaMobile: viaMobile
+				localOnly: this.localOnly
 			}).then(data => {
 				this.clear();
 				this.deleteDraft();

@@ -35,7 +35,7 @@ export default defineComponent({
 	},
 	created() {
 		this.g = this.game;
-		this.connection = this.$root.stream.connectToChannel('gamesReversiGame', {
+		this.connection = this.$root.stream.connectToChannel('reversiGame', {
 			gameId: this.game.id
 		});
 		this.connection.on('started', this.onStarted);

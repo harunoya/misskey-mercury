@@ -138,12 +138,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import i18n from '../../../../i18n';
-import { apiUrl, host } from '../../../../config';
+import { host } from '../../../../config';
 import { toUnicode } from 'punycode';
 import langmap from 'langmap';
 import { unique } from '../../../../../../prelude/array';
 import { faDownload, faUpload, faUnlockAlt, faBoxes, faCogs } from '@fortawesome/free-solid-svg-icons';
 import { faSave, faEnvelope } from '@fortawesome/free-regular-svg-icons';
+import { uploadDriveFile } from '@compat/upload';
 
 export default defineComponent({
 	i18n: i18n('common/views/components/profile-editor.vue'),
@@ -229,48 +230,30 @@ export default defineComponent({
 	},
 
 	methods: {
-		onAvatarChange([file]) {
+		async onAvatarChange([file]) {
 			this.avatarUploading = true;
 
-			const data = new FormData();
-			data.append('file', file);
-			data.append('i', this.$store.state.i.token);
-
-			fetch(apiUrl + '/drive/files/create', {
-				method: 'POST',
-				body: data
-			})
-				.then(response => response.json())
-				.then(f => {
-					this.avatarId = f.id;
-					this.avatarUploading = false;
-				})
-				.catch(e => {
-					this.avatarUploading = false;
-					alert('%18n:@upload-failed%');
-				});
+			try {
+				const uploaded = await uploadDriveFile({ file });
+				this.avatarId = uploaded.id;
+			} catch {
+				alert('%18n:@upload-failed%');
+			} finally {
+				this.avatarUploading = false;
+			}
 		},
 
-		onBannerChange([file]) {
+		async onBannerChange([file]) {
 			this.bannerUploading = true;
 
-			const data = new FormData();
-			data.append('file', file);
-			data.append('i', this.$store.state.i.token);
-
-			fetch(apiUrl + '/drive/files/create', {
-				method: 'POST',
-				body: data
-			})
-				.then(response => response.json())
-				.then(f => {
-					this.bannerId = f.id;
-					this.bannerUploading = false;
-				})
-				.catch(e => {
-					this.bannerUploading = false;
-					alert('%18n:@upload-failed%');
-				});
+			try {
+				const uploaded = await uploadDriveFile({ file });
+				this.bannerId = uploaded.id;
+			} catch {
+				alert('%18n:@upload-failed%');
+			} finally {
+				this.bannerUploading = false;
+			}
 		},
 
 		save(notify) {
@@ -344,7 +327,7 @@ export default defineComponent({
 				}
 			}).then(({ canceled, result: password }) => {
 				if (canceled) return;
-				this.$root.api('i/update_email', {
+				this.$root.api('i/update-email', {
 					password: password,
 					email: this.email == '' ? null : this.email
 				});
@@ -352,13 +335,16 @@ export default defineComponent({
 		},
 
 		doExport() {
-			this.$root.api(
-				this.exportTarget == 'notes' ? 'i/export-notes' :
-				this.exportTarget == 'following' ? 'i/export-following' :
-				this.exportTarget == 'mute' ? 'i/export-mute' :
-				this.exportTarget == 'blocking' ? 'i/export-blocking' :
-				this.exportTarget == 'user-lists' ? 'i/export-user-lists' :
-				null, {}).then(() => {
+			let request;
+			switch (this.exportTarget) {
+				case 'notes': request = this.$root.api('i/export-notes'); break;
+				case 'following': request = this.$root.api('i/export-following'); break;
+				case 'mute': request = this.$root.api('i/export-mute'); break;
+				case 'blocking': request = this.$root.api('i/export-blocking'); break;
+				case 'user-lists': request = this.$root.api('i/export-user-lists'); break;
+				default: return;
+			}
+			request.then(() => {
 					this.$root.dialog({
 						type: 'info',
 						text: this.$t('export-requested')
@@ -373,12 +359,13 @@ export default defineComponent({
 
 		doImport() {
 			this.$chooseDriveFile().then(file => {
-				this.$root.api(
-					this.exportTarget == 'following' ? 'i/import-following' :
-					this.exportTarget == 'user-lists' ? 'i/import-user-lists' :
-					null, {
-						fileId: file.id
-				}).then(() => {
+				const request = this.exportTarget == 'following'
+					? this.$root.api('i/import-following', { fileId: file.id })
+					: this.exportTarget == 'user-lists'
+						? this.$root.api('i/import-user-lists', { fileId: file.id })
+						: null;
+				if (request == null) return;
+				request.then(() => {
 					this.$root.dialog({
 						type: 'info',
 						text: this.$t('import-requested')

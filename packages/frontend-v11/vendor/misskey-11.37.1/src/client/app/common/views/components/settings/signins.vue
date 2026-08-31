@@ -28,7 +28,7 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.$root.api('i/signin_history').then(signins => {
+		this.$root.api('i/signin-history').then(signins => {
 			this.signins = signins;
 			this.fetching = false;
 		});

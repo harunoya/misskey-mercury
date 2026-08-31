@@ -22,8 +22,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
-import { apiUrl } from '../../../config';
 import getMD5 from '../../scripts/get-md5';
+import { uploadDriveFile } from '@compat/upload';
 
 export default defineComponent({
 	emits: ['change', 'uploaded'],
@@ -70,34 +70,25 @@ export default defineComponent({
 					this.uploads.push(ctx);
 					this.$emit('change', this.uploads);
 
-					const data = new FormData();
-					data.append('i', this.$store.state.i.token);
-					data.append('force', 'true');
-					data.append('file', file);
-
-					if (folder) data.append('folderId', folder);
-					if (name) data.append('name', name);
-
-					const xhr = new XMLHttpRequest();
-					xhr.open('POST', apiUrl + '/drive/files/create', true);
-					xhr.onload = (e: any) => {
-						const driveFile = JSON.parse(e.target.response);
-
+					uploadDriveFile({
+						file,
+						name,
+						folderId: folder || null,
+						force: true,
+						onProgress: (loaded, total) => {
+							if (ctx.progress == undefined) ctx.progress = {};
+							ctx.progress.max = total;
+							ctx.progress.value = loaded;
+						},
+					}).then(driveFile => {
 						this.$emit('uploaded', driveFile);
-
 						this.uploads = this.uploads.filter(x => x.id != id);
 						this.$emit('change', this.uploads);
-					};
-
-					xhr.upload.onprogress = e => {
-						if (e.lengthComputable) {
-							if (ctx.progress == undefined) ctx.progress = {};
-							ctx.progress.max = e.total;
-							ctx.progress.value = e.loaded;
-						}
-					};
-
-					xhr.send(data);
+					}).catch(error => {
+						this.uploads = this.uploads.filter(x => x.id != id);
+						this.$emit('change', this.uploads);
+						this.$root.dialog({ type: 'error', text: error.toString() });
+					});
 				})
 			}
 			reader.readAsArrayBuffer(file);
