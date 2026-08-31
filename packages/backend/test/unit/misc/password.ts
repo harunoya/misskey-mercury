@@ -6,7 +6,7 @@
 import * as argon2 from 'argon2';
 import bcrypt from 'bcryptjs';
 import { describe, expect, test } from 'vitest';
-import { getPasswordHashType, verifyPassword } from '@/misc/password.js';
+import { BCRYPT_COST, getPasswordHashType, hashPassword, verifyPassword } from '@/misc/password.js';
 
 describe('getPasswordHashType', () => {
 	test('bcrypt hashを現行方式として分類する', async () => {
@@ -27,6 +27,14 @@ describe('getPasswordHashType', () => {
 
 	test('未知のhashを分類する', () => {
 		expect(getPasswordHashType('unknown-hash')).toBe('unknown');
+	});
+});
+
+describe('hashPassword', () => {
+	test('uses bcrypt cost 10', async () => {
+		const hash = await hashPassword('password');
+		expect(hash.startsWith(`$2a$${String(BCRYPT_COST).padStart(2, '0')}$`) || hash.startsWith(`$2b$${String(BCRYPT_COST).padStart(2, '0')}$`)).toBe(true);
+		expect(await verifyPassword('password', hash)).toBe(true);
 	});
 });
 

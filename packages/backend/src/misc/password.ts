@@ -8,6 +8,18 @@ import bcrypt from 'bcryptjs';
 
 export type PasswordHashType = 'bcrypt' | 'legacy' | 'unknown' | 'none';
 
+/** Cost 8 is too cheap for offline cracking if the hash table leaks. */
+export const BCRYPT_COST = 10;
+
+export async function hashPassword(password: string): Promise<string> {
+	const salt = await bcrypt.genSalt(BCRYPT_COST);
+	return await bcrypt.hash(password, salt);
+}
+
+export function hashPasswordSync(password: string): string {
+	return bcrypt.hashSync(password, BCRYPT_COST);
+}
+
 export function getPasswordHashType(hash: string | null): PasswordHashType {
 	if (hash == null) return 'none';
 	if (/^\$2[aby]\$/.test(hash)) return 'bcrypt';

@@ -53,6 +53,22 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			// for backward compatibility
 			const permission = unique(ps.permission.map(v => v.replace(/^(.+)(\/|-)(read|write)$/, '$3:$1')));
 
+			let callbackUrl = ps.callbackUrl;
+			if (callbackUrl != null && callbackUrl !== '') {
+				try {
+					const url = new URL(callbackUrl);
+					if (
+						(url.protocol !== 'http:' && url.protocol !== 'https:') ||
+						url.username !== '' ||
+						url.password !== ''
+					) {
+						callbackUrl = null;
+					}
+				} catch {
+					callbackUrl = null;
+				}
+			}
+
 			// Create account
 			const app = await this.appsRepository.insertOne({
 				id: this.idService.gen(),
@@ -60,7 +76,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				name: ps.name,
 				description: ps.description,
 				permission,
-				callbackUrl: ps.callbackUrl,
+				callbackUrl,
 				secret: secret,
 			});
 

@@ -130,8 +130,16 @@ export class SigninApiService {
 		}) as MiLocalUser;
 
 		if (user == null) {
-			return error(404, {
-				id: '6cc579cc-885d-43d8-95c2-b8c7fc963280',
+			// Same shape as a failed password so usernames cannot be enumerated.
+			if (password == null) {
+				reply.code(200);
+				return {
+					finished: false,
+					next: 'captcha',
+				} satisfies Misskey.entities.SigninFlowResponse;
+			}
+			return error(403, {
+				id: '932c904e-9460-45b7-9ce6-7ed33be7eb2c',
 			});
 		}
 

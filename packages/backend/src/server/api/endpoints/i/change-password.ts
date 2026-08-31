@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import bcrypt from 'bcryptjs';
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import type { UserProfilesRepository } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
 import { UserAuthService } from '@/core/UserAuthService.js';
-import { verifyPassword } from '@/misc/password.js';
+import { hashPassword, verifyPassword } from '@/misc/password.js';
 
 export const meta = {
 	requireCredential: true,
@@ -57,9 +56,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				throw new Error('incorrect password');
 			}
 
-			// Generate hash of password
-			const salt = await bcrypt.genSalt(8);
-			const hash = await bcrypt.hash(ps.newPassword, salt);
+			const hash = await hashPassword(ps.newPassword);
 
 			await this.userProfilesRepository.update(me.id, {
 				password: hash,

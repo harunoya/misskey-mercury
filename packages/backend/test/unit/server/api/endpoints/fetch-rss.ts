@@ -90,6 +90,19 @@ describe('fetch-rss endpoint', () => {
 		expect(httpRequestService.send).not.toHaveBeenCalled();
 	});
 
+	test('rejects loopback and private hosts outside the test environment', async () => {
+		const previousNodeEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = 'production';
+		try {
+			await expectApiError(exec('http://127.0.0.1/feed.xml'), 'INVALID_URL', 400);
+			await expectApiError(exec('http://192.168.1.10/feed.xml'), 'INVALID_URL', 400);
+			await expectApiError(exec('http://169.254.169.254/latest/meta-data/'), 'INVALID_URL', 400);
+			expect(httpRequestService.send).not.toHaveBeenCalled();
+		} finally {
+			process.env.NODE_ENV = previousNodeEnv;
+		}
+	});
+
 	test('does not expose details from internal errors', async () => {
 		httpRequestService.send.mockRejectedValue(new Error('secret upstream details'));
 
