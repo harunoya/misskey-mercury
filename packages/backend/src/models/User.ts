@@ -295,18 +295,6 @@ export class MiUser {
 	})
 	public signupReason: string | null;
 
-	// 関連アカウント機能: このアカウントが「サブアカウント」として関連付けられているメインアカウントの ID。
-	// null なら独立したアカウント (メインアカウントとしてサブを持つこともできる)。
-	// 関連付けられている間、このアカウント自身の UserProfile.password は使われず、常にメインアカウントの
-	// 現在のパスワードで認証される (LinkedAccountService を参照)。
-	@Index()
-	@Column({
-		...id(),
-		nullable: true,
-		comment: 'The ID of the main User this (sub-)account is linked to. Null if this account is not a linked sub-account.',
-	})
-	public linkedToUserId: MiUser['id'] | null;
-
 	constructor(data: Partial<MiUser>) {
 		if (data == null) return;
 

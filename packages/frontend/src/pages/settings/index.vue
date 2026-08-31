@@ -108,11 +108,6 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		text: i18n.ts.security,
 		to: '/settings/security',
 		active: currentPage.value?.route.name === 'security',
-	}, {
-		icon: 'ti ti-users-group',
-		text: i18n.ts._settings.linkedAccounts,
-		to: '/settings/linked-accounts',
-		active: currentPage.value?.route.name === 'linked-accounts',
 	}],
 }, {
 	items: [{

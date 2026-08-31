@@ -1660,8 +1660,6 @@ _settings:
   accessibilityBanner: "クライアントの視覚や動作に関するパーソナライズを行い、より最適に使用できるように設定できます。"
   privacyBanner: "コンテンツの公開範囲、見つけやすさ、フォローの承認制などアカウントのプライバシーに関する設定を行えます。"
   securityBanner: "パスワード、ログイン方法、認証アプリ、パスキーなどアカウントのセキュリティに関する設定を行えます。"
-  linkedAccounts: "関連アカウント"
-  linkedAccountsBanner: "同じ人が使う複数のローカルアカウントを、メインアカウントとサブアカウントとして関連付けます。関連付けたサブアカウントは、メインアカウントの現在のパスワードでログインできるようになります。"
   preferencesBanner: "好みに応じた、クライアントの全体的な動作の設定が行えます。"
   appearanceBanner: "好みに応じた、クライアントの見た目・表示方法に関する設定が行えます。"
   soundsBanner: "クライアントで再生するサウンドの設定が行えます。"
@@ -2592,29 +2590,6 @@ _2fa:
   backupCodesExhaustedWarning: "バックアップコードが全て使用されました。認証アプリを利用できない場合、これ以上アカウントにアクセスできなくなります。認証アプリを再登録してください。"
   moreDetailedGuideHere: "詳細なガイドはこちら"
 
-_linkedAccounts:
-  linkedToDescription: "このアカウントは {name} のサブアカウントとして関連付けられています。ログインには {name} の現在のパスワードを使用します。"
-  passwordManagedByMain: "このアカウントは {name} のサブアカウントとして関連付けられているため、独自のパスワードを持ちません。パスワードの変更は {name} 側で行ってください。"
-  subAccountsTitle: "サブアカウント"
-  noSubAccounts: "関連付けられているサブアカウントはありません。"
-  unlink: "関連付けを解除"
-  unlinkSelf: "関連付けを解除する"
-  unlinkConfirmTitle: "関連付けを解除しますか？"
-  unlinkConfirmText: "解除すると、このアカウントは独立したパスワードでログインするようになります。新しいパスワードを設定してください。"
-  newPasswordForUnlink: "解除後の新しいパスワード"
-  linkExisting: "既存のアカウントを関連付ける"
-  linkExistingDescription: "既存のアカウントをサブアカウントとして関連付けます。所有者確認のため、そのアカウントの現在のパスワードが必要です。"
-  targetUsername: "関連付けるアカウントのユーザー名"
-  targetPassword: "そのアカウントの現在のパスワード"
-  linkButton: "関連付ける"
-  createSub: "新しいサブアカウントを作成"
-  createSubDescription: "新しいアカウントを作成し、同時にサブアカウントとして関連付けます。パスワードの設定は不要です (ログインには常にこのメインアカウントの現在のパスワードを使用します)。"
-  newSubUsername: "新しいサブアカウントのユーザー名"
-  createButton: "作成する"
-  linked: "関連付けました。"
-  unlinked: "関連付けを解除しました。"
-  created: "サブアカウントを作成しました。"
-
 _permissions:
   "read:account": "アカウントの情報を見る"
   "write:account": "アカウントの情報を変更する"
@@ -3122,6 +3097,16 @@ _deck:
     direct: "指名"
     roleTimeline: "ロールタイムライン"
     chat: "ダイレクトメッセージ"
+    subAccountTl: "別アカウントのTL"
+
+_subAccountTl:
+  noAccount: "表示するアカウントが選択されていません。"
+  selectAccount: "アカウントを選択"
+  noOtherAccounts: "他に追加されているアカウントがありません。"
+  addAccount: "既存のアカウントを追加"
+  readOnlyNotice: "このカラムは閲覧専用です。リアクションや投稿を行うには、アカウントを切り替えてください。"
+  switchToThisAccount: "このアカウントに切り替え"
+  tokenRevoked: "このアカウントのログイン状態が無効になっています。設定からログインし直してください。"
 
 _dialog:
   charactersExceeded: "最大文字数を超えています！ 現在 {current} / 制限 {max}"

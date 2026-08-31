@@ -119,10 +119,6 @@ export const ROUTE_DEF = [{
 		name: 'security',
 		component: page(() => import('@/pages/settings/security.vue')),
 	}, {
-		path: '/linked-accounts',
-		name: 'linked-accounts',
-		component: page(() => import('@/pages/settings/linked-accounts.vue')),
-	}, {
 		path: '/preferences',
 		name: 'preferences',
 		component: page(() => import('@/pages/settings/preferences.vue')),

@@ -22,7 +22,6 @@ import { IdService } from '@/core/IdService.js';
 import { bindThis } from '@/decorators.js';
 import { WebAuthnService } from '@/core/WebAuthnService.js';
 import { UserAuthService } from '@/core/UserAuthService.js';
-import { LinkedAccountService } from '@/core/LinkedAccountService.js';
 import { CaptchaService } from '@/core/CaptchaService.js';
 import { LoggerService } from '@/core/LoggerService.js';
 import { FastifyReplyError } from '@/misc/fastify-reply-error.js';
@@ -60,7 +59,6 @@ export class SigninApiService {
 		private rateLimiterService: RateLimiterService,
 		private signinService: SigninService,
 		private userAuthService: UserAuthService,
-		private linkedAccountService: LinkedAccountService,
 		private webAuthnService: WebAuthnService,
 		private captchaService: CaptchaService,
 	) {
@@ -179,10 +177,7 @@ export class SigninApiService {
 		}
 
 		// Compare password
-		// 関連アカウント機能: サブアカウントは自身の password を持たず、常にメインアカウントの
-		// 現在のパスワードで認証される (2FA / パスキー等はサブアカウント自身の profile のまま)。
-		const authProfile = await this.linkedAccountService.resolveAuthProfile(user, profile);
-		const same = await verifyPassword(password, authProfile.password!);
+		const same = await verifyPassword(password, profile.password!);
 
 		const fail = async (status?: number, failure?: { id: string; }) => {
 			// Append signin history

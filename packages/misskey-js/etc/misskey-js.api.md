@@ -1996,13 +1996,6 @@ declare namespace entities {
         IImportFollowingRequest,
         IImportMutingRequest,
         IImportUserListsRequest,
-        ILinkedAccountsCreateSubRequest,
-        ILinkedAccountsCreateSubResponse,
-        ILinkedAccountsLinkRequest,
-        ILinkedAccountsLinkResponse,
-        ILinkedAccountsListResponse,
-        ILinkedAccountsUnlinkRequest,
-        ILinkedAccountsUnlinkResponse,
         IMoveRequest,
         IMoveResponse,
         INotificationsRequest,
@@ -2696,27 +2689,6 @@ type IImportMutingRequest = operations['i___import-muting']['requestBody']['cont
 
 // @public (undocumented)
 type IImportUserListsRequest = operations['i___import-user-lists']['requestBody']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsCreateSubRequest = operations['i___linked-accounts___create-sub']['requestBody']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsCreateSubResponse = operations['i___linked-accounts___create-sub']['responses']['200']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsLinkRequest = operations['i___linked-accounts___link']['requestBody']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsLinkResponse = operations['i___linked-accounts___link']['responses']['200']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsListResponse = operations['i___linked-accounts___list']['responses']['200']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsUnlinkRequest = operations['i___linked-accounts___unlink']['requestBody']['content']['application/json'];
-
-// @public (undocumented)
-type ILinkedAccountsUnlinkResponse = operations['i___linked-accounts___unlink']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
 type IMoveRequest = operations['i___move']['requestBody']['content']['application/json'];

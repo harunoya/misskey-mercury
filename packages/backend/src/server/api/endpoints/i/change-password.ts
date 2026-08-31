@@ -6,7 +6,6 @@
 import bcrypt from 'bcryptjs';
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import { ApiError } from '@/server/api/error.js';
 import type { UserProfilesRepository } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
 import { UserAuthService } from '@/core/UserAuthService.js';
@@ -16,16 +15,6 @@ export const meta = {
 	requireCredential: true,
 
 	secure: true,
-
-	errors: {
-		// 関連アカウント機能: サブアカウントは独自パスワードを持たないため変更できない。
-		// メインアカウントのパスワードを変えるか、先に関連付けを解除する必要がある。
-		linkedAccount: {
-			message: 'This account is linked to a main account and has no password of its own. Change the main account\'s password, or unlink this account first.',
-			code: 'LINKED_ACCOUNT',
-			id: 'd4e5f6a7-b8c9-4d0e-8f1a-2b3c4d5e6f7a',
-		},
-	},
 } as const;
 
 export const paramDef = {
@@ -47,10 +36,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private userAuthService: UserAuthService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			if (me.linkedToUserId != null) {
-				throw new ApiError(meta.errors.linkedAccount);
-			}
-
 			const token = ps.token;
 			const profile = await this.userProfilesRepository.findOneByOrFail({ userId: me.id });
 

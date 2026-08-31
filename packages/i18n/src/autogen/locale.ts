@@ -6598,14 +6598,6 @@ export interface Locale extends ILocale {
          */
         "securityBanner": string;
         /**
-         * 関連アカウント
-         */
-        "linkedAccounts": string;
-        /**
-         * 同じ人が使う複数のローカルアカウントを、メインアカウントとサブアカウントとして関連付けます。関連付けたサブアカウントは、メインアカウントの現在のパスワードでログインできるようになります。
-         */
-        "linkedAccountsBanner": string;
-        /**
          * 好みに応じた、クライアントの全体的な動作の設定が行えます。
          */
         "preferencesBanner": string;
@@ -9873,92 +9865,6 @@ export interface Locale extends ILocale {
          */
         "moreDetailedGuideHere": string;
     };
-    "_linkedAccounts": {
-        /**
-         * このアカウントは {name} のサブアカウントとして関連付けられています。ログインには {name} の現在のパスワードを使用します。
-         */
-        "linkedToDescription": ParameterizedString<"name" | "name">;
-        /**
-         * このアカウントは {name} のサブアカウントとして関連付けられているため、独自のパスワードを持ちません。パスワードの変更は {name} 側で行ってください。
-         */
-        "passwordManagedByMain": ParameterizedString<"name" | "name">;
-        /**
-         * サブアカウント
-         */
-        "subAccountsTitle": string;
-        /**
-         * 関連付けられているサブアカウントはありません。
-         */
-        "noSubAccounts": string;
-        /**
-         * 関連付けを解除
-         */
-        "unlink": string;
-        /**
-         * 関連付けを解除する
-         */
-        "unlinkSelf": string;
-        /**
-         * 関連付けを解除しますか？
-         */
-        "unlinkConfirmTitle": string;
-        /**
-         * 解除すると、このアカウントは独立したパスワードでログインするようになります。新しいパスワードを設定してください。
-         */
-        "unlinkConfirmText": string;
-        /**
-         * 解除後の新しいパスワード
-         */
-        "newPasswordForUnlink": string;
-        /**
-         * 既存のアカウントを関連付ける
-         */
-        "linkExisting": string;
-        /**
-         * 既存のアカウントをサブアカウントとして関連付けます。所有者確認のため、そのアカウントの現在のパスワードが必要です。
-         */
-        "linkExistingDescription": string;
-        /**
-         * 関連付けるアカウントのユーザー名
-         */
-        "targetUsername": string;
-        /**
-         * そのアカウントの現在のパスワード
-         */
-        "targetPassword": string;
-        /**
-         * 関連付ける
-         */
-        "linkButton": string;
-        /**
-         * 新しいサブアカウントを作成
-         */
-        "createSub": string;
-        /**
-         * 新しいアカウントを作成し、同時にサブアカウントとして関連付けます。パスワードの設定は不要です (ログインには常にこのメインアカウントの現在のパスワードを使用します)。
-         */
-        "createSubDescription": string;
-        /**
-         * 新しいサブアカウントのユーザー名
-         */
-        "newSubUsername": string;
-        /**
-         * 作成する
-         */
-        "createButton": string;
-        /**
-         * 関連付けました。
-         */
-        "linked": string;
-        /**
-         * 関連付けを解除しました。
-         */
-        "unlinked": string;
-        /**
-         * サブアカウントを作成しました。
-         */
-        "created": string;
-    };
     "_permissions": {
         /**
          * アカウントの情報を見る
@@ -11819,7 +11725,41 @@ export interface Locale extends ILocale {
              * ダイレクトメッセージ
              */
             "chat": string;
+            /**
+             * 別アカウントのTL
+             */
+            "subAccountTl": string;
         };
+    };
+    "_subAccountTl": {
+        /**
+         * 表示するアカウントが選択されていません。
+         */
+        "noAccount": string;
+        /**
+         * アカウントを選択
+         */
+        "selectAccount": string;
+        /**
+         * 他に追加されているアカウントがありません。
+         */
+        "noOtherAccounts": string;
+        /**
+         * 既存のアカウントを追加
+         */
+        "addAccount": string;
+        /**
+         * このカラムは閲覧専用です。リアクションや投稿を行うには、アカウントを切り替えてください。
+         */
+        "readOnlyNotice": string;
+        /**
+         * このアカウントに切り替え
+         */
+        "switchToThisAccount": string;
+        /**
+         * このアカウントのログイン状態が無効になっています。設定からログインし直してください。
+         */
+        "tokenRevoked": string;
     };
     "_dialog": {
         /**
