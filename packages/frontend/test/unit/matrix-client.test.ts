@@ -334,6 +334,17 @@ describe('homeserver discovery', () => {
 		expect(await discoverHomeserver('@alice:example.com', fetchMock)).toBe('https://matrix.example.com');
 	});
 
+	test('uses HTTP for a local homeserver without a scheme', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 404 }));
+		expect(await discoverHomeserver('localhost:8008', fetchMock)).toBe('http://localhost:8008');
+		expect(String(fetchMock.mock.calls[0]?.[0])).toBe('http://localhost:8008/.well-known/matrix/client');
+	});
+
+	test('uses HTTP for a WSL private address without a scheme', async () => {
+		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 404 }));
+		expect(await discoverHomeserver('172.27.213.65:8008', fetchMock)).toBe('http://172.27.213.65:8008');
+	});
+
 	test('falls back to the input when there is no discovery document', async () => {
 		const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 404 }));
 

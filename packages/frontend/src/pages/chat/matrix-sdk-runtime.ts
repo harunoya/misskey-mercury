@@ -153,25 +153,31 @@ export class MatrixSdkSession {
 	) {}
 
 	public async start(): Promise<void> {
+		const deviceId = this.session.deviceId ?? await resolveDeviceId(this.session);
+		if (deviceId != null && this.session.deviceId !== deviceId) {
+			this.session.deviceId = deviceId;
+		}
+
 		const idb = await canUseIndexedDb();
 		const store = idb
 			? new IndexedDBStore({
 				indexedDB,
 				dbName: storeName('sync', this.session),
-				localStorage,
 				workerFactory: typeof Worker === 'undefined'
 					? undefined
 					: () => new Worker(new URL('./matrix-idb.worker.ts', import.meta.url), { type: 'module' }),
 			})
-			: new MemoryStore({ localStorage });
+			: new MemoryStore();
 
 		const client = createClient({
 			baseUrl: this.session.homeserverUrl,
 			accessToken: this.session.accessToken,
 			userId: this.session.userId,
-			deviceId: this.session.deviceId,
+			deviceId,
 			store,
 			timelineSupport: true,
+			// Bound fetch: passing `window.fetch` as a method hits Illegal invocation.
+			fetchFn: (input, init) => globalThis.fetch(input, init),
 			cryptoCallbacks: {
 				getSecretStorageKey: async ({ keys }) => {
 					if (this.pendingRecoveryKey == null) return null;
@@ -187,7 +193,7 @@ export class MatrixSdkSession {
 			await store.startup();
 		}
 
-		if (idb) {
+		if (idb && deviceId != null) {
 			try {
 				await client.initRustCrypto({
 					useIndexedDB: true,
@@ -200,6 +206,16 @@ export class MatrixSdkSession {
 			}
 		}
 
+		const emitSnapshot = () => {
+			if (this.stopped) return;
+			try {
+				this.callbacks.onSync(this.collectSnapshot());
+			} catch (error) {
+				console.error('[matrix] failed to apply a sync snapshot', error);
+				this.callbacks.onError(error);
+			}
+		};
+
 		client.on(ClientEvent.Sync, (state) => {
 			if (this.stopped) return;
 			if (state === SyncState.Error) {
@@ -208,27 +224,23 @@ export class MatrixSdkSession {
 				return;
 			}
 			if (state === SyncState.Prepared || state === SyncState.Syncing) {
-				this.callbacks.onSync(this.collectSnapshot());
+				emitSnapshot();
 			}
 		});
 
 		client.on(RoomEvent.Timeline, (event: SdkEvent, room) => {
 			if (this.stopped || room == null) return;
 			if (event.isEncrypted() && event.getClearContent() == null) {
-				event.once(MatrixEventEvent.Decrypted, () => {
-					if (!this.stopped) this.callbacks.onSync(this.collectSnapshot());
-				});
+				event.once(MatrixEventEvent.Decrypted, () => emitSnapshot());
 			}
-			this.callbacks.onSync(this.collectSnapshot());
+			emitSnapshot();
 		});
 
-		client.on(RoomEvent.Receipt, () => {
-			if (!this.stopped) this.callbacks.onSync(this.collectSnapshot());
-		});
+		client.on(RoomEvent.Receipt, () => emitSnapshot());
 
 		client.on(ClientEvent.Event, (event: SdkEvent) => {
 			if (event.getType() === 'm.room.encryption' || event.getType() === EventType.RoomMember) {
-				this.callbacks.onSync(this.collectSnapshot());
+				emitSnapshot();
 			}
 		});
 
@@ -565,6 +577,19 @@ export class MatrixSdkSession {
 		const crypto = this.client?.getCrypto();
 		if (crypto == null) throw new Error('Encryption is not available in this browser.');
 		return crypto;
+	}
+}
+
+async function resolveDeviceId(session: MatrixSession): Promise<string | undefined> {
+	try {
+		const response = await globalThis.fetch(`${session.homeserverUrl}/_matrix/client/v3/account/whoami`, {
+			headers: { Authorization: `Bearer ${session.accessToken}` },
+		});
+		if (!response.ok) return undefined;
+		const body = await response.json() as { device_id?: unknown };
+		return typeof body.device_id === 'string' && body.device_id.length > 0 ? body.device_id : undefined;
+	} catch {
+		return undefined;
 	}
 }
 

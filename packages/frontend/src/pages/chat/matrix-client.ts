@@ -136,11 +136,33 @@ export function parseMxcUrl(mxcUrl: unknown): { serverName: string; mediaId: str
  * `.well-known/matrix/client` document on the id's domain, so it is consulted before falling back
  * to treating the input as an origin.
  */
+function isPlainHttpHomeserverHost(host: string): boolean {
+	const hostname = host.replace(/^\[(.*)\]$/, '$1').toLowerCase();
+	if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+	if (hostname.endsWith('.local')) return true;
+	const ipv4 = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+	if (ipv4 == null) return false;
+	const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+	// WSL2 and LAN homeservers (10/8, 172.16/12, 192.168/16) are HTTP.
+	return a === 10 || a === 192 && b === 168 || a === 172 && b >= 16 && b <= 31;
+}
+
+function guessHomeserverOrigin(input: string): string {
+	const trimmed = input.trim();
+	if (/^https?:\/\//i.test(trimmed)) return trimmed;
+	const host = trimmed.split('/')[0] ?? trimmed;
+	const hostname = host.includes(']:') ? host.slice(1, host.indexOf(']')) : (host.split(':')[0] ?? host);
+	if (isPlainHttpHomeserverHost(hostname) || isPlainHttpHomeserverHost(host)) {
+		return `http://${trimmed}`;
+	}
+	return `https://${trimmed}`;
+}
+
 export async function discoverHomeserver(input: string, fetchImpl: typeof fetch = globalThis.fetch): Promise<string> {
 	const trimmed = input.trim();
 	// A bare server name or a Matrix id, rather than a URL.
 	const domain = trimmed.startsWith('@') ? trimmed.split(':').slice(1).join(':') : trimmed;
-	const candidate = /^https?:\/\//.test(domain) ? domain : `https://${domain}`;
+	const candidate = guessHomeserverOrigin(domain);
 	const origin = normalizeHomeserverUrl(candidate);
 
 	try {

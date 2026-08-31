@@ -681,6 +681,7 @@ async function ensureSession(): Promise<void> {
 		sdkSession = handle;
 		sessionOwnerKey = wantedKey;
 		cryptoUnavailable.value = !handle.cryptoEnabled;
+		persistSessions();
 	})();
 
 	try {

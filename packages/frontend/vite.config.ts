@@ -174,10 +174,16 @@ export function getConfig(): UserConfig {
 		},
 
 		optimizeDeps: {
-			// Instantiating the WASM module during dep pre-bundling fails; load it only from the
-			// dynamically imported Matrix session runtime.
-			exclude: ['@matrix-org/matrix-sdk-crypto-wasm'],
+			// Pre-bundling matrix-js-sdk loads a second entrypoint (`index.js` then
+			// `browser-index.js`) and throws "Multiple matrix-js-sdk entrypoints detected!".
+			// The WASM module also cannot be instantiated during dep optimization.
+			exclude: [
+				'matrix-js-sdk',
+				'@matrix-org/matrix-sdk-crypto-wasm',
+			],
 		},
+
+		assetsInclude: ['**/*.wasm'],
 
 		css: {
 			lightningcss: {

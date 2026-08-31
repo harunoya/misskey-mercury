@@ -26,6 +26,9 @@ packages/sw/.yarn/cache
 # Playwright
 packages/frontend/test/e2e/artifacts
 
+# Local Synapse used for Matrix E2EE verification
+packages/frontend/test/synapse/data
+
 # Coverage
 coverage
 
