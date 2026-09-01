@@ -81,7 +81,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
 import MatrixAvatar from './matrix-avatar.vue';
 import MatrixMessage from './matrix-message.vue';
 import type { MatrixMessage as MatrixMessageEntry, MatrixReplyTarget } from './matrix-store.js';
@@ -120,13 +120,28 @@ const typingLabel = computed(() => {
 });
 
 // The conversation reads from the shared store, so it needs the sync running while it is open.
-matrix.acquireSync();
-onBeforeUnmount(() => {
+//
+// Paired with the mount rather than taken during setup: `onBeforeUnmount` only runs for a component
+// that actually mounted, so a setup whose component was discarded before mounting used to take a
+// reference it never gave back, and the long poll then ran for the rest of the session.
+onMounted(() => {
+	matrix.acquireSync();
+	matrix.markRoomAsRead(props.matrixRoomId);
+});
+onUnmounted(() => {
 	matrix.stopTyping(props.matrixRoomId);
 	matrix.releaseSync();
 });
 
-onMounted(() => matrix.markRoomAsRead(props.matrixRoomId));
+// The router reuses this component when only the room id changes, so switching conversations does
+// not remount. Without this the previous room was left showing us as typing, and the new one was
+// never marked as read.
+watch(() => props.matrixRoomId, (roomId, previousRoomId) => {
+	if (previousRoomId != null) matrix.stopTyping(previousRoomId);
+	replyTarget.value = null;
+	draft.value = '';
+	matrix.markRoomAsRead(roomId);
+});
 
 watch(roomMessages, async () => {
 	// Only follow the conversation when the reader is already at the bottom; snapping them back

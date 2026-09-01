@@ -41,6 +41,47 @@ for key, value in {
         text = pattern.sub(f"{key}: {value}", text)
     else:
         text = text.rstrip() + f"\n{key}: {value}\n"
+
+# Synapse rate limits registration, login, sends and joins by default. A test run does all four in
+# bursts and would otherwise fail with 429s that say nothing about the client under test.
+MARKER = "# mercury-test-rate-limits"
+if MARKER not in text:
+    limits = "\n".join([
+        "",
+        MARKER,
+        "rc_message:",
+        "  per_second: 1000",
+        "  burst_count: 1000",
+        "rc_registration:",
+        "  per_second: 1000",
+        "  burst_count: 1000",
+        "rc_login:",
+        "  address:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "  account:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "  failed_attempts:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "rc_joins:",
+        "  local:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "  remote:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "rc_invites:",
+        "  per_room:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "  per_user:",
+        "    per_second: 1000",
+        "    burst_count: 1000",
+        "",
+    ])
+    text = text.rstrip() + "\n" + limits
 path.write_text(text)
 PY
 

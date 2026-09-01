@@ -35,7 +35,20 @@ export type SdkRoomSnapshot = {
 	joined: Record<string, MatrixJoinedRoom>;
 	invited: Record<string, MatrixInvitedRoom>;
 	left: string[];
+	/**
+	 * Set when this snapshot exists because history was read, naming the room that was paginated.
+	 *
+	 * Backfill arrives through the same snapshot as live events, so without this the store cannot
+	 * tell a page the reader asked for from an ordinary update — and its retention rules need to,
+	 * because trimming drops the oldest events, which is the end backfill adds to.
+	 */
+	backfilledRoomId?: string;
+	/** Rooms this account has in `m.direct`, which is where the spec keeps direct messages. */
+	directRoomIds: string[];
 };
+
+/** How long snapshot emission waits to gather a burst of sync activity. */
+const SNAPSHOT_COALESCE_MS = 16;
 
 export type SdkSessionCallbacks = {
 	onSync: (snapshot: SdkRoomSnapshot) => void;
@@ -146,6 +159,7 @@ export class MatrixSdkSession {
 	private stopped = false;
 	private pendingRecoveryKey: Uint8Array | null = null;
 	private verificationRequest: VerificationRequest | null = null;
+	private snapshotTimer: number | null = null;
 
 	constructor(
 		private readonly session: MatrixSession,
@@ -206,16 +220,6 @@ export class MatrixSdkSession {
 			}
 		}
 
-		const emitSnapshot = () => {
-			if (this.stopped) return;
-			try {
-				this.callbacks.onSync(this.collectSnapshot());
-			} catch (error) {
-				console.error('[matrix] failed to apply a sync snapshot', error);
-				this.callbacks.onError(error);
-			}
-		};
-
 		client.on(ClientEvent.Sync, (state) => {
 			if (this.stopped) return;
 			if (state === SyncState.Error) {
@@ -224,23 +228,27 @@ export class MatrixSdkSession {
 				return;
 			}
 			if (state === SyncState.Prepared || state === SyncState.Syncing) {
-				emitSnapshot();
+				this.scheduleSnapshot();
 			}
 		});
 
-		client.on(RoomEvent.Timeline, (event: SdkEvent, room) => {
-			if (this.stopped || room == null) return;
-			if (event.isEncrypted() && event.getClearContent() == null) {
-				event.once(MatrixEventEvent.Decrypted, () => emitSnapshot());
-			}
-			emitSnapshot();
+		client.on(RoomEvent.Timeline, (_event: SdkEvent, room) => {
+			if (room != null) this.scheduleSnapshot();
 		});
 
-		client.on(RoomEvent.Receipt, () => emitSnapshot());
+		// One listener for the whole client rather than one per encrypted event.
+		//
+		// Registering `once(Decrypted)` on each event as it arrived leaked a listener for every
+		// encrypted message that was never decrypted, and re-registered on the same event whenever it
+		// was reported again. The SDK already re-emits this on the client for every event it maps
+		// (`event-mapper.ts`), so a single subscription covers every room.
+		client.on(MatrixEventEvent.Decrypted, () => this.scheduleSnapshot());
+
+		client.on(RoomEvent.Receipt, () => this.scheduleSnapshot());
 
 		client.on(ClientEvent.Event, (event: SdkEvent) => {
 			if (event.getType() === 'm.room.encryption' || event.getType() === EventType.RoomMember) {
-				emitSnapshot();
+				this.scheduleSnapshot();
 			}
 		});
 
@@ -268,12 +276,7 @@ export class MatrixSdkSession {
 			if (membership === 'invite') invited[room.roomId] = snapshotInvited(room);
 			else if (membership === 'join') joined[room.roomId] = snapshotRoom(room);
 		}
-		return { joined, invited, left: [] };
-	}
-
-	public getPaginationToken(roomId: string): string | undefined {
-		const room = this.client?.getRoom(roomId);
-		return room?.getLiveTimeline().getPaginationToken(EventTimeline.BACKWARDS) ?? undefined;
+		return { joined, invited, left: [], directRoomIds: [...this.directRoomIds()] };
 	}
 
 	public async loadOlder(roomId: string): Promise<{ end: string | null; chunkLength: number }> {
@@ -284,14 +287,21 @@ export class MatrixSdkSession {
 		await client.scrollback(room, 50);
 		const after = room.getLiveTimeline().getEvents().length;
 		const token = room.getLiveTimeline().getPaginationToken(EventTimeline.BACKWARDS);
-		this.callbacks.onSync(this.collectSnapshot());
+		if (!this.stopped) this.callbacks.onSync({ ...this.collectSnapshot(), backfilledRoomId: roomId });
 		return { end: token, chunkLength: Math.max(0, after - before) };
 	}
 
-	public async sendText(roomId: string, body: string, replyToEventId?: string): Promise<void> {
+	/**
+	 * Sends a message under a transaction id the caller chose.
+	 *
+	 * The homeserver echoes that id back on the event as `unsigned.transaction_id`, which is how the
+	 * store recognises its own placeholder in the timeline. Letting the SDK pick the id left nothing
+	 * to match on, so a message the sync delivered before the send call returned appeared twice.
+	 */
+	public async sendText(roomId: string, body: string, replyToEventId?: string, transactionId?: string): Promise<void> {
 		const client = this.requireClient();
 		if (replyToEventId == null) {
-			await client.sendMessage(roomId, { msgtype: MsgType.Text, body });
+			await client.sendEvent(roomId, EventType.RoomMessage, { msgtype: MsgType.Text, body }, transactionId);
 			return;
 		}
 
@@ -303,14 +313,14 @@ export class MatrixSdkSession {
 			? `${quotedBody.split('\n').map(line => `> ${line}`).join('\n')}\n\n${body}`
 			: body;
 
-		await client.sendMessage(roomId, {
+		await client.sendEvent(roomId, EventType.RoomMessage, {
 			msgtype: MsgType.Text,
 			body: fallback,
 			'm.relates_to': { 'm.in_reply_to': { event_id: replyToEventId } },
-		} as never);
+		} as never, transactionId);
 	}
 
-	public async sendFile(roomId: string, file: File): Promise<void> {
+	public async sendFile(roomId: string, file: File, transactionId?: string): Promise<void> {
 		const client = this.requireClient();
 		const encrypted = this.cryptoEnabled && await client.getCrypto()?.isEncryptionEnabledInRoom(roomId);
 		const msgtype = file.type.startsWith('image/') ? MsgType.Image
@@ -323,12 +333,12 @@ export class MatrixSdkSession {
 			const packed = await encryptAttachment(await file.arrayBuffer());
 			const uploaded = await client.uploadContent(new Blob([packed.ciphertext], { type: 'application/octet-stream' }), { includeFilename: false });
 			packed.file.url = uploaded.content_uri;
-			await client.sendMessage(roomId, { msgtype, body: file.name, file: packed.file, info } as never);
+			await client.sendEvent(roomId, EventType.RoomMessage, { msgtype, body: file.name, file: packed.file, info } as never, transactionId);
 			return;
 		}
 
 		const uploaded = await client.uploadContent(file);
-		await client.sendMessage(roomId, { msgtype, body: file.name, url: uploaded.content_uri, info } as never);
+		await client.sendEvent(roomId, EventType.RoomMessage, { msgtype, body: file.name, url: uploaded.content_uri, info } as never, transactionId);
 	}
 
 	public async editText(roomId: string, eventId: string, body: string): Promise<void> {
@@ -361,16 +371,54 @@ export class MatrixSdkSession {
 
 	public async createDirectRoom(userId: string): Promise<string> {
 		const client = this.requireClient();
+		const invitee = userId.trim();
 		const initial_state = this.cryptoEnabled
 			? [{ type: EventType.RoomEncryption, content: { algorithm: 'm.megolm.v1.aes-sha2' } }]
 			: [];
 		const result = await client.createRoom({
 			is_direct: true,
-			invite: [userId.trim()],
+			invite: [invitee],
 			preset: 'trusted_private_chat' as never,
 			initial_state,
 		});
+		await this.rememberDirectRoom(invitee, result.room_id);
 		return result.room_id;
+	}
+
+	/**
+	 * Records the room in `m.direct`, which is what actually makes it a direct message.
+	 *
+	 * `is_direct` on `/createRoom` only flags the invite it sends; the spec puts the list of direct
+	 * rooms in the creator's own `m.direct` account data, and expects the client to maintain it. Room
+	 * creation used to stop at the flag, so a conversation started here was a direct message to the
+	 * person invited and an ordinary room to us — including after a reload, and in every other client
+	 * signed in to the same account.
+	 */
+	private async rememberDirectRoom(userId: string, roomId: string): Promise<void> {
+		const client = this.requireClient();
+		try {
+			const existing = client.getAccountData(EventType.Direct)?.getContent<Record<string, string[]>>() ?? {};
+			const forUser = existing[userId] ?? [];
+			if (forUser.includes(roomId)) return;
+			await client.setAccountData(EventType.Direct, { ...existing, [userId]: [...forUser, roomId] });
+		} catch (error) {
+			// The room exists and is usable either way; losing the flag only costs the direct-message
+			// grouping, so it must not fail the creation the caller is waiting on.
+			console.error('[matrix] could not record the room in m.direct', { roomId, error });
+		}
+	}
+
+	/** The rooms this account has marked as direct messages, from `m.direct`. */
+	public directRoomIds(): Set<string> {
+		const content = this.client?.getAccountData(EventType.Direct)?.getContent<Record<string, string[]>>() ?? {};
+		const ids = new Set<string>();
+		for (const rooms of Object.values(content)) {
+			if (!Array.isArray(rooms)) continue;
+			for (const roomId of rooms) {
+				if (typeof roomId === 'string') ids.add(roomId);
+			}
+		}
+		return ids;
 	}
 
 	public async setTyping(roomId: string, typing: boolean): Promise<void> {
@@ -564,8 +612,43 @@ export class MatrixSdkSession {
 
 	public async stop(): Promise<void> {
 		this.stopped = true;
+		if (this.snapshotTimer != null) {
+			window.clearTimeout(this.snapshotTimer);
+			this.snapshotTimer = null;
+		}
+		// Cancelled before the listeners go, so a verification still in flight does not outlive the
+		// session that started it.
+		void this.verificationRequest?.cancel().catch(() => undefined);
+		this.verificationRequest = null;
+		this.pendingRecoveryKey = null;
 		this.client?.stopClient();
 		this.client?.removeAllListeners();
+	}
+
+	/**
+	 * Emits a snapshot, coalescing the bursts that sync produces.
+	 *
+	 * Every timeline event, receipt and decryption used to emit its own snapshot, and a snapshot walks
+	 * every room and every event it holds. An initial sync of thirty events therefore rebuilt the whole
+	 * store thirty times over. Batching within a frame keeps the client responsive while it catches up
+	 * and still shows the last state of the burst.
+	 */
+	private scheduleSnapshot(): void {
+		if (this.stopped || this.snapshotTimer != null) return;
+		this.snapshotTimer = window.setTimeout(() => {
+			this.snapshotTimer = null;
+			this.emitSnapshot();
+		}, SNAPSHOT_COALESCE_MS);
+	}
+
+	private emitSnapshot(): void {
+		if (this.stopped) return;
+		try {
+			this.callbacks.onSync(this.collectSnapshot());
+		} catch (error) {
+			console.error('[matrix] failed to apply a sync snapshot', error);
+			this.callbacks.onError(error);
+		}
 	}
 
 	private requireClient(): MatrixClient {

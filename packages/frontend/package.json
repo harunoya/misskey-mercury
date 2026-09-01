@@ -10,6 +10,7 @@
 		"build-storybook": "pnpm build-storybook-pre && storybook build --webpack-stats-json storybook-static",
 		"chromatic": "chromatic",
 		"test": "vitest --run --globals --config vitest.config.unit.ts",
+		"test:integration": "vitest --run --globals --config vitest.config.integration.ts",
 		"test-and-coverage": "vitest --run --coverage --globals --config vitest.config.unit.ts",
 		"test:e2e": "playwright test --config playwright.config.ts",
 		"test:browser": "vitest --run --globals --config vitest.config.browser.ts",

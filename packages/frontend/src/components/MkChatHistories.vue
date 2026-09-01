@@ -53,7 +53,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue';
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import { useInterval } from '@@/js/use-interval.js';
 import MatrixAvatar from '@/pages/chat/matrix-avatar.vue';
@@ -66,8 +66,10 @@ const $i = ensureSignin();
 
 // Syncing runs while the direct-message list is on screen, which is what keeps the Matrix rows here
 // current without holding a long-poll open for the whole app.
-matrix.acquireSync();
-onBeforeUnmount(() => matrix.releaseSync());
+// Balanced against the mount, not setup: `onBeforeUnmount` never runs for a component that was
+// discarded before mounting, and the reference taken here would then never be given back.
+onMounted(() => matrix.acquireSync());
+onUnmounted(() => matrix.releaseSync());
 
 const matrixEntries = computed(() => matrix.rooms.value
 	.map(room => ({

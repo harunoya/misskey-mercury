@@ -107,6 +107,24 @@ describe('deriveTimeline', () => {
 		]);
 	});
 
+	// Two annotation events for the same person and key is not a contradiction: a client that retried
+	// or a second device produces exactly that. Counting both made the tally disagree with what every
+	// other Matrix client shows for the same room.
+	test('counts one reaction per person even when the same annotation arrives twice', () => {
+		const reaction = (eventId: string, sender: string, key: string): MatrixEvent => ({
+			type: 'm.reaction', event_id: eventId, sender, origin_server_ts: clock++,
+			content: { 'm.relates_to': { rel_type: 'm.annotation', event_id: '$a', key } },
+		});
+		const timeline = deriveTimeline([
+			text('$a', THEM, 'hello'),
+			reaction('$r1', ME, '👍'),
+			reaction('$r2', ME, '👍'),
+			reaction('$r3', THEM, '👍'),
+		], ME);
+
+		expect(timeline[0]?.reactions).toEqual([{ key: '👍', count: 2, mine: true, ownEventId: '$r1' }]);
+	});
+
 	test('drops a reaction that was itself redacted', () => {
 		const timeline = deriveTimeline([
 			text('$a', THEM, 'hello'),

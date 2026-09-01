@@ -60,7 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import XMessage from './XMessage.vue';
 import MatrixAvatar from './matrix-avatar.vue';
@@ -93,8 +93,9 @@ const matrixInvites = computed(() => matrix.invites.value);
 
 // The invitations and the connection state shown here need the sync, and the history list below is
 // inside a foldable section that may be closed.
-matrix.acquireSync();
-onBeforeUnmount(() => matrix.releaseSync());
+// Balanced against the mount, not setup: see the same pairing in matrix-room.vue.
+onMounted(() => matrix.acquireSync());
+onUnmounted(() => matrix.releaseSync());
 
 // Joining a room, or accepting an invitation, only produces a room once the next sync arrives.
 watch(matrix.rooms, () => {

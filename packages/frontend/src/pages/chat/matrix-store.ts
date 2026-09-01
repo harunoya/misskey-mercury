@@ -4,7 +4,8 @@
  */
 
 import { computed, ref } from 'vue';
-import { discoverHomeserver, isMatrixSession, MatrixApiError, MatrixClient, matrixSessionKey, parseMxcUrl, upsertMatrixSession } from './matrix-client.js';
+import { isMatrixSession, MatrixApiError, MatrixAuthClient, matrixSessionKey, parseMxcUrl, upsertMatrixSession } from './matrix-client.js';
+import { RoomEventStore } from './matrix-event-store.js';
 import { isEncryptedAttachmentFile } from './matrix-attachment-crypto.js';
 import type { MatrixEvent, MatrixInvitedRoom, MatrixJoinedRoom, MatrixSession } from './matrix-client.js';
 import type { EncryptedAttachmentFile } from './matrix-attachment-crypto.js';
@@ -27,10 +28,9 @@ export type { DeviceSummary, SasChallenge };
  * from history usually shows up before the message it belongs to — so applying them to a
  * pre-rendered list means handling every ordering by hand. Rebuilding from the raw events makes the
  * result the same whichever order they came in.
+ *
+ * The retention rules for those raw events live in {@link RoomEventStore}.
  */
-
-/** Kept per room. The oldest entries are dropped once a room goes past this. */
-const MAX_EVENTS_PER_ROOM = 1000;
 
 export type MatrixRoomSummary = {
 	roomId: string;
@@ -42,6 +42,8 @@ export type MatrixRoomSummary = {
 	/** Timestamp of the most recent message, for interleaving with Misskey conversations. */
 	lastActivityAt: number;
 	lastMessage?: string;
+	/** In this account's `m.direct`, so it is a conversation with a person rather than a room. */
+	direct: boolean;
 };
 
 export type MatrixInvite = {
@@ -145,13 +147,10 @@ export const sasChallenge = ref<SasChallenge | null>(null);
 export const isSignedIn = computed(() => session.value != null);
 
 let sdkSession: MatrixSdkSession | null = null;
-let syncController: AbortController | null = null;
 let subscribers = 0;
 let pendingRoomIdToSelect: string | null = null;
 const latestTimelineEventIds = new Map<string, string>();
-const roomEvents = new Map<string, MatrixEvent[]>();
-const roomEventIds = new Map<string, Set<string>>();
-const paginationTokens = new Map<string, string | undefined>();
+const roomEventStore = new RoomEventStore();
 
 function persistSessions() {
 	miLocalStorage.setItemAsJson('matrixSessions', sessions.value);
@@ -163,8 +162,6 @@ function describeError(prefix: string, error: unknown): string {
 }
 
 function resetRuntime() {
-	syncController?.abort();
-	syncController = null;
 	initialSync.value = false;
 	rooms.value = [];
 	invites.value = [];
@@ -175,9 +172,8 @@ function resetRuntime() {
 	loadingHistory.value = {};
 	pendingRoomIdToSelect = null;
 	latestTimelineEventIds.clear();
-	roomEvents.clear();
-	roomEventIds.clear();
-	paginationTokens.clear();
+	roomEventStore.clear();
+	clearTypingTimers();
 	releaseAllMedia();
 	connectionError.value = null;
 	cryptoUnavailable.value = false;
@@ -190,57 +186,6 @@ function resetRuntime() {
 }
 
 // ---------------------------------------------------------------- event store
-
-/**
- * Adds events to a room, ignoring ones already held. Returns whether anything was new, so a sync
- * that only carried receipts does not rebuild the timeline for nothing.
- */
-function isUndecryptable(event: MatrixEvent): boolean {
-	return event.content?.['m.undecryptable'] === true;
-}
-
-function recordEvents(roomId: string, events: MatrixEvent[]): boolean {
-	if (events.length === 0) return false;
-	const existing = roomEvents.get(roomId) ?? [];
-	const ids = roomEventIds.get(roomId) ?? new Set<string>();
-	let added = false;
-
-	for (const event of events) {
-		// State events carry no id worth deduping on when they repeat across syncs; keying them by
-		// type and state_key keeps the newest one and drops the rest.
-		const key = event.event_id ?? (event.state_key != null ? `${event.type} ${event.state_key}` : null);
-		if (key == null) continue;
-
-		if (ids.has(key)) {
-			// An encrypted event reaches the timeline before it is decrypted, so the same id comes
-			// back a second time with real content. Ignoring the repeat, as a plain dedupe would,
-			// leaves every encrypted message stuck on its "cannot decrypt" placeholder.
-			const index = existing.findIndex(held => (held.event_id ?? `${held.type} ${held.state_key}`) === key);
-			if (index !== -1 && isUndecryptable(existing[index]!) && !isUndecryptable(event)) {
-				existing[index] = event;
-				added = true;
-			}
-			continue;
-		}
-
-		ids.add(key);
-		existing.push(event);
-		added = true;
-	}
-	if (!added) return false;
-
-	existing.sort((a, b) => (a.origin_server_ts ?? 0) - (b.origin_server_ts ?? 0));
-	if (existing.length > MAX_EVENTS_PER_ROOM) {
-		const dropped = existing.splice(0, existing.length - MAX_EVENTS_PER_ROOM);
-		for (const event of dropped) {
-			if (event.event_id != null) ids.delete(event.event_id);
-		}
-	}
-
-	roomEvents.set(roomId, existing);
-	roomEventIds.set(roomId, ids);
-	return true;
-}
 
 function relatesTo(event: MatrixEvent): { rel_type?: string; event_id?: string; key?: string } | null {
 	const relation = event.content?.['m.relates_to'];
@@ -329,7 +274,7 @@ function replyTargetOf(
  * Derives the visible timeline from the raw events of a room.
  *
  * Runs over every held event on each change. That is deliberate: it is bounded by
- * {@link MAX_EVENTS_PER_ROOM} and it makes the result independent of arrival order, which
+ * {@link MAX_TOTAL_EVENTS_PER_ROOM} and it makes the result independent of arrival order, which
  * relations otherwise are not. Pure, so the relation handling can be tested on its own.
  */
 export function deriveTimeline(
@@ -340,6 +285,8 @@ export function deriveTimeline(
 	const redactedIds = new Set<string>();
 	const edits = new Map<string, { body: string; timestamp: number }>();
 	const reactionsByTarget = new Map<string, Map<string, MatrixReaction>>();
+	/** target event -> reaction key -> everyone already counted for it. */
+	const reactorsByTargetAndKey = new Map<string, Map<string, Set<string>>>();
 
 	for (const event of events) {
 		if (event.type === 'm.room.redaction' && typeof event.redacts === 'string') redactedIds.add(event.redacts);
@@ -364,6 +311,16 @@ export function deriveTimeline(
 		}
 
 		if (event.type === 'm.reaction' && relation.rel_type === 'm.annotation' && typeof relation.key === 'string') {
+			// One reaction per person per key. The same annotation can legitimately arrive under two
+			// event ids — a client that retried, or the same account reacting from a second device —
+			// and counting both made the tally disagree with what every other Matrix client shows.
+			const reactors = reactorsByTargetAndKey.get(relation.event_id) ?? new Map<string, Set<string>>();
+			const forKey = reactors.get(relation.key) ?? new Set<string>();
+			if (event.sender == null || forKey.has(event.sender)) continue;
+			forKey.add(event.sender);
+			reactors.set(relation.key, forKey);
+			reactorsByTargetAndKey.set(relation.event_id, reactors);
+
 			const perTarget = reactionsByTarget.get(relation.event_id) ?? new Map<string, MatrixReaction>();
 			const current = perTarget.get(relation.key) ?? { key: relation.key, count: 0, mine: false };
 			current.count++;
@@ -424,8 +381,26 @@ export function deriveTimeline(
 }
 
 function rebuildTimeline(roomId: string) {
-	const timeline = deriveTimeline(roomEvents.get(roomId) ?? [], session.value?.userId, members.value[roomId] ?? {});
-	const local = (messages.value[roomId] ?? []).filter(message => message.pending === true || message.failed === true);
+	const events = roomEventStore.get(roomId);
+	const timeline = deriveTimeline(events, session.value?.userId, members.value[roomId] ?? {});
+
+	// Transaction ids of our own messages the homeserver has now echoed back. A placeholder whose id
+	// is in here has been superseded by the real event, so keeping it would show the message twice —
+	// which is what happened whenever a sync arrived before the send call returned.
+	const confirmed = new Set<string>();
+	for (const event of events) {
+		const transactionId = event.unsigned?.transaction_id;
+		if (typeof transactionId === 'string') confirmed.add(transactionId);
+	}
+
+	const local = (messages.value[roomId] ?? []).filter(message => {
+		if (message.pending !== true && message.failed !== true) return false;
+		return !confirmed.has(message.eventId);
+	});
+	for (const message of messages.value[roomId] ?? []) {
+		if (message.pending === true && confirmed.has(message.eventId)) pendingSends.delete(message.eventId);
+	}
+
 	messages.value = { ...messages.value, [roomId]: [...timeline, ...local] };
 }
 
@@ -483,6 +458,9 @@ function applySync(
 	joinedRooms: Record<string, MatrixJoinedRoom>,
 	invitedRooms: Record<string, MatrixInvitedRoom>,
 	leftRoomIds: string[],
+	/** Set when this snapshot was produced by reading history, so retention can keep that page. */
+	backfilledRoomId?: string,
+	directRoomIds: ReadonlySet<string> = new Set(),
 ) {
 	// A conversation someone else starts arrives here first and only shows up under `join` once it
 	// is accepted, so ignoring this section makes every incoming DM invisible.
@@ -498,13 +476,29 @@ function applySync(
 
 	if (leftRoomIds.length > 0) {
 		rooms.value = rooms.value.filter(room => !leftRoomIds.includes(room.roomId));
+		// Every per-room map has to be cleared together. Leaving any of them behind kept a left room's
+		// members and "loading history" flag alive for the rest of the session, and rejoining then
+		// started from that stale state.
+		const nextMessages = { ...messages.value };
+		const nextMembers = { ...members.value };
+		const nextTyping = { ...typing.value };
+		const nextHasMore = { ...hasMoreHistory.value };
+		const nextLoading = { ...loadingHistory.value };
 		for (const roomId of leftRoomIds) {
-			delete messages.value[roomId];
+			delete nextMessages[roomId];
+			delete nextMembers[roomId];
+			delete nextTyping[roomId];
+			delete nextHasMore[roomId];
+			delete nextLoading[roomId];
 			latestTimelineEventIds.delete(roomId);
-			roomEvents.delete(roomId);
-			roomEventIds.delete(roomId);
-			paginationTokens.delete(roomId);
+			roomEventStore.forget(roomId);
+			clearTypingTimer(roomId);
 		}
+		messages.value = nextMessages;
+		members.value = nextMembers;
+		typing.value = nextTyping;
+		hasMoreHistory.value = nextHasMore;
+		loadingHistory.value = nextLoading;
 	}
 
 	for (const [roomId, joinedRoom] of Object.entries(joinedRooms)) {
@@ -516,17 +510,19 @@ function applySync(
 		const latestTimelineEventId = timelineEvents.findLast(event => typeof event.event_id === 'string')?.event_id;
 		if (latestTimelineEventId) latestTimelineEventIds.set(roomId, latestTimelineEventId);
 
-		// The first sync of a room is the only place a token to read further back is offered; later
-		// syncs would move it forward and skip everything in between.
-		if (!paginationTokens.has(roomId) && joinedRoom.timeline?.prev_batch != null) {
-			paginationTokens.set(roomId, joinedRoom.timeline.prev_batch);
-			hasMoreHistory.value = { ...hasMoreHistory.value, [roomId]: true };
-		}
-
 		const membersChanged = recordMembers(roomId, events);
 		recordTyping(roomId, joinedRoom.ephemeral?.events ?? []);
-		const eventsChanged = recordEvents(roomId, timelineEvents);
+		const eventsChanged = roomEventStore.record(roomId, timelineEvents, { backfill: roomId === backfilledRoomId });
 		if (eventsChanged || membersChanged) rebuildTimeline(roomId);
+
+		// Read every time rather than only on the room's first sync. The token here is the SDK live
+		// timeline's backward token, which only ever moves further back as history is read, so re-reading
+		// it cannot skip anything — unlike a raw `/sync` `prev_batch`, which this once guarded against.
+		const moreOnServer = joinedRoom.timeline?.prev_batch != null;
+		const hasMore = moreOnServer && roomEventStore.canHoldMoreHistory(roomId);
+		if (hasMoreHistory.value[roomId] !== hasMore) {
+			hasMoreHistory.value = { ...hasMoreHistory.value, [roomId]: hasMore };
+		}
 
 		const latestMessage = messages.value[roomId]?.at(-1);
 		const summary: MatrixRoomSummary = {
@@ -538,6 +534,7 @@ function applySync(
 			unreadCount: joinedRoom.unread_notifications?.notification_count ?? previousRoom?.unreadCount ?? 0,
 			lastActivityAt: latestMessage?.timestamp ?? previousRoom?.lastActivityAt ?? 0,
 			lastMessage: latestMessage?.body ?? previousRoom?.lastMessage,
+			direct: directRoomIds.has(roomId),
 		};
 
 		const index = rooms.value.findIndex(room => room.roomId === roomId);
@@ -558,16 +555,19 @@ export async function loadOlderMessages(roomId: string): Promise<void> {
 	if (loadingHistory.value[roomId] === true) return;
 	const active = sdkSession;
 	if (active == null) return;
+	// Refuse rather than fetch a page the event store would immediately drop. Reporting the room as
+	// having no more history is what stops the view offering a button that cannot do anything.
+	if (!roomEventStore.canHoldMoreHistory(roomId)) {
+		hasMoreHistory.value = { ...hasMoreHistory.value, [roomId]: false };
+		return;
+	}
 
 	loadingHistory.value = { ...loadingHistory.value, [roomId]: true };
 	try {
 		const page = await active.loadOlder(roomId);
 		// No token back, or a page with nothing in it, means the start of the room.
 		if (page.end == null || page.chunkLength === 0) {
-			paginationTokens.set(roomId, undefined);
 			hasMoreHistory.value = { ...hasMoreHistory.value, [roomId]: false };
-		} else {
-			paginationTokens.set(roomId, page.end);
 		}
 	} finally {
 		loadingHistory.value = { ...loadingHistory.value, [roomId]: false };
@@ -578,18 +578,12 @@ function isAuthenticationFailure(error: unknown): boolean {
 	return error instanceof MatrixApiError && error.isAuthenticationFailure;
 }
 
-function rateLimitRetryDelay(error: unknown): number | null {
-	if (!(error instanceof MatrixApiError) || error.retryAfterMs == null) return null;
-	// Trust the homeserver, but do not let a hostile or buggy value stall the client for hours.
-	return Math.min(Math.max(error.retryAfterMs, 0), 60000);
-}
-
 /** Bridges an SDK snapshot into the store's own room/event model. */
 function applySdkSnapshot(snapshot: SdkRoomSnapshot) {
 	const known = new Set(Object.keys(snapshot.joined));
 	// Rooms the client no longer holds have been left, from this store's point of view.
 	const left = rooms.value.map(room => room.roomId).filter(id => !known.has(id));
-	applySync(snapshot.joined, snapshot.invited, left);
+	applySync(snapshot.joined, snapshot.invited, left, snapshot.backfilledRoomId, new Set(snapshot.directRoomIds));
 }
 
 /**
@@ -613,11 +607,24 @@ let starting: Promise<void> | null = null;
 let sessionOwnerKey: string | null = null;
 let idleTimer: number | null = null;
 
+/**
+ * Which session attempt is the current one.
+ *
+ * Callbacks used to be filtered on {@link sessionOwnerKey}, which is only assigned once startup has
+ * finished — so everything a client reported *while starting* was discarded, including the auth
+ * failure of an expired token, which left the view waiting on a sync that would never come. This is
+ * bumped before a client is built and again whenever one is dropped, so a callback can tell whether
+ * it still belongs to the session the store wants at any point in its life.
+ */
+let sessionGeneration = 0;
+
 function stopSessionRuntime(): void {
 	const stopping = sdkSession;
 	sdkSession = null;
 	sessionOwnerKey = null;
 	starting = null;
+	// Anything still in flight from the outgoing client is now somebody else's past.
+	sessionGeneration++;
 	if (stopping == null) return;
 	teardown = teardown.then(() => stopping.stop()).catch(() => undefined);
 }
@@ -641,28 +648,33 @@ async function ensureSession(): Promise<void> {
 	}
 	if (starting != null) return starting;
 
+	// Claimed before anything is built, so the callbacks below can be filtered from their very first
+	// call rather than only once startup finishes.
+	const generation = ++sessionGeneration;
+	const isCurrent = () => generation === sessionGeneration;
+
 	starting = (async () => {
 		// Never overlap with an outgoing session's crypto database.
 		await teardown;
-		if (session.value == null || matrixSessionKey(session.value) !== wantedKey || subscribers === 0) return;
+		if (!isCurrent() || session.value == null || matrixSessionKey(session.value) !== wantedKey || subscribers === 0) return;
 
 		initialSync.value = true;
 		const runtime = await import('./matrix-sdk-runtime.js');
-		if (session.value == null || matrixSessionKey(session.value) !== wantedKey) return;
+		if (!isCurrent() || session.value == null || matrixSessionKey(session.value) !== wantedKey) return;
 
 		const handle = await runtime.startMatrixSdkSession(wanted, {
 			onSync: (snapshot) => {
-				if (sessionOwnerKey !== wantedKey) return;
+				if (!isCurrent()) return;
 				applySdkSnapshot(snapshot);
 				connectionError.value = null;
 				initialSync.value = false;
-				void refreshCryptoStatus();
+				scheduleCryptoStatusRefresh();
 			},
 			onAuthFailure: () => {
-				if (sessionOwnerKey === wantedKey) discardActiveSession();
+				if (isCurrent()) discardActiveSession();
 			},
 			onError: (error) => {
-				if (sessionOwnerKey !== wantedKey) return;
+				if (!isCurrent()) return;
 				initialSync.value = false;
 				if (isAuthenticationFailure(error)) {
 					discardActiveSession();
@@ -673,7 +685,7 @@ async function ensureSession(): Promise<void> {
 		});
 
 		// The account changed while the client was starting; this one is already obsolete.
-		if (session.value == null || matrixSessionKey(session.value) !== wantedKey) {
+		if (!isCurrent() || session.value == null || matrixSessionKey(session.value) !== wantedKey) {
 			await handle.stop();
 			return;
 		}
@@ -736,11 +748,37 @@ export function restartSync(): void {
 	void ensureSession();
 }
 
+/**
+ * Device and secret-storage status, refreshed at most once every few seconds.
+ *
+ * Both are crypto API round trips, and this used to run on every sync callback — which fires per
+ * timeline event, so a burst of messages meant a burst of crypto queries whose answers could also
+ * land out of order. Nothing here is time critical: it drives an advisory banner.
+ */
+const CRYPTO_STATUS_INTERVAL_MS = 5_000;
+let cryptoStatusRefreshedAt = 0;
+let cryptoStatusInFlight = false;
+
+function scheduleCryptoStatusRefresh(): void {
+	const now = Date.now();
+	if (cryptoStatusInFlight || now - cryptoStatusRefreshedAt < CRYPTO_STATUS_INTERVAL_MS) return;
+	cryptoStatusRefreshedAt = now;
+	cryptoStatusInFlight = true;
+	void refreshCryptoStatus().finally(() => { cryptoStatusInFlight = false; });
+}
+
 async function refreshCryptoStatus() {
-	if (sdkSession == null) return;
+	const active = sdkSession;
+	if (active == null) return;
 	try {
-		unverifiedDeviceCount.value = await sdkSession.unverifiedDeviceCount();
-		secretStorageReady.value = await sdkSession.isSecretStorageReady();
+		const [unverified, ready] = await Promise.all([
+			active.unverifiedDeviceCount(),
+			active.isSecretStorageReady(),
+		]);
+		// The session may have been replaced while these were in flight.
+		if (sdkSession !== active) return;
+		unverifiedDeviceCount.value = unverified;
+		secretStorageReady.value = ready;
 	} catch {
 		// Status is advisory; a failure here must not tear down the session.
 	}
@@ -829,12 +867,12 @@ export function activateSession(nextSession: MatrixSession): void {
 }
 
 export async function login(homeserverUrl: string, userId: string, password: string): Promise<void> {
-	const newSession = await MatrixClient.login(homeserverUrl, userId, password);
+	const newSession = await MatrixAuthClient.login(homeserverUrl, userId, password);
 	const replacedSession = sessions.value.find(saved => matrixSessionKey(saved) === matrixSessionKey(newSession));
 	activateSession(newSession);
 	// The homeserver issues a fresh token per login; the superseded one is ours to clean up.
 	if (replacedSession && replacedSession.accessToken !== newSession.accessToken) {
-		void new MatrixClient(replacedSession).logout().catch(() => undefined);
+		void new MatrixAuthClient(replacedSession).logout().catch(() => undefined);
 	}
 }
 
@@ -905,7 +943,9 @@ function localEcho(roomId: string, kind: MatrixMessageKind, body: string, attach
 	if (ownUserId == null) return null;
 	const member = members.value[roomId]?.[ownUserId];
 	return {
-		eventId: `local:${crypto.randomUUID()}`,
+		// Doubles as the transaction id the message is sent under, so the homeserver's echo of that id
+		// identifies exactly which placeholder this event replaces.
+		eventId: `m${Date.now()}.${crypto.randomUUID()}`,
 		sender: ownUserId,
 		senderName: member?.displayName ?? ownUserId,
 		senderAvatarUrl: member?.avatarUrl,
@@ -928,7 +968,7 @@ export async function sendText(roomId: string, body: string, replyTo?: MatrixRep
 
 	addLocalEcho(roomId, echo, { kind: 'text', body, replyTo });
 	try {
-		await requireSession().sendText(roomId, body, replyTo?.eventId);
+		await requireSession().sendText(roomId, body, replyTo?.eventId, echo.eventId);
 		// The synced event carries the real id and timestamp, so the placeholder just goes away.
 		replaceLocalEcho(roomId, echo.eventId, null);
 	} catch (error) {
@@ -947,7 +987,7 @@ export async function sendFile(roomId: string, file: File): Promise<void> {
 
 	addLocalEcho(roomId, echo, { kind: 'file', file });
 	try {
-		await requireSession().sendFile(roomId, file);
+		await requireSession().sendFile(roomId, file, echo.eventId);
 		replaceLocalEcho(roomId, echo.eventId, null);
 	} catch (error) {
 		replaceLocalEcho(roomId, echo.eventId, { pending: false, failed: true });
@@ -969,8 +1009,8 @@ export async function retrySend(roomId: string, localEventId: string): Promise<v
 	replaceLocalEcho(roomId, localEventId, { pending: true, failed: false });
 	try {
 		const active = requireSession();
-		if (payload.kind === 'text') await active.sendText(roomId, payload.body, payload.replyTo?.eventId);
-		else await active.sendFile(roomId, payload.file);
+		if (payload.kind === 'text') await active.sendText(roomId, payload.body, payload.replyTo?.eventId, localEventId);
+		else await active.sendFile(roomId, payload.file, localEventId);
 		replaceLocalEcho(roomId, localEventId, null);
 	} catch (error) {
 		replaceLocalEcho(roomId, localEventId, { pending: false, failed: true });
@@ -1004,22 +1044,40 @@ export async function toggleReaction(roomId: string, eventId: string, key: strin
 	}
 }
 
-let typingTimer: number | null = null;
+/**
+ * Throttle timers for the typing notice, one per room.
+ *
+ * A single shared timer meant the throttle was global: typing in one conversation suppressed the
+ * notice in every other one until it expired, and switching rooms mid-throttle left the previous
+ * room showing this account as still typing.
+ */
+const typingTimers = new Map<string, number>();
+
+function clearTypingTimer(roomId: string): void {
+	const timer = typingTimers.get(roomId);
+	if (timer != null) {
+		window.clearTimeout(timer);
+		typingTimers.delete(roomId);
+	}
+}
+
+function clearTypingTimers(): void {
+	for (const timer of typingTimers.values()) window.clearTimeout(timer);
+	typingTimers.clear();
+}
 
 /** Tells the room we are composing, at most once every few seconds. */
 export function notifyTyping(roomId: string): void {
-	if (typingTimer != null) return;
-	if (sdkSession != null) void sdkSession.setTyping(roomId, true).catch(() => undefined);
+	if (typingTimers.has(roomId)) return;
+	const active = sdkSession;
+	if (active == null) return;
 
-	else return;
-	typingTimer = window.setTimeout(() => { typingTimer = null; }, 5000);
+	void active.setTyping(roomId, true).catch(() => undefined);
+	typingTimers.set(roomId, window.setTimeout(() => typingTimers.delete(roomId), 5000));
 }
 
 export function stopTyping(roomId: string): void {
-	if (typingTimer != null) {
-		window.clearTimeout(typingTimer);
-		typingTimer = null;
-	}
+	clearTypingTimer(roomId);
 	if (sdkSession != null) void sdkSession.setTyping(roomId, false).catch(() => undefined);
 }
 
@@ -1027,7 +1085,7 @@ export async function createDirectRoom(userId: string): Promise<string> {
 	const active = requireSession();
 	const roomId = await active.createDirectRoom(userId);
 	// Shown straight away; the sync fills in the real name and members a moment later.
-	rooms.value.push({ roomId, name: userId, encrypted: active.cryptoEnabled, unreadCount: 0, lastActivityAt: Date.now() });
+	rooms.value.push({ roomId, name: userId, encrypted: active.cryptoEnabled, unreadCount: 0, lastActivityAt: Date.now(), direct: true });
 	return roomId;
 }
 
