@@ -1,12 +1,3 @@
-# Misskey Mercury 変更履歴
-
-Mercuryフォーク独自の変更履歴です。
-ベースとなるMisskey本体の変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。
-
-Mercuryのバージョンは`package.json`の`mercuryVersion`で管理し、上流のバージョンと組み合わせて表示されます (例: `2026.8.0-alpha.0-mercury.0.3.1`)。
-
-0.3.0以前の変更履歴は [Releases](https://github.com/harunoya/misskey-mercury/releases) にあります。
-
 ## 0.3.1
 
 ### Note
