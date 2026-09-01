@@ -111,6 +111,8 @@ export function createDetachedComponent(component: Component, props?: Record<str
 	const wrapper = {
 		$mount() {
 			instance = app.mount(host) as unknown as Record<string, unknown>;
+			// Registered on the wrapper root: `destroyDetached` walks `$parent` up from wherever
+			// `destroyDom` was called, and every component in this app ends up here.
 			teardowns.set(instance, () => wrapper.$destroy());
 			return proxy;
 		},
@@ -128,6 +130,25 @@ export function createDetachedComponent(component: Component, props?: Record<str
 
 	// Dialogs call their own methods on the returned object (`vm.close()`), which in Vue 2 was the
 	// component instance itself.
+	/**
+	 * The component's own props object, which is where a post-mount prop write has to land.
+	 *
+	 * Vue 2 let the creator write straight to the instance, and v11 relies on it: the autocomplete
+	 * directive sets `suggestion.q` on every keystroke, and the pickers follow the caret by setting
+	 * `x`/`y`. Vue 3 exposes props read-only on the public instance, so those writes were dropped and
+	 * the suggestion list stayed on the query it was opened with — an empty one, which lists only
+	 * custom emojis.
+	 *
+	 * `$.props` is Vue's internal shallow-reactive props object. Writing there updates just this
+	 * component. Rendering it through a wrapper whose props were reactive would be the tidier shape,
+	 * but v11 moves the mounted element out of its container (`document.body.appendChild(vm.$el)`),
+	 * and a parent patching a subtree whose DOM has moved crashes the renderer.
+	 */
+	const propsOf = (vm: Record<string, unknown> | null): Record<string, unknown> | null => {
+		const internal = vm?.$ as { props?: Record<string, unknown> } | undefined;
+		return internal?.props ?? null;
+	};
+
 	const proxy: DetachedInstance = new Proxy(wrapper, {
 		get(self, key, receiver) {
 			if (key in self) return Reflect.get(self, key, receiver);
@@ -135,6 +156,11 @@ export function createDetachedComponent(component: Component, props?: Record<str
 			return typeof value === 'function' ? value.bind(instance) : value;
 		},
 		set(self, key, value) {
+			const props = propsOf(instance);
+			if (props != null && Object.prototype.hasOwnProperty.call(props, key)) {
+				props[key as string] = value;
+				return true;
+			}
 			if (instance != null && !(key in self)) {
 				instance[key as string] = value;
 				return true;

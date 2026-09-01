@@ -2,13 +2,7 @@
 <div class="rdfaahpb" v-hotkey.global="keymap">
 	<div class="backdrop" ref="backdrop" @click="close"></div>
 	<div class="popover" :class="{ isMobile: $root.isMobile }" ref="popover">
-		<p v-if="!$root.isMobile">{{ title }}</p>
-		<div class="buttons" ref="buttons" :class="{ showFocus }">
-			<button v-for="(reaction, i) in rs" :key="reaction" @click="react(reaction)" @mouseover="onMouseover" @mouseout="onMouseout" :tabindex="i + 1" :title="/^[a-z]+$/.test(reaction) ? $t('@.reactions.' + reaction) : reaction" v-particle><mk-reaction-icon :reaction="reaction"/></button>
-		</div>
-		<div v-if="enableEmojiReaction" class="text">
-			<input v-model="text" :placeholder="$t('input-reaction-placeholder')" @keyup.enter="reactText" @input="tryReactText" v-autocomplete="{ model: 'text' }">
-		</div>
+		<x-emoji-picker :pinned="rs" @chosen="react"/>
 	</div>
 </div>
 </template>
@@ -17,10 +11,24 @@
 import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import anime from 'animejs';
-import { emojiRegex } from '../../../../../misc/emoji-regex';
+import XEmojiPicker from './emoji-picker.vue';
 
+/**
+ * The reaction picker.
+ *
+ * v11 offered the account's ten configured reactions and a text field to type anything else into.
+ * Everything the instance actually had was therefore invisible: reacting with a custom emoji meant
+ * knowing its name and spelling it. This keeps the popover, its placement and its `chosen` contract,
+ * and puts the full emoji picker inside it — the configured reactions stay one click away as the
+ * picker's pinned row.
+ */
 export default defineComponent({
 	i18n: i18n('common/views/components/reaction-picker.vue'),
+
+	components: {
+		XEmojiPicker,
+	},
+
 	props: {
 		source: {
 			required: true
@@ -46,10 +54,6 @@ export default defineComponent({
 	data() {
 		return {
 			rs: this.reactions || this.$store.state.settings.reactions,
-			title: this.$t('choose-reaction'),
-			text: null,
-			enableEmojiReaction: false,
-			focus: null
 		};
 	},
 
@@ -57,43 +61,12 @@ export default defineComponent({
 		keymap(): any {
 			return {
 				'esc': this.close,
-				'enter|space|plus': this.choose,
-				'up|k': this.focusUp,
-				'left|h|shift+tab': this.focusLeft,
-				'right|l|tab': this.focusRight,
-				'down|j': this.focusDown,
-				'1': () => this.react('like'),
-				'2': () => this.react('love'),
-				'3': () => this.react('laugh'),
-				'4': () => this.react('hmm'),
-				'5': () => this.react('surprise'),
-				'6': () => this.react('congrats'),
-				'7': () => this.react('angry'),
-				'8': () => this.react('confused'),
-				'9': () => this.react('rip'),
-				'0': () => this.react('pudding'),
 			};
 		}
 	},
 
-	watch: {
-		focus(i) {
-			this.$refs.buttons.children[i].focus();
-
-			if (this.showFocus) {
-				this.title = this.$refs.buttons.children[i].title;
-			}
-		}
-	},
-
 	mounted() {
-		this.$root.getMeta().then(meta => {
-			this.enableEmojiReaction = meta.enableEmojiReaction;
-		});
-
 		this.$nextTick(() => {
-			this.focus = 0;
-
 			const popover = this.$refs.popover as any;
 
 			const rect = this.source.getBoundingClientRect();
@@ -108,8 +81,15 @@ export default defineComponent({
 			} else {
 				const x = rect.left + window.pageXOffset + (this.source.offsetWidth / 2);
 				const y = rect.top + window.pageYOffset + this.source.offsetHeight;
-				popover.style.left = (x - (width / 2)) + 'px';
-				popover.style.top = y + 'px';
+				// Kept on screen: the picker is much taller than the ten buttons it replaced, so
+				// anchoring it below a note near the bottom would otherwise run off the viewport.
+				const maxLeft = window.pageXOffset + document.documentElement.clientWidth - width - 8;
+				const minLeft = window.pageXOffset + 8;
+				const flipUp = (rect.top + this.source.offsetHeight + height) > document.documentElement.clientHeight
+					&& rect.top > height;
+				popover.style.left = Math.max(minLeft, Math.min(x - (width / 2), maxLeft)) + 'px';
+				popover.style.top = (flipUp ? rect.top + window.pageYOffset - height : y) + 'px';
+				if (flipUp) popover.classList.add('flipped');
 			}
 
 			anime({
@@ -131,25 +111,6 @@ export default defineComponent({
 	methods: {
 		react(reaction) {
 			this.$emit('chosen', reaction);
-		},
-
-		reactText() {
-			if (!this.text) return;
-			this.react(this.text);
-		},
-
-		tryReactText() {
-			if (!this.text) return;
-			if (!this.text.match(emojiRegex)) return;
-			this.reactText();
-		},
-
-		onMouseover(e) {
-			this.title = e.target.title;
-		},
-
-		onMouseout(e) {
-			this.title = this.$t('choose-reaction');
 		},
 
 		close() {
@@ -174,26 +135,6 @@ export default defineComponent({
 				}
 			});
 		},
-
-		focusUp() {
-			this.focus = this.focus == 0 ? 9 : this.focus < 5 ? (this.focus + 4) : (this.focus - 5);
-		},
-
-		focusDown() {
-			this.focus = this.focus == 9 ? 0 : this.focus >= 5 ? (this.focus - 4) : (this.focus + 5);
-		},
-
-		focusRight() {
-			this.focus = this.focus == 9 ? 0 : (this.focus + 1);
-		},
-
-		focusLeft() {
-			this.focus = this.focus == 0 ? 9 : (this.focus - 1);
-		},
-
-		choose() {
-			this.$refs.buttons.childNodes[this.focus].click();
-		}
 	}
 });
 </script>
@@ -248,6 +189,19 @@ export default defineComponent({
 				border-left solid $arrow-size transparent
 				border-right solid $arrow-size transparent
 				border-bottom solid $arrow-size $bgcolor
+
+		// Opened upwards because there was no room below: the arrow has to move with it, and the
+		// margin that made space for it belongs on the other side.
+		&.flipped
+			margin-top 0
+			margin-bottom 16px
+			transform-origin center calc(100% + 16px)
+
+			&:before
+				top auto
+				bottom -32px
+				border-bottom-width 0
+				border-top solid 16px $bgcolor
 
 		> p
 			display block
