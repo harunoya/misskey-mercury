@@ -107,7 +107,12 @@ async function createAdmin(host: Host): Promise<Misskey.entities.SignupResponse 
 export async function fetchAdmin(host: Host): Promise<LoginUser> {
 	const admin = ADMIN_CACHE.get(host) ?? await signin(host, ADMIN_PARAMS)
 		.catch(async err => {
-			if (err.id === '6cc579cc-885d-43d8-95c2-b8c7fc963280') {
+			// サインインは「そのユーザーが居ない」と「パスワードが違う」を区別せず、
+			// どちらもこのIDを返す (ユーザー名の列挙を防ぐため)。まだ管理者が居ない
+			// インスタンスで最初に立ち上げるには、この共通の失敗を受けて作成を試みる
+			// ほかない。createAdmin は既に管理者が居れば access denied で undefined を
+			// 返すので、パスワードが本当に違う場合は続くサインインが同じ失敗で終わる。
+			if (err.id === '932c904e-9460-45b7-9ce6-7ed33be7eb2c') {
 				await createAdmin(host);
 				return await signin(host, ADMIN_PARAMS);
 			}
