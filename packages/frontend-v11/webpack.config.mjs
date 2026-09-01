@@ -89,7 +89,18 @@ export default {
 	},
 	plugins: [
 		new VueLoaderPlugin(),
-		new CopyWebpackPlugin({ patterns: [{ from: resolve(vendorRoot, 'src/client/assets'), to: 'assets' }] }),
+		// v11's markup asks for these by absolute URL (`/assets/…`, served under `publicPath`), so they
+		// have to be copied rather than resolved by webpack. The per-app directories are separate
+		// sources that upstream published under the same prefix — without them `messaging-room.message`
+		// and `post-form-attaches` request `/v11/assets/desktop/remove.png` and get a 404 on every
+		// message and every attachment.
+		new CopyWebpackPlugin({
+			patterns: [
+				{ from: resolve(vendorRoot, 'src/client/assets'), to: 'assets' },
+				{ from: resolve(vendorRoot, 'src/client/app/desktop/assets'), to: 'assets/desktop' },
+				{ from: resolve(vendorRoot, 'src/client/app/auth/assets'), to: 'assets/auth' },
+			],
+		}),
 		new webpack.DefinePlugin({
 			_COPYRIGHT_: JSON.stringify(constants.copyright),
 			_VERSION_: JSON.stringify('11.37.1-mercury'),
