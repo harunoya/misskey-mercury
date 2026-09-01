@@ -28,6 +28,12 @@ export default defineComponent({
 		};
 	},
 	mounted() {
+		// Total from `server-info`, live usage from the stream: the stream stopped carrying the
+		// total, so every percentage here divided by `undefined`.
+		this.$root.api('server-info').then(info => {
+			this.total = info.mem?.total ?? 0;
+		}).catch(() => undefined);
+
 		this.connection.on('stats', this.onStats);
 	},
 	beforeUnmount() {
@@ -35,11 +41,11 @@ export default defineComponent({
 	},
 	methods: {
 		onStats(stats) {
-			stats.mem.free = stats.mem.total - stats.mem.used;
-			this.usage = stats.mem.used / stats.mem.total;
-			this.total = stats.mem.total;
-			this.used = stats.mem.used;
-			this.free = stats.mem.free;
+			if (stats.mem == null) return;
+			this.used = stats.mem.active ?? stats.mem.used ?? 0;
+			if (this.total === 0) return;
+			this.free = this.total - this.used;
+			this.usage = this.used / this.total;
 		}
 	}
 });

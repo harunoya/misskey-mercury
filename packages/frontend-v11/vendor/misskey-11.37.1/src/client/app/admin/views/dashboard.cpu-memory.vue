@@ -3,14 +3,14 @@
 	<div>
 		<header>
 			<span><fa icon="microchip"/> CPU <span>{{ cpuP }}%</span></span>
-			<span v-if="meta">{{ meta.cpu.model }}</span>
+			<span v-if="serverInfo">{{ serverInfo.cpu.model }}</span>
 		</header>
 		<div ref="cpu"></div>
 	</div>
 	<div>
 		<header>
 			<span><fa icon="memory"/> MEM <span>{{ memP }}%</span></span>
-			<span v-if="meta"></span>
+			<span v-if="serverInfo"></span>
 		</header>
 		<div ref="mem"></div>
 	</div>
@@ -31,7 +31,7 @@ export default defineComponent({
 			memChart: null,
 			cpuP: '',
 			memP: '',
-			meta: null
+			serverInfo: null
 		};
 	},
 
@@ -41,14 +41,19 @@ export default defineComponent({
 				data: stats.map((x, i) => ({ x: i, y: x.cpu_usage }))
 			}]);
 			this.memChart.updateSeries([{
-				data: stats.map((x, i) => ({ x: i, y: (x.mem.used / x.mem.total) }))
+				data: stats.map((x, i) => ({ x: i, y: this.memRatio(x) }))
 			}]);
 		}
 	},
 
 	mounted() {
-		this.$root.getMeta().then(meta => {
-			this.meta = meta;
+		// `admin/server-info`, not `meta`: v11 read the CPU model off `meta.cpu`, and the current
+		// backend moved the machine's hardware details to their own admin endpoint. `meta` has no
+		// `cpu` any more, so reading it threw and took the whole dashboard down with it.
+		this.$root.api('admin/server-info').then(info => {
+			this.serverInfo = info;
+		}).catch(() => {
+			// The panel still draws its charts without the model name.
 		});
 
 		this.connection.on('stats', this.onStats);
@@ -123,12 +128,19 @@ export default defineComponent({
 	},
 
 	methods: {
+		/** `active` is what the current server reports; `used` is what v11's server sent. */
+		memRatio(stats): number {
+			const total = this.serverInfo?.mem?.total ?? 0;
+			if (total === 0 || stats?.mem == null) return 0;
+			return (stats.mem.active ?? stats.mem.used ?? 0) / total;
+		},
+
 		onStats(stats) {
 			this.stats.push(stats);
 			if (this.stats.length > 200) this.stats.shift();
 
 			this.cpuP = (stats.cpu_usage * 100).toFixed(0);
-			this.memP = (stats.mem.used / stats.mem.total * 100).toFixed(0);
+			this.memP = (this.memRatio(stats) * 100).toFixed(0);
 		},
 
 		onStatsLog(statsLog) {

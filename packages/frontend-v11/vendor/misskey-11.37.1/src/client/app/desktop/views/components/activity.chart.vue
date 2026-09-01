@@ -1,6 +1,6 @@
 <template>
 <svg :viewBox="`0 0 ${ viewBoxX } ${ viewBoxY }`" @mousedown.prevent="onMousedown">
-	<title>{{ $t('total') }}<br/>{{ $t('notes') }}<br/>{{ $t('replies') }}<br/>{{ $t('renotes') }}</title>
+	<title>{{ legend }}</title>
 	<polyline
 		:points="pointsNote"
 		fill="none"
@@ -55,6 +55,19 @@ export default defineComponent({
 			pointsRenote: null,
 			pointsTotal: null
 		};
+	},
+	computed: {
+		/**
+		 * The chart's legend, as the one string an SVG `<title>` can hold.
+		 *
+		 * This was four labels separated by `<br/>`, which SVG has no place for: `<title>` takes text
+		 * content only, so the browser dropped the breaks and ran the four labels together in the
+		 * tooltip — and Vue warned about it on every build. A newline is what a native tooltip
+		 * actually breaks on.
+		 */
+		legend(): string {
+			return [this.$t('total'), this.$t('notes'), this.$t('replies'), this.$t('renotes')].join('\n');
+		},
 	},
 	created() {
 		for (const d of this.data) {

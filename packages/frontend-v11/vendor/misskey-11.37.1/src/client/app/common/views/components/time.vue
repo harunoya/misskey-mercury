@@ -13,9 +13,18 @@ import i18n from '../../../i18n';
 export default defineComponent({
 	i18n: i18n(),
 	props: {
+		/**
+		 * Nullable, unlike in v11.
+		 *
+		 * Several of the timestamps this renders are absent in the current API when the thing never
+		 * happened — a security key that has never been used, a profile that was never edited. v11
+		 * assumed they were always there, so a null crashed the computed and took the whole render
+		 * tree with it.
+		 */
 		time: {
 			type: [Date, String],
-			required: true
+			required: false,
+			default: null
 		},
 		mode: {
 			type: String,
@@ -29,14 +38,17 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		_time(): Date {
-			return typeof this.time == 'string' ? new Date(this.time) : this.time;
+		_time(): Date | null {
+			if (this.time == null) return null;
+			const parsed = typeof this.time == 'string' ? new Date(this.time) : this.time;
+			return isNaN(parsed.getTime()) ? null : parsed;
 		},
 		absolute(): string {
-			return this._time.toLocaleString();
+			return this._time == null ? '' : this._time.toLocaleString();
 		},
 		relative(): string {
 			const time = this._time;
+			if (time == null) return '';
 			const ago = (this.now.getTime() - time.getTime()) / 1000/*ms*/;
 			return (
 				ago >= 31536000 ? this.$t('@.time.years_ago')  .replace('{}', (~~(ago / 31536000)).toString()) :

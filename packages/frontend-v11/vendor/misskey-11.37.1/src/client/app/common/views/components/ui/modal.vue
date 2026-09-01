@@ -1,7 +1,9 @@
 <template>
 <div class="modal">
 	<div class="bg" ref="bg" @click="onBgClick" />
-	<slot class="main" />
+	<!-- The class on this slot did nothing: Vue 3 does not forward attributes from `<slot>` onto the
+	     content, so the `.main` rule below is written to reach that content instead. -->
+	<slot />
 </div>
 </template>
 
@@ -75,6 +77,13 @@ export default defineComponent({
 	background rgba(#000, 0.7)
 	opacity 0
 
-.main
-	z-index 1
+// Reaches the slotted content, which is what `.main` actually is.
+//
+// In Vue 2 this was `<slot class="main"/>` plus a scoped `.main` rule: the class was merged onto the
+// slot content and the scoped rule matched it. Vue 3 does neither, so the dialog sat at `z-index:
+// auto` while the backdrop above claimed every click — every dialog in v11 rendered, and none of
+// their buttons could be pressed.
+.modal
+	>>> .main
+		z-index 2
 </style>

@@ -69,6 +69,7 @@ export default defineComponent({
 	props: ['connection'],
 	data() {
 		return {
+			memTotal: 0,
 			viewBoxX: 50,
 			viewBoxY: 30,
 			stats: [],
@@ -89,6 +90,11 @@ export default defineComponent({
 		};
 	},
 	mounted() {
+		// The stream stopped carrying the machine's total memory; it lives on `server-info` now.
+		this.$root.api('server-info').then(info => {
+			this.memTotal = info.mem?.total ?? 0;
+		}).catch(() => undefined);
+
 		this.connection.on('stats', this.onStats);
 		this.connection.on('statsLog', this.onStatsLog);
 		this.connection.send('requestLog', {
@@ -100,12 +106,18 @@ export default defineComponent({
 		this.connection.off('statsLog', this.onStatsLog);
 	},
 	methods: {
+		/** `active` is what the current server reports; `used` is what v11's server sent. */
+		memRatio(stats): number {
+			if (this.memTotal === 0 || stats?.mem == null) return 0;
+			return (stats.mem.active ?? stats.mem.used ?? 0) / this.memTotal;
+		},
+
 		onStats(stats) {
 			this.stats.push(stats);
 			if (this.stats.length > 50) this.stats.shift();
 
 			const cpuPolylinePoints = this.stats.map((s, i) => [this.viewBoxX - ((this.stats.length - 1) - i), (1 - s.cpu_usage) * this.viewBoxY]);
-			const memPolylinePoints = this.stats.map((s, i) => [this.viewBoxX - ((this.stats.length - 1) - i), (1 - (s.mem.used / s.mem.total)) * this.viewBoxY]);
+			const memPolylinePoints = this.stats.map((s, i) => [this.viewBoxX - ((this.stats.length - 1) - i), (1 - (this.memRatio(s))) * this.viewBoxY]);
 			this.cpuPolylinePoints = cpuPolylinePoints.map(xy => `${xy[0]},${xy[1]}`).join(' ');
 			this.memPolylinePoints = memPolylinePoints.map(xy => `${xy[0]},${xy[1]}`).join(' ');
 
@@ -118,7 +130,7 @@ export default defineComponent({
 			this.memHeadY = memPolylinePoints[memPolylinePoints.length - 1][1];
 
 			this.cpuP = (stats.cpu_usage * 100).toFixed(0);
-			this.memP = (stats.mem.used / stats.mem.total * 100).toFixed(0);
+			this.memP = (this.memRatio(stats) * 100).toFixed(0);
 		},
 		onStatsLog(statsLog) {
 			for (const stats of statsLog.reverse()) this.onStats(stats);

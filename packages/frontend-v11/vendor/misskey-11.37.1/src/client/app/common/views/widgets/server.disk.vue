@@ -28,19 +28,19 @@ export default defineComponent({
 		};
 	},
 	mounted() {
-		this.connection.on('stats', this.onStats);
-	},
-	beforeUnmount() {
-		this.connection.off('stats', this.onStats);
-	},
-	methods: {
-		onStats(stats) {
-			stats.disk.used = stats.disk.total - stats.disk.free;
-			this.usage = stats.disk.used / stats.disk.total;
-			this.total = stats.disk.total;
-			this.used = stats.disk.used;
-			this.available = stats.disk.available;
-		}
+			// The stream carries only the live figures now; the machine's fixed capacities moved to
+			// the `server-info` endpoint. v11 read `stats.disk`/`stats.mem.total` straight off the
+			// stream, and `stats.disk` no longer exists at all — reading it threw on every stats
+			// message the server sent.
+		this.$root.api('server-info').then(info => {
+			if (info.fs == null) return;
+			this.total = info.fs.total;
+			this.used = info.fs.used;
+			this.available = info.fs.total - info.fs.used;
+			this.usage = info.fs.total === 0 ? 0 : info.fs.used / info.fs.total;
+		}).catch(() => {
+			// Leaves the widget at zero rather than taking the column down with it.
+		});
 	}
 });
 </script>
