@@ -110,9 +110,11 @@ describe('useLinkedTimeline', () => {
 		getAccounts.mockResolvedValue([account('stale', 'tok-stale'), account('fresh', 'tok-fresh')]);
 
 		// 先行する refresh の `i` だけを遅らせ、後発の解決より後に失効エラーで終わらせる。
-		let rejectStale: ((reason: unknown) => void) | null = null;
+		// コールバック内でしか代入しない変数はTSが使用時点でnullに絞り込むため、保持は
+		// オブジェクト越しにする。
+		const staleSignin: { reject: ((reason: unknown) => void) | null } = { reject: null };
 		misskeyApi.mockImplementation((_ep: string, _params: unknown, token: string) => {
-			if (token === 'tok-stale') return new Promise((_res, rej) => { rejectStale = rej; });
+			if (token === 'tok-stale') return new Promise((_res, rej) => { staleSignin.reject = rej; });
 			return Promise.resolve({});
 		});
 
@@ -122,7 +124,7 @@ describe('useLinkedTimeline', () => {
 		saved.userId = 'fresh';
 		await tl.refresh();
 
-		rejectStale?.(AUTHENTICATION_FAILED);
+		staleSignin.reject?.(AUTHENTICATION_FAILED);
 		await stale;
 
 		expect(tl.state.value).toBe('ready');
