@@ -36,15 +36,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
 						<span>{{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt)?.nextText }} <i class="ti ti-chevron-down"></i></span>
 					</div>
-					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
+					<MkNote :class="$style.note" :note="note" :withHardMute="true" :mock="readonly"/>
 				</div>
 				<div v-else-if="note._shouldInsertAd_" :data-scroll-anchor="note.id">
-					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
+					<MkNote :class="$style.note" :note="note" :withHardMute="true" :mock="readonly"/>
 					<div :class="$style.ad">
 						<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
 					</div>
 				</div>
-				<MkNote v-else :class="$style.note" :note="note" :withHardMute="true" :data-scroll-anchor="note.id"/>
+				<MkNote v-else :class="$style.note" :note="note" :withHardMute="true" :mock="readonly" :data-scroll-anchor="note.id"/>
 			</template>
 		</component>
 		<button v-show="paginator.canFetchOlder.value" key="_more_" v-appear="prefer.s.enableInfiniteScroll ? paginator.fetchOlder : null" :disabled="paginator.fetchingOlder.value" class="_button" :class="$style.more" @click="paginator.fetchOlder">
@@ -65,6 +65,7 @@ import type { BasicTimelineType } from '@/timelines.js';
 import type { SoundStore } from '@/preferences/def.js';
 import type { IPaginator, MisskeyEntity } from '@/utility/paginator.js';
 import MkPullToRefresh from '@/components/MkPullToRefresh.vue';
+import { wsOrigin } from '@@/js/config.js';
 import { useStream } from '@/stream.js';
 import * as sound from '@/utility/sound.js';
 import { $i } from '@/i.js';
@@ -80,17 +81,28 @@ import { isSeparatorNeeded, getSeparatorInfo } from '@/utility/timeline-date-sep
 import { Paginator } from '@/utility/paginator.js';
 
 const props = withDefaults(defineProps<{
-	src: BasicTimelineType | 'mentions' | 'directs' | 'list' | 'antenna' | 'channel' | 'role';
+	src: BasicTimelineType | 'mentions' | 'directs' | 'list' | 'antenna' | 'channel' | 'role' | 'linked';
 	list?: string;
 	antenna?: string;
 	channel?: string;
 	role?: string;
+	/**
+	 * `linked` のときに使う、別のローカルアカウントのトークン。
+	 * このトークンでAPIとStreamingの両方を行う。変更する場合は利用側で `:key` を変えて作り直すこと。
+	 */
+	token?: string;
 	sound?: boolean;
 	customSound?: SoundStore | null;
 	withRenotes?: boolean;
 	withReplies?: boolean;
 	withSensitive?: boolean;
 	onlyFiles?: boolean;
+	/**
+	 * ノートを操作不可で表示する。
+	 * `linked` は他アカウントのタイムラインを読むだけのものなので、リアクションや返信を
+	 * サインイン中のアカウントとして送ってしまわないようにする。
+	 */
+	readonly?: boolean;
 }>(), {
 	withRenotes: true,
 	withReplies: false,
@@ -98,6 +110,7 @@ const props = withDefaults(defineProps<{
 	onlyFiles: false,
 	sound: false,
 	customSound: null,
+	readonly: false,
 });
 
 provide('inTimeline', true);
@@ -178,6 +191,22 @@ if (props.src === 'antenna') {
 	paginator = markRaw(new Paginator('roles/notes', {
 		computedParams: computed(() => ({
 			roleId: props.role!,
+		})),
+		useShallowRef: true,
+	}));
+} else if (props.src === 'linked') {
+	// 別のローカルアカウントのホームタイムライン。エンドポイントは 'home' と同じで、
+	// 違うのは誰として呼ぶかだけ。
+	//
+	// トークンが無いまま成立させると 'home' とまったく同じ呼び出しになり、サインイン中の
+	// アカウントのタイムラインを他人のものとして見せてしまう。黙って間違ったものを出すより
+	// 落ちたほうがよいので、ここで止める。読めるトークンがあるかの判断は利用側の責務。
+	if (props.token == null) throw new Error('The linked timeline needs the token of the account it reads.');
+	paginator = markRaw(new Paginator('notes/timeline', {
+		token: props.token,
+		computedParams: computed(() => ({
+			withRenotes: props.withRenotes,
+			withFiles: props.onlyFiles ? true : undefined,
 		})),
 		useShallowRef: true,
 	}));
@@ -304,7 +333,12 @@ function prepend(note: Misskey.entities.Note & MisskeyEntity) {
 	}
 }
 
-const stream = store.s.realtimeMode ? useStream() : null;
+// `linked` はサインイン中のアカウントとは別の資格情報で繋ぐ必要があるので、共有のStreamは使えない。
+// このコンポーネントが持つ専用の接続にし、アンマウント時に自分で閉じる。
+const ownedStream = (store.s.realtimeMode && props.src === 'linked' && props.token != null)
+	? markRaw(new Misskey.Stream(wsOrigin, { token: props.token }))
+	: null;
+const stream = store.s.realtimeMode ? (ownedStream ?? useStream()) : null;
 
 const connections = {
 	antenna: null as Misskey.IChannelConnection<Misskey.Channels['antenna']> | null,
@@ -383,6 +417,14 @@ function connectChannel() {
 			roleId: props.role,
 		});
 		connections.roleTimeline.on('note', prepend);
+	} else if (props.src === 'linked') {
+		// 'home' と同じチャンネル。接続しているStreamが別アカウントのものなので、
+		// そのアカウントのホームタイムラインが流れてくる。
+		connections.homeTimeline = stream.useChannel('homeTimeline', {
+			withRenotes: props.withRenotes,
+			withFiles: props.onlyFiles ? true : undefined,
+		});
+		connections.homeTimeline.on('note', prepend);
 	}
 }
 
@@ -410,6 +452,8 @@ watch(() => props.withSensitive, reloadTimeline);
 
 onUnmounted(() => {
 	disconnectChannel();
+	// 共有のStreamは他の利用者がいるので閉じない。自分で開いたものだけ閉じる。
+	ownedStream?.close();
 });
 
 function reloadTimeline() {

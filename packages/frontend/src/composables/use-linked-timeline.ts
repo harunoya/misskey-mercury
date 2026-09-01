@@ -3,13 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { ref, shallowRef, markRaw, onBeforeUnmount } from 'vue';
-import * as Misskey from 'misskey-js';
-import { wsOrigin } from '@@/js/config.js';
+import { computed, ref } from 'vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { getAccounts, getAccountWithSigninDialog, switchAccount } from '@/accounts.js';
 import { $i } from '@/i.js';
-import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
 import * as os from '@/os.js';
 import type { MenuItem } from '@/types/menu.js';
@@ -18,76 +15,88 @@ const AUTHENTICATION_FAILED_ERROR_ID = 'b0a7f5f8-dc2f-4171-b91f-de88ad238e14';
 
 type LocalAccount = Awaited<ReturnType<typeof getAccounts>>[number];
 
+/**
+ * リンクタイムラインが今どの状態にあるか。
+ *
+ * - `noAccount`: 読む相手がまだ選ばれていない
+ * - `unavailable`: 選ばれてはいるが、そのアカウントとして読めるトークンが無い
+ *   (保存されていない / 失効している)
+ * - `ready`: 読める
+ */
+export type LinkedTimelineState = 'noAccount' | 'unavailable' | 'ready';
+
+export function isAuthenticationFailed(error: unknown): boolean {
+	return typeof error === 'object' && error != null && 'id' in error
+		&& (error as { id: unknown }).id === AUTHENTICATION_FAILED_ERROR_ID;
+}
+
+/**
+ * リンクタイムラインのうち、「どのアカウントとして読むか」だけを扱う。
+ *
+ * ノートの取得・ページング・Streaming・新着queue・スクロール保持は、GTLなど他のタイムラインと
+ * 同じ `MkStreamingNotesTimeline`(`src="linked"`)が持つ。ここが持つのは、共通実装に渡す
+ * トークンを決めるまでの部分だけ。
+ */
 export function useLinkedTimeline(
 	getSaved: () => { host?: string | null; userId?: string | null },
 	save: (host: string, userId: string) => void,
 ) {
-	const fetching = ref(true);
-	const tokenRevoked = ref(false);
-	const notes = shallowRef<Misskey.entities.Note[]>([]);
 	const selected = ref<LocalAccount | null>(null);
+	const revoked = ref(false);
 
-	let stream: Misskey.Stream | null = null;
-	let connection: Misskey.IChannelConnection<Misskey.Channels['homeTimeline']> | null = null;
+	/**
+	 * 共通タイムラインへ渡すトークン。読めないときは `undefined`。
+	 *
+	 * `null` にしないのは、`misskeyApi` が `token !== undefined` で判定するため。`null` を
+	 * 渡すと `i: null` が送られ、サインイン中の資格情報を打ち消して CREDENTIAL_REQUIRED になる。
+	 */
+	const token = computed<string | undefined>(() => {
+		if (revoked.value) return undefined;
+		return selected.value?.token ?? undefined;
+	});
 
-	function isAuthError(error: unknown): boolean {
-		return typeof error === 'object' && error != null && 'id' in error && (error as { id: unknown }).id === AUTHENTICATION_FAILED_ERROR_ID;
-	}
+	const state = computed<LinkedTimelineState>(() => {
+		if (selected.value == null) return 'noAccount';
+		return token.value == null ? 'unavailable' : 'ready';
+	});
 
-	async function resolveSelected() {
-		const accounts = await getAccounts();
+	// 選び直しが続けて起きたとき、古い問い合わせの結果で新しい選択を上書きしないための世代番号。
+	let generation = 0;
+
+	/**
+	 * 保存されている選択を解決し、そのトークンで読めるかどうかまで確かめる。
+	 *
+	 * 失効の判定をここでするのは、共通タイムラインが持つエラー表示が「読み込みに失敗した、再試行」
+	 * までしか言えないため。失効したトークンは何度試しても通らないので、その一件だけ見分けて
+	 * アカウントを選び直せる案内に振り分ける。
+	 */
+	async function refresh(): Promise<void> {
+		const current = ++generation;
+
 		const saved = getSaved();
-		if (saved.userId == null) {
-			selected.value = null;
-			return;
-		}
-		selected.value = accounts.find(a => a.host === saved.host && a.id === saved.userId) ?? null;
-	}
+		const accounts = await getAccounts();
+		if (current !== generation) return;
 
-	async function fetchInitial() {
-		if (selected.value?.token == null) {
-			notes.value = [];
-			return;
-		}
-		fetching.value = true;
-		tokenRevoked.value = false;
+		const account = saved.userId == null
+			? null
+			: accounts.find(a => a.host === saved.host && a.id === saved.userId) ?? null;
+
+		selected.value = account;
+		revoked.value = false;
+
+		// トークンが保存されていないなら問い合わせるものが無い。すでに `unavailable` である。
+		if (account?.token == null) return;
+
 		try {
-			notes.value = await misskeyApi('notes/timeline', { limit: 15 }, selected.value.token);
+			await misskeyApi('i', {}, account.token);
 		} catch (error) {
-			notes.value = [];
-			if (isAuthError(error)) tokenRevoked.value = true;
-		} finally {
-			fetching.value = false;
+			if (current !== generation) return;
+			// 説明できるのは失効だけ。通信エラーなどはタイムライン側のエラー表示に任せる。
+			revoked.value = isAuthenticationFailed(error);
 		}
-	}
-
-	function prepend(note: Misskey.entities.Note) {
-		notes.value = [note, ...notes.value].slice(0, 60);
-	}
-
-	function disconnectStream() {
-		connection?.dispose();
-		connection = null;
-		stream?.close();
-		stream = null;
-	}
-
-	function connectStream() {
-		disconnectStream();
-		if (selected.value?.token == null || tokenRevoked.value || !store.s.realtimeMode) return;
-		stream = markRaw(new Misskey.Stream(wsOrigin, { token: selected.value.token }));
-		connection = stream.useChannel('homeTimeline', {});
-		connection.on('note', prepend);
-	}
-
-	async function refresh() {
-		await resolveSelected();
-		await fetchInitial();
-		connectStream();
 	}
 
 	async function selectAccount(account: LocalAccount) {
-		selected.value = account;
 		save(account.host, account.id);
 		await refresh();
 	}
@@ -129,14 +138,9 @@ export function useLinkedTimeline(
 		switchAccount(selected.value.host, selected.value.id);
 	}
 
-	onBeforeUnmount(() => {
-		disconnectStream();
-	});
-
 	return {
-		fetching,
-		tokenRevoked,
-		notes,
+		state,
+		token,
 		selected,
 		refresh,
 		openAccountPicker,

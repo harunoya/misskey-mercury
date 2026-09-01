@@ -10,23 +10,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<template #func="{ buttonStyleClass }"><button class="_button" :class="buttonStyleClass" @click="configure()"><i class="ti ti-settings"></i></button></template>
 
 	<div :class="$style.root">
-		<div v-if="selected == null" :class="$style.info">
+		<div v-if="state === 'noAccount'" :class="$style.info">
 			<p>{{ i18n.ts._linkedTl.noAccount }}</p>
 			<MkButton primary style="margin: 0 auto;" @click="openAccountPicker">{{ i18n.ts._linkedTl.selectAccount }}</MkButton>
 		</div>
 
-		<div v-else-if="tokenRevoked" :class="$style.info">
+		<div v-else-if="state === 'unavailable'" :class="$style.info">
 			<p>{{ i18n.ts._linkedTl.tokenRevoked }}</p>
 		</div>
 
 		<div v-else>
 			<MkInfo :class="$style.readOnlyNotice">{{ i18n.ts._linkedTl.readOnlyNotice }}</MkInfo>
 
-			<MkLoading v-if="fetching"/>
-			<MkResult v-else-if="notes.length === 0" type="empty" :text="i18n.ts.noNotes"/>
-			<div v-else :class="$style.notes">
-				<MkNote v-for="note in notes" :key="note.id" :note="note" :mock="true" :class="$style.note"/>
-			</div>
+			<MkStreamingNotesTimeline
+				:key="token"
+				src="linked"
+				:token="token"
+				:readonly="true"
+			/>
 		</div>
 	</div>
 </MkContainer>
@@ -40,7 +41,7 @@ import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
 import MkContainer from '@/components/MkContainer.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInfo from '@/components/MkInfo.vue';
-import MkNote from '@/components/MkNote.vue';
+import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
 import { i18n } from '@/i18n.js';
 import { useLinkedTimeline } from '@/composables/use-linked-timeline.js';
 
@@ -75,7 +76,7 @@ const { widgetProps, configure, save } = useWidgetPropsManager(name,
 	emit,
 );
 
-const { fetching, tokenRevoked, notes, selected, refresh, openAccountPicker } = useLinkedTimeline(
+const { state, token, selected, refresh, openAccountPicker } = useLinkedTimeline(
 	() => ({ host: widgetProps.linkedHost, userId: widgetProps.linkedUserId }),
 	(host, userId) => {
 		widgetProps.linkedHost = host;
@@ -116,15 +117,5 @@ defineExpose<WidgetComponentExpose>({
 
 .readOnlyNotice {
 	margin: 8px;
-}
-
-.notes {
-	display: flex;
-	flex-direction: column;
-}
-
-.note {
-	padding: 16px;
-	border-bottom: solid 0.5px var(--MI_THEME-divider);
 }
 </style>

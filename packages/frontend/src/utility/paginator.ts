@@ -89,6 +89,11 @@ export class Paginator<
 	public canSearch = false;
 	public error = ref(false);
 	private endpoint: Endpoint;
+	/**
+	 * 別のアカウントの資格情報でページングする場合のトークン。
+	 * 未指定なら通常どおりサインイン中のアカウントとして呼ぶ。
+	 */
+	private token: string | undefined;
 	private limit: number;
 	private params: E['req'] | (() => E['req']);
 	public computedParams: ComputedRef<E['req'] | null | undefined> | null;
@@ -140,8 +145,19 @@ export class Paginator<
 
 		canSearch?: boolean;
 		searchParamName?: keyof E['req'];
+
+		/**
+		 * サインイン中のアカウント以外の資格情報で取得する場合に指定する。
+		 * 変更する場合は利用側でPaginatorを作り直すこと。
+		 *
+		 * nullを受け付けないのは、misskeyApiが `token !== undefined` で判定するため。
+		 * nullを渡すと `i: null` が送られ、サインイン中の資格情報を打ち消して
+		 * CREDENTIAL_REQUIRED になる。「トークンが無い」は呼び出し側で解決すること。
+		 */
+		token?: string;
 	}) {
 		this.endpoint = endpoint;
+		this.token = props.token;
 		this.useShallowRef = (props.useShallowRef ?? false) as SRef;
 		if (this.useShallowRef) {
 			this.items = shallowRef<T[]>([]);
@@ -213,7 +229,7 @@ export class Paginator<
 			} : {}),
 		};
 
-		const apiRes = (await misskeyApi(this.endpoint, data).catch(_ => {
+		const apiRes = (await misskeyApi(this.endpoint, data, this.token).catch(_ => {
 			this.error.value = true;
 			this.fetching.value = false;
 			return null;
@@ -273,7 +289,7 @@ export class Paginator<
 			}),
 		};
 
-		const apiRes = (await misskeyApi<T[]>(this.endpoint, data).catch(_ => {
+		const apiRes = (await misskeyApi<T[]>(this.endpoint, data, this.token).catch(_ => {
 			return null;
 		})) as T[] | null;
 
@@ -326,7 +342,7 @@ export class Paginator<
 			}),
 		};
 
-		const apiRes = (await misskeyApi<T[]>(this.endpoint, data).catch(_ => {
+		const apiRes = (await misskeyApi<T[]>(this.endpoint, data, this.token).catch(_ => {
 			return null;
 		})) as T[] | null;
 

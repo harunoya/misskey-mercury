@@ -10,23 +10,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<span style="margin-left: 8px;">{{ column.name || (selected ? selected.username : i18n.ts._deck._columns.linkedTl) }}</span>
 	</template>
 
-	<div v-if="selected == null" :class="$style.info">
+	<div v-if="state === 'noAccount'" :class="$style.info">
 		<p>{{ i18n.ts._linkedTl.noAccount }}</p>
 		<MkButton style="margin: 0 auto;" @click="openAccountPicker">{{ i18n.ts._linkedTl.selectAccount }}</MkButton>
 	</div>
 
-	<div v-else-if="tokenRevoked" :class="$style.info">
+	<div v-else-if="state === 'unavailable'" :class="$style.info">
 		<p>{{ i18n.ts._linkedTl.tokenRevoked }}</p>
 	</div>
 
 	<div v-else>
 		<MkInfo :class="$style.readOnlyNotice">{{ i18n.ts._linkedTl.readOnlyNotice }}</MkInfo>
 
-		<MkLoading v-if="fetching"/>
-		<MkResult v-else-if="notes.length === 0" type="empty" :text="i18n.ts.noNotes"/>
-		<div v-else :class="$style.notes">
-			<MkNote v-for="note in notes" :key="note.id" :note="note" :mock="true" :class="$style.note"/>
-		</div>
+		<MkStreamingNotesTimeline
+			:key="token"
+			src="linked"
+			:token="token"
+			:readonly="true"
+		/>
 	</div>
 </XColumn>
 </template>
@@ -39,7 +40,7 @@ import type { MenuItem } from '@/types/menu.js';
 import { updateColumn } from '@/deck.js';
 import MkButton from '@/components/MkButton.vue';
 import MkInfo from '@/components/MkInfo.vue';
-import MkNote from '@/components/MkNote.vue';
+import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
 import { i18n } from '@/i18n.js';
 import { useLinkedTimeline } from '@/composables/use-linked-timeline.js';
 
@@ -48,7 +49,7 @@ const props = defineProps<{
 	isStacked: boolean;
 }>();
 
-const { fetching, tokenRevoked, notes, selected, refresh, openAccountPicker, switchToThisAccount } = useLinkedTimeline(
+const { state, token, selected, refresh, openAccountPicker, switchToThisAccount } = useLinkedTimeline(
 	() => ({ host: props.column.linkedHost, userId: props.column.linkedUserId }),
 	(host, userId) => updateColumn(props.column.id, { linkedHost: host, linkedUserId: userId }),
 );
@@ -93,13 +94,4 @@ onMounted(() => {
 	margin: 8px;
 }
 
-.notes {
-	display: flex;
-	flex-direction: column;
-}
-
-.note {
-	padding: 16px 0;
-	border-bottom: solid 0.5px var(--MI_THEME-divider);
-}
 </style>

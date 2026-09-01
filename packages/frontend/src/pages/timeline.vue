@@ -11,20 +11,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</MkTip>
 		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);"/>
 		<template v-if="src === 'linkedTl'">
-			<div v-if="linkedSelected == null" :class="$style.linkedInfo">
+			<div v-if="linkedState === 'noAccount'" :class="$style.linkedInfo">
 				<p>{{ i18n.ts._linkedTl.noAccount }}</p>
 				<MkButton primary style="margin: 0 auto;" @click="openLinkedAccountPicker">{{ i18n.ts._linkedTl.selectAccount }}</MkButton>
 			</div>
-			<div v-else-if="linkedTokenRevoked" :class="$style.linkedInfo">
+			<div v-else-if="linkedState === 'unavailable'" :class="$style.linkedInfo">
 				<p>{{ i18n.ts._linkedTl.tokenRevoked }}</p>
 			</div>
 			<div v-else>
 				<MkInfo style="margin-bottom: var(--MI-margin);">{{ i18n.ts._linkedTl.readOnlyNotice }}</MkInfo>
-				<MkLoading v-if="linkedFetching"/>
-				<MkResult v-else-if="linkedNotes.length === 0" type="empty" :text="i18n.ts.noNotes"/>
-				<div v-else :class="[$style.tl, $style.linkedNotes]">
-					<MkNote v-for="note in linkedNotes" :key="note.id" :note="note" :mock="true" :class="$style.linkedNote"/>
-				</div>
+				<MkStreamingNotesTimeline
+					:key="'linked:' + linkedToken"
+					:class="$style.tl"
+					src="linked"
+					:token="linkedToken"
+					:readonly="true"
+				/>
 			</div>
 		</template>
 		<MkStreamingNotesTimeline
@@ -54,7 +56,6 @@ import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue'
 import MkPostForm from '@/components/MkPostForm.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInfo from '@/components/MkInfo.vue';
-import MkNote from '@/components/MkNote.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -73,10 +74,8 @@ const tlComponent = useTemplateRef('tlComponent');
 type TimelinePageSrc = BasicTimelineType | `list:${string}` | 'linkedTl';
 
 const {
-	fetching: linkedFetching,
-	tokenRevoked: linkedTokenRevoked,
-	notes: linkedNotes,
-	selected: linkedSelected,
+	state: linkedState,
+	token: linkedToken,
 	refresh: refreshLinkedTl,
 	openAccountPicker: openLinkedAccountPicker,
 } = useLinkedTimeline(
@@ -396,15 +395,5 @@ definePage(() => ({
 		margin: 0 0 12px 0;
 		opacity: 0.7;
 	}
-}
-
-.linkedNotes {
-	display: flex;
-	flex-direction: column;
-}
-
-.linkedNote {
-	padding: 16px;
-	border-bottom: solid 0.5px var(--MI_THEME-divider);
 }
 </style>
