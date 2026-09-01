@@ -18,6 +18,7 @@
 </template>
 
 <script lang="ts">
+import { cpuUsageOf } from '@compat/server-stats';
 import { defineComponent } from 'vue';
 import ApexCharts from 'apexcharts';
 
@@ -38,7 +39,7 @@ export default defineComponent({
 	watch: {
 		stats(stats) {
 			this.cpuChart.updateSeries([{
-				data: stats.map((x, i) => ({ x: i, y: x.cpu_usage }))
+				data: stats.map((x, i) => ({ x: i, y: cpuUsageOf(x) }))
 			}]);
 			this.memChart.updateSeries([{
 				data: stats.map((x, i) => ({ x: i, y: this.memRatio(x) }))
@@ -139,7 +140,7 @@ export default defineComponent({
 			this.stats.push(stats);
 			if (this.stats.length > 200) this.stats.shift();
 
-			this.cpuP = (stats.cpu_usage * 100).toFixed(0);
+			this.cpuP = (cpuUsageOf(stats) * 100).toFixed(0);
 			this.memP = (this.memRatio(stats) * 100).toFixed(0);
 		},
 

@@ -62,6 +62,7 @@
 </template>
 
 <script lang="ts">
+import { cpuUsageOf } from '@compat/server-stats';
 import { defineComponent } from 'vue';
 import { v4 as uuid } from 'uuid';
 
@@ -116,7 +117,7 @@ export default defineComponent({
 			this.stats.push(stats);
 			if (this.stats.length > 50) this.stats.shift();
 
-			const cpuPolylinePoints = this.stats.map((s, i) => [this.viewBoxX - ((this.stats.length - 1) - i), (1 - s.cpu_usage) * this.viewBoxY]);
+			const cpuPolylinePoints = this.stats.map((s, i) => [this.viewBoxX - ((this.stats.length - 1) - i), (1 - cpuUsageOf(s)) * this.viewBoxY]);
 			const memPolylinePoints = this.stats.map((s, i) => [this.viewBoxX - ((this.stats.length - 1) - i), (1 - (this.memRatio(s))) * this.viewBoxY]);
 			this.cpuPolylinePoints = cpuPolylinePoints.map(xy => `${xy[0]},${xy[1]}`).join(' ');
 			this.memPolylinePoints = memPolylinePoints.map(xy => `${xy[0]},${xy[1]}`).join(' ');
@@ -129,7 +130,7 @@ export default defineComponent({
 			this.memHeadX = memPolylinePoints[memPolylinePoints.length - 1][0];
 			this.memHeadY = memPolylinePoints[memPolylinePoints.length - 1][1];
 
-			this.cpuP = (stats.cpu_usage * 100).toFixed(0);
+			this.cpuP = (cpuUsageOf(stats) * 100).toFixed(0);
 			this.memP = (this.memRatio(stats) * 100).toFixed(0);
 		},
 		onStatsLog(statsLog) {

@@ -12,6 +12,7 @@
 </template>
 
 <script lang="ts">
+import { cpuUsageOf } from '@compat/server-stats';
 import { defineComponent } from 'vue';
 import XPie from './server.pie.vue';
 
@@ -33,7 +34,7 @@ export default defineComponent({
 	},
 	methods: {
 		onStats(stats) {
-			this.usage = stats.cpu_usage;
+			this.usage = cpuUsageOf(stats);
 		}
 	}
 });
