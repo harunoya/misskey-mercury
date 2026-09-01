@@ -6,7 +6,16 @@
 import * as argon2 from 'argon2';
 import bcrypt from 'bcryptjs';
 
-export type PasswordHashType = 'bcrypt' | 'legacy' | 'unknown' | 'none';
+/**
+ * Which client the account's credentials were created by.
+ *
+ * Read from the shape of the stored hash, because that is the only record of it: accounts carried
+ * over by the CherryPick migration kept their Argon2id hashes, while anything Misskey created is
+ * bcrypt. The control panel used to report the hashing algorithm itself, which told a moderator
+ * more about how a specific person's password is stored than they need to know — the operational
+ * question is only ever whether the account predates the move.
+ */
+export type AccountOrigin = 'misskey' | 'cherrypick' | 'unknown' | 'none';
 
 /** Cost 8 is too cheap for offline cracking if the hash table leaks. */
 export const BCRYPT_COST = 10;
@@ -20,10 +29,10 @@ export function hashPasswordSync(password: string): string {
 	return bcrypt.hashSync(password, BCRYPT_COST);
 }
 
-export function getPasswordHashType(hash: string | null): PasswordHashType {
+export function getAccountOrigin(hash: string | null): AccountOrigin {
 	if (hash == null) return 'none';
-	if (/^\$2[aby]\$/.test(hash)) return 'bcrypt';
-	if (hash.startsWith('$argon2')) return 'legacy';
+	if (/^\$2[aby]\$/.test(hash)) return 'misskey';
+	if (hash.startsWith('$argon2')) return 'cherrypick';
 	return 'unknown';
 }
 

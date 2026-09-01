@@ -6,27 +6,27 @@
 import * as argon2 from 'argon2';
 import bcrypt from 'bcryptjs';
 import { describe, expect, test } from 'vitest';
-import { BCRYPT_COST, getPasswordHashType, hashPassword, verifyPassword } from '@/misc/password.js';
+import { BCRYPT_COST, getAccountOrigin, hashPassword, verifyPassword } from '@/misc/password.js';
 
-describe('getPasswordHashType', () => {
+describe('getAccountOrigin', () => {
 	test('bcrypt hashを現行方式として分類する', async () => {
 		const hash = await bcrypt.hash('password', 8);
 
-		expect(getPasswordHashType(hash)).toBe('bcrypt');
+		expect(getAccountOrigin(hash)).toBe('misskey');
 	});
 
 	test('Argon2 hashを旧方式として分類する', async () => {
 		const hash = await argon2.hash('password', { type: argon2.argon2id });
 
-		expect(getPasswordHashType(hash)).toBe('legacy');
+		expect(getAccountOrigin(hash)).toBe('cherrypick');
 	});
 
 	test('パスワード未設定を分類する', () => {
-		expect(getPasswordHashType(null)).toBe('none');
+		expect(getAccountOrigin(null)).toBe('none');
 	});
 
 	test('未知のhashを分類する', () => {
-		expect(getPasswordHashType('unknown-hash')).toBe('unknown');
+		expect(getAccountOrigin('unknown-hash')).toBe('unknown');
 	});
 });
 

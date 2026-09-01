@@ -1961,30 +1961,26 @@ export interface Locale extends ILocale {
      */
     "resetPassword": string;
     /**
-     * パスワードハッシュ方式
+     * アカウント方式
      */
-    "passwordHashType": string;
-    "_passwordHashType": {
+    "accountOrigin": string;
+    "_accountOrigin": {
         /**
-         * bcrypt
+         * Misskey
          */
-        "bcrypt": string;
+        "misskey": string;
         /**
          * CherryPick
          */
-        "legacy": string;
+        "cherrypick": string;
         /**
-         * 不明な方式
+         * 不明
          */
         "unknown": string;
         /**
          * 未設定
          */
         "none": string;
-        /**
-         * CherryPickのパスワードハッシュが使用されています。パスワードを再設定し、再ハッシュすることを推奨します。
-         */
-        "rehashRecommended": string;
     };
     /**
      * 新しいパスワードは「{password}」です
