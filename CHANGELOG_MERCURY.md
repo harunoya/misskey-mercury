@@ -1,0 +1,45 @@
+# Misskey Mercury 変更履歴
+
+Mercuryフォーク独自の変更履歴です。
+ベースとなるMisskey本体の変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。
+
+Mercuryのバージョンは`package.json`の`mercuryVersion`で管理し、上流のバージョンと組み合わせて表示されます (例: `2026.8.0-alpha.0-mercury.0.3.1`)。
+
+0.3.0以前の変更履歴は [Releases](https://github.com/harunoya/misskey-mercury/releases) にあります。
+
+## 0.3.1
+
+### Note
+
+- データベースマイグレーションが追加されています(関連アカウント機能の削除)。`pnpm migrate` を実行してください。
+- **関連アカウント機能を廃止しました。** 0.3.0 ではサブアカウントをメインアカウントのパスワードでログインできるようにしていましたが、パスワードの共有そのものを取りやめ、後述の「リンクタイムライン」へ置き換えています。サブアカウントにはそれぞれのパスワードが必要です。
+- `admin/show-user` の `passwordHashType` を `accountOrigin` に変更しています(値も `bcrypt` / `argon2id` → `misskey` / `cherrypick`)。外部ツールから参照している場合は追従が必要です。
+- upstream Misskey develop の変更を取り込んでいます。
+
+### Client
+
+- Feat: リンクタイムラインを追加。ログイン中のセッションを切り替えずに、別のローカル登録済みアカウントのホームタイムラインを読み取り専用で閲覧できます(デッキ列 / サイドバーウィジェット / メインタイムラインの切替タブの3箇所)
+- Feat: v11 UIにリアクションピッカーを実装(検索・ピン留め・カテゴリの折りたたみ・サイズ固定)
+- Feat: v11 UIにUI切り替えメニューを追加(デフォルト / デッキ / v11)。「現行UIへ戻る」ボタンは廃止
+- Feat: v11 UIで、現行UIのURLのまま切り替えて404になった場合に、対応するページへ誘導するように
+- Change: v11 UIからルーム機能を削除(バックエンドに対応するAPIが無く、動作しないため)
+- Fix: Matrixチャットの同期・再接続まわりを安定化(履歴ページングの喪失、リスナーリーク、退室後の状態残留、タイピング表示のタイマー競合、ローカルエコーの重複表示)
+- Fix: v11 UIで絵文字一覧が読み込めず、リアクションを選べない問題を修正
+- Fix: v11 UIのダイアログが操作できない問題を修正
+- Fix: v11 UIの実行時エラーを修正(投稿時刻を持たないノートでのクラッシュ、ダイアログ破棄時のクラッシュ)。ビルド警告も解消
+- Fix: v11 UIのサーバー統計ウィジェットが、ストリーム受信のたびにクラッシュする問題を修正
+- Fix: v11 UIが呼んでいた廃止済みAPIを現行のものへ置き換え(管理操作・チャット・リバーシ・セキュリティキー登録など)
+
+### Server
+
+- Feat: yojo-art/cherrypickフォーク向けの移行事前チェック `CherryPick_Migration_fork1` を追加。あわせて `CherryPickToMisskey` のsmtpカラム幅の取りこぼしを修正
+- Change: 関連アカウントのAPI (`i/linked-accounts/*`) と `linkedToMain` カラムを削除
+- Change: コントロールパネルの表示を、パスワードハッシュ方式からアカウント方式(Misskey / CherryPick)へ変更
+- Fix: `users/recommendation` が常に500を返す問題を修正
+- Fix: 新規に保存するパスワードのbcryptコストを8から10へ引き上げ
+- Fix: ログイン失敗時の応答からユーザー名列挙の手がかりを除去
+- Fix: プライベートIPへの接続遮断を本番以外でも有効化し、`fetch-rss` にSSRF対策を追加
+- Fix: OAuthのcallbackUrlをhttp(s)のみに制限
+- Fix: ユーザー入力を含むSQLの文字列連結をパラメータ化
+- Fix: Meilisearch経由のノート検索に可視性フィルタを適用(閲覧できないノートが検索結果に出うる問題)
+- Fix: `federation/update-remote-user` に認証とレート制限を追加
