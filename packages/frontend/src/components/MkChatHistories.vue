@@ -4,7 +4,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div v-if="history.length > 0" class="_gaps_s">
+<div v-if="entries.length > 0" class="_gaps_s">
+	<!-- Matrix conversations sit in the same list as Misskey ones, ordered by recency, so the
+	     direct-message screen is the single place to look regardless of which network a
+	     conversation is on. -->
+	<MkA
+		v-for="entry in matrixEntries"
+		:key="entry.roomId"
+		:class="[$style.message, { [$style.isRead]: entry.unreadCount === 0 }]"
+		class="_panel"
+		:to="`/chat/matrix/${entry.roomId}`"
+	>
+		<MatrixAvatar :class="$style.messageAvatar" :name="entry.name" :mxcUrl="entry.avatarUrl" :size="52"/>
+		<div :class="$style.messageBody">
+			<header :class="$style.messageHeader">
+				<span :class="$style.messageHeaderName">{{ entry.name }}</span>
+				<span :class="$style.networkBadge">Matrix</span>
+				<MkTime v-if="entry.lastActivityAt > 0" :time="entry.lastActivityAt" :class="$style.messageHeaderTime"/>
+			</header>
+			<div :class="$style.messageBodyText">{{ entry.lastMessage ?? i18n.ts._matrix.noMessages }}</div>
+		</div>
+	</MkA>
 	<MkA
 		v-for="item in history"
 		:key="item.id"
@@ -28,19 +48,41 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</MkA>
 </div>
-<MkResult v-if="!initializing && history.length == 0" type="empty" :text="i18n.ts._chat.noHistory"/>
+<MkResult v-if="!initializing && entries.length == 0" type="empty" :text="i18n.ts._chat.noHistory"/>
 <MkLoading v-if="initializing"/>
 </template>
 
 <script lang="ts" setup>
-import { onActivated, onDeactivated, onMounted, ref } from 'vue';
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import { useInterval } from '@@/js/use-interval.js';
+import MatrixAvatar from '@/pages/chat/matrix-avatar.vue';
+import * as matrix from '@/pages/chat/matrix-store.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import { ensureSignin } from '@/i.js';
 
 const $i = ensureSignin();
+
+// Syncing runs while the direct-message list is on screen, which is what keeps the Matrix rows here
+// current without holding a long-poll open for the whole app.
+// Balanced against the mount, not setup: `onBeforeUnmount` never runs for a component that was
+// discarded before mounting, and the reference taken here would then never be given back.
+onMounted(() => matrix.acquireSync());
+onUnmounted(() => matrix.releaseSync());
+
+const matrixEntries = computed(() => matrix.rooms.value
+	.map(room => ({
+		roomId: room.roomId,
+		name: room.name,
+		unreadCount: room.unreadCount,
+		lastActivityAt: room.lastActivityAt,
+		lastMessage: room.lastMessage,
+		avatarUrl: room.avatarUrl,
+	}))
+	.toSorted((a, b) => b.lastActivityAt - a.lastActivityAt));
+
+const entries = computed(() => [...matrixEntries.value, ...history.value]);
 
 const history = ref<{
 	id: string;
@@ -147,6 +189,16 @@ onMounted(() => {
 	width: 50px;
 	height: 50px;
 	margin: 0 16px 0 0;
+}
+
+.networkBadge {
+	flex-shrink: 0;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: var(--MI_THEME-buttonBg);
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 0.75em;
+	font-weight: 700;
 }
 
 @container (max-width: 500px) {

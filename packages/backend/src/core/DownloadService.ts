@@ -45,6 +45,7 @@ export class DownloadService {
 
 		const urlObj = new URL(url);
 		let filename = urlObj.pathname.split('/').pop() ?? 'untitled';
+		const isOwnOrigin = urlObj.origin === new URL(this.config.url).origin;
 
 		const req = got.stream(url, {
 			headers: {
@@ -60,8 +61,8 @@ export class DownloadService {
 				request: operationTimeout,	// whole operation timeout
 			},
 			agent: {
-				http: this.httpRequestService.getAgentForHttp(urlObj, true),
-				https: this.httpRequestService.getAgentForHttps(urlObj, true),
+				http: this.httpRequestService.getAgentForHttp(urlObj, isOwnOrigin),
+				https: this.httpRequestService.getAgentForHttps(urlObj, isOwnOrigin),
 			},
 			http2: false,	// default
 			retry: {

@@ -4,7 +4,6 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { ApiError } from '@/server/api/error.js';
 import type { UsersRepository, UserProfilesRepository, MiMeta } from '@/models/_.js';
@@ -12,6 +11,7 @@ import { DI } from '@/di-symbols.js';
 import { secureRndstr } from '@/misc/secure-rndstr.js';
 import { RoleService } from '@/core/RoleService.js';
 import { ModerationLogService } from '@/core/ModerationLogService.js';
+import { hashPasswordSync } from '@/misc/password.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -84,7 +84,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const passwd = secureRndstr(8);
 
 			// Generate hash of password
-			const hash = bcrypt.hashSync(passwd);
+			const hash = hashPasswordSync(passwd);
 
 			await this.userProfilesRepository.update({
 				userId: user.id,

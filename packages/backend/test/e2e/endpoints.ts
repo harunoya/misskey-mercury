@@ -57,6 +57,7 @@ describe('Endpoints', () => {
 
 			assert.strictEqual(res.status, 200);
 			assert.strictEqual(typeof res.body === 'object' && !Array.isArray(res.body), true);
+			assert.ok(res.body != null && 'username' in res.body);
 			assert.strictEqual(res.body.username, me.username);
 		});
 

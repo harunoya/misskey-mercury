@@ -4,6 +4,7 @@
  */
 
 import * as fs from 'node:fs';
+import { resolveVersion } from './version.mjs';
 
 const __dirname = import.meta.dirname;
 
@@ -14,7 +15,7 @@ function build() {
 		const json = fs.readFileSync(packageJsonPath, 'utf-8')
 		const meta = JSON.parse(json);
 		fs.mkdirSync(__dirname + '/../built', { recursive: true });
-		fs.writeFileSync(__dirname + '/../built/meta.json', JSON.stringify({ version: meta.version }), 'utf-8');
+		fs.writeFileSync(__dirname + '/../built/meta.json', JSON.stringify({ version: resolveVersion(meta.version, meta.mercuryVersion) }), 'utf-8');
 	} catch (e) {
 		console.error(e)
 	}

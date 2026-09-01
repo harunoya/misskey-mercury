@@ -8,6 +8,8 @@ import { Endpoint } from '@/server/api/endpoint-base.js';
 import { SystemWebhookEntityService } from '@/core/entities/SystemWebhookEntityService.js';
 import { systemWebhookEventTypes } from '@/models/SystemWebhook.js';
 import { SystemWebhookService } from '@/core/SystemWebhookService.js';
+import { ApiError } from '@/server/api/error.js';
+import { UnsafeWebhookUrlError } from '@/misc/check-webhook-url.js';
 
 export const meta = {
 	tags: ['admin', 'system-webhook'],
@@ -16,6 +18,14 @@ export const meta = {
 	requireModerator: true,
 	secure: true,
 	kind: 'write:admin:system-webhook',
+
+	errors: {
+		invalidUrl: {
+			message: 'Invalid URL.',
+			code: 'INVALID_URL',
+			id: 'b7e2c04f-8a19-4d5e-9c6b-0f3a1e8d5c77',
+		},
+	},
 
 	res: {
 		type: 'object',
@@ -72,19 +82,26 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private systemWebhookEntityService: SystemWebhookEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			const result = await this.systemWebhookService.updateSystemWebhook(
-				{
-					id: ps.id,
-					isActive: ps.isActive,
-					name: ps.name,
-					on: ps.on,
-					url: ps.url,
-					secret: ps.secret,
-				},
-				me,
-			);
+			try {
+				const result = await this.systemWebhookService.updateSystemWebhook(
+					{
+						id: ps.id,
+						isActive: ps.isActive,
+						name: ps.name,
+						on: ps.on,
+						url: ps.url,
+						secret: ps.secret,
+					},
+					me,
+				);
 
-			return this.systemWebhookEntityService.pack(result);
+				return this.systemWebhookEntityService.pack(result);
+			} catch (err) {
+				if (err instanceof UnsafeWebhookUrlError) {
+					throw new ApiError(meta.errors.invalidUrl);
+				}
+				throw err;
+			}
 		});
 	}
 }

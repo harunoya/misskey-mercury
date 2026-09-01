@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+export const MISSKEY_REPOSITORY_URL = 'https://github.com/misskey-dev/misskey';
+export const MERCURY_REPOSITORY_URL = 'https://github.com/harunoya/misskey-mercury';
+
 // ブラウザで直接表示することを許可するファイルの種類のリスト
 // ここに含まれないものは application/octet-stream としてレスポンスされる
 // SVGはXSSを生むので許可しない

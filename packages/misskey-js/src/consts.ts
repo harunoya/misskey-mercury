@@ -134,12 +134,16 @@ export const permissions = [
 	'write:report-abuse',
 	'write:chat',
 	'read:chat',
+	'write:admin:approve-user',
+	'write:admin:decline-user',
 ] as const;
 
 export const moderationLogTypes = [
 	'updateServerSettings',
 	'suspend',
 	'unsuspend',
+	'approve',
+	'decline',
 	'updateUserNote',
 	'addCustomEmoji',
 	'updateCustomEmoji',
@@ -286,6 +290,16 @@ export type ModerationLogPayloads = {
 		userHost: string | null;
 	};
 	unsuspend: {
+		userId: string;
+		userUsername: string;
+		userHost: string | null;
+	};
+	approve: {
+		userId: string;
+		userUsername: string;
+		userHost: string | null;
+	};
+	decline: {
 		userId: string;
 		userUsername: string;
 		userHost: string | null;

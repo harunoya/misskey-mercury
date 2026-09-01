@@ -163,7 +163,17 @@ export const navbarItemDef = reactive<{
 					miLocalStorage.setItem('ui', 'deck');
 					unisonReload();
 				},
-			}], ev.currentTarget ?? ev.target);
+			}, ...($i == null ? [] : [{
+				// v11 reads the session from `account`, so it is only offered while signed in.
+				text: 'Misskey v11',
+				active: ui === 'v11',
+				action: () => {
+					// v11 offers one way back rather than a menu, so remember which UI to restore.
+					miLocalStorage.setItem('mercury:v11:previousUi', ui ?? 'default');
+					miLocalStorage.setItem('ui', 'v11');
+					unisonReload();
+				},
+			}])], ev.currentTarget ?? ev.target);
 		},
 	},
 	about: {

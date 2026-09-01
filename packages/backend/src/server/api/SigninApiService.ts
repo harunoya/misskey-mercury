@@ -4,7 +4,6 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
 import { IsNull } from 'typeorm';
 import * as Misskey from 'misskey-js';
 import { DI } from '@/di-symbols.js';
@@ -26,6 +25,7 @@ import { UserAuthService } from '@/core/UserAuthService.js';
 import { CaptchaService } from '@/core/CaptchaService.js';
 import { LoggerService } from '@/core/LoggerService.js';
 import { FastifyReplyError } from '@/misc/fastify-reply-error.js';
+import { verifyPassword } from '@/misc/password.js';
 import { RateLimiterService } from './RateLimiterService.js';
 import { SigninService } from './SigninService.js';
 import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
@@ -130,8 +130,16 @@ export class SigninApiService {
 		}) as MiLocalUser;
 
 		if (user == null) {
-			return error(404, {
-				id: '6cc579cc-885d-43d8-95c2-b8c7fc963280',
+			// Same shape as a failed password so usernames cannot be enumerated.
+			if (password == null) {
+				reply.code(200);
+				return {
+					finished: false,
+					next: 'captcha',
+				} satisfies Misskey.entities.SigninFlowResponse;
+			}
+			return error(403, {
+				id: '932c904e-9460-45b7-9ce6-7ed33be7eb2c',
 			});
 		}
 
@@ -140,6 +148,18 @@ export class SigninApiService {
 				id: 'e03a5f46-d309-4865-9b69-56282d94e1eb',
 			});
 		}
+
+		if (!user.approved && this.meta.approvalRequiredForSignup) {
+			return error(403, {
+				id: '22d05606-fbcf-421a-a2db-b32241fa8f1b',
+			});
+		}
+
+		const approveIfApprovalIsDisabled = async () => {
+			if (!this.meta.approvalRequiredForSignup && !user.approved) {
+				await this.usersRepository.update(user.id, { approved: true });
+			}
+		};
 
 		const profile = await this.userProfilesRepository.findOneByOrFail({ userId: user.id });
 		const securityKeysAvailable = await this.userSecurityKeysRepository.countBy({ userId: user.id }).then(result => result >= 1);
@@ -165,7 +185,7 @@ export class SigninApiService {
 		}
 
 		// Compare password
-		const same = await bcrypt.compare(password, profile.password!);
+		const same = await verifyPassword(password, profile.password!);
 
 		const fail = async (status?: number, failure?: { id: string; }) => {
 			// Append signin history
@@ -214,6 +234,7 @@ export class SigninApiService {
 			}
 
 			if (same) {
+				await approveIfApprovalIsDisabled();
 				return this.signinService.signin(request, reply, user);
 			} else {
 				return await fail(403, {
@@ -237,6 +258,7 @@ export class SigninApiService {
 				});
 			}
 
+			await approveIfApprovalIsDisabled();
 			return this.signinService.signin(request, reply, user);
 		} else if (body.credential) {
 			if (!same && !profile.usePasswordLessLogin) {
@@ -248,6 +270,7 @@ export class SigninApiService {
 			const authorized = await this.webAuthnService.verifyAuthentication(user.id, body.credential);
 
 			if (authorized) {
+				await approveIfApprovalIsDisabled();
 				return this.signinService.signin(request, reply, user);
 			} else {
 				return await fail(403, {

@@ -11,7 +11,13 @@ import { GetterService } from '@/server/api/GetterService.js';
 export const meta = {
 	tags: ['federation'],
 
-	requireCredential: false,
+	requireCredential: true,
+	kind: 'read:federation',
+
+	limit: {
+		duration: 1000 * 60,
+		max: 30,
+	},
 } as const;
 
 export const paramDef = {

@@ -1,0 +1,43 @@
+<template>
+<div class="hkcxmtwj">
+	<ui-switch :value="v" @change="v = $event">{{ script.interpolate(value.text) }}</ui-switch>
+</div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+	props: {
+		value: {
+			required: true
+		},
+		script: {
+			required: true
+		}
+	},
+
+	data() {
+		return {
+			v: this.value.default,
+		};
+	},
+
+	watch: {
+		v() {
+			this.script.aiScript.updatePageVar(this.value.name, this.v);
+			this.script.eval();
+		}
+	}
+});
+</script>
+
+<style lang="stylus" scoped>
+.hkcxmtwj
+	display inline-block
+	margin 16px auto
+
+	& + .hkcxmtwj
+		margin-left 16px
+
+</style>

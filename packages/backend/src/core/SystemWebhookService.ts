@@ -15,6 +15,7 @@ import { QueueService } from '@/core/QueueService.js';
 import { ModerationLogService } from '@/core/ModerationLogService.js';
 import { LoggerService } from '@/core/LoggerService.js';
 import Logger from '@/logger.js';
+import { assertSafeWebhookUrl } from '@/misc/check-webhook-url.js';
 import { Packed } from '@/misc/json-schema.js';
 import { AbuseReportResolveType } from '@/models/AbuseUserReport.js';
 import { ModeratorInactivityRemainingTime } from '@/queue/processors/CheckModeratorsActivityProcessorService.js';
@@ -117,6 +118,7 @@ export class SystemWebhookService implements OnApplicationShutdown {
 		},
 		updater: MiUser,
 	): Promise<MiSystemWebhook> {
+		assertSafeWebhookUrl(params.url);
 		const id = this.idService.gen();
 		await this.systemWebhooksRepository.insert({
 			...params,
@@ -149,6 +151,7 @@ export class SystemWebhookService implements OnApplicationShutdown {
 		},
 		updater: MiUser,
 	): Promise<MiSystemWebhook> {
+		assertSafeWebhookUrl(params.url);
 		const beforeEntity = await this.systemWebhooksRepository.findOneByOrFail({ id: params.id });
 		await this.systemWebhooksRepository.update(beforeEntity.id, {
 			updatedAt: new Date(),

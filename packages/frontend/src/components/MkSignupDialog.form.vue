@@ -62,6 +62,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<span v-if="passwordRetypeState == 'not-match'" style="color: var(--MI_THEME-error)"><i class="ti ti-alert-triangle ti-fw"></i> {{ i18n.ts.passwordNotMatched }}</span>
 				</template>
 			</MkInput>
+			<MkTextarea v-if="instance.approvalRequiredForSignup" v-model="reason" :spellcheck="true" required data-testid="signup-reason">
+				<template #label>{{ i18n.ts.signupReason }} <div v-tooltip:dialog="i18n.ts._signup.reasonInfo" class="_button _help" :aria-label="i18n.ts._signup.reasonInfo"><i class="ti ti-help-circle"></i></div></template>
+				<template #caption>
+					<span :style="reason.length > 1000 ? 'color: var(--MI_THEME-error)' : ''">{{ reason.length }} / 1000</span>
+				</template>
+			</MkTextarea>
 			<MkCaptcha v-if="instance.enableHcaptcha" ref="hcaptcha" v-model="hCaptchaResponse" :class="$style.captcha" provider="hcaptcha" :sitekey="instance.hcaptchaSiteKey"/>
 			<MkCaptcha v-if="instance.enableMcaptcha" ref="mcaptcha" v-model="mCaptchaResponse" :class="$style.captcha" provider="mcaptcha" :sitekey="instance.mcaptchaSiteKey" :instanceUrl="instance.mcaptchaInstanceUrl"/>
 			<MkCaptcha v-if="instance.enableRecaptcha" ref="recaptcha" v-model="reCaptchaResponse" :class="$style.captcha" provider="recaptcha" :sitekey="instance.recaptchaSiteKey"/>
@@ -85,6 +91,7 @@ import * as Misskey from 'misskey-js';
 import * as config from '@@/js/config.js';
 import MkButton from './MkButton.vue';
 import MkInput from './MkInput.vue';
+import MkTextarea from './MkTextarea.vue';
 import type { Captcha } from '@/components/MkCaptcha.vue';
 import MkCaptcha from '@/components/MkCaptcha.vue';
 import * as os from '@/os.js';
@@ -102,6 +109,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
 	(ev: 'signup', user: Misskey.entities.SignupResponse): void;
 	(ev: 'signupEmailPending'): void;
+	(ev: 'approvalPending'): void;
 }>();
 
 const host = toUnicode(config.host);
@@ -129,6 +137,7 @@ const turnstileResponse = ref<string | null>(null);
 const testcaptchaResponse = ref<string | null>(null);
 const usernameAbortController = ref<null | AbortController>(null);
 const emailAbortController = ref<null | AbortController>(null);
+const reason = ref('');
 
 const shouldDisableSubmitting = computed((): boolean => {
 	return submitting.value ||
@@ -139,6 +148,7 @@ const shouldDisableSubmitting = computed((): boolean => {
 		instance.enableTestcaptcha && !testcaptchaResponse.value ||
 		instance.emailRequiredForSignup && emailState.value !== 'ok' ||
 		instance.disableRegistration && invitationCode.value === '' ||
+		instance.approvalRequiredForSignup && (reason.value.trim() === '' || reason.value.length > 1000) ||
 		usernameState.value !== 'ok' ||
 		passwordRetypeState.value !== 'match';
 });
@@ -261,6 +271,7 @@ async function onSubmit(): Promise<void> {
 		password: password.value,
 		emailAddress: email.value,
 		invitationCode: invitationCode.value,
+		reason: reason.value.trim(),
 		'hcaptcha-response': hCaptchaResponse.value,
 		'm-captcha-response': mCaptchaResponse.value,
 		'g-recaptcha-response': reCaptchaResponse.value,
@@ -280,7 +291,7 @@ async function onSubmit(): Promise<void> {
 	});
 
 	if (res && res.ok) {
-		if (res.status === 204 || instance.emailRequiredForSignup) {
+		if (res.status === 204) {
 			os.alert({
 				type: 'success',
 				title: i18n.ts._signup.almostThere,
@@ -288,8 +299,17 @@ async function onSubmit(): Promise<void> {
 			});
 			emit('signupEmailPending');
 		} else {
-			const resJson = (await res.json()) as Misskey.entities.SignupResponse;
+			const resJson = (await res.json()) as Misskey.entities.SignupResponse | Misskey.entities.SignupApprovalPendingResponse;
 			if (_DEV_) console.log(resJson);
+			if ('pendingApproval' in resJson) {
+				await os.alert({
+					type: 'success',
+					title: i18n.ts._signup.almostThere,
+					text: i18n.ts._signup.approvalPending,
+				});
+				emit('approvalPending');
+				return;
+			}
 
 			emit('signup', resJson);
 

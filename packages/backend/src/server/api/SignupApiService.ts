@@ -4,7 +4,6 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
 import { IsNull } from 'typeorm';
 import { DI } from '@/di-symbols.js';
 import type { RegistrationTicketsRepository, UsedUsernamesRepository, UserPendingsRepository, UserProfilesRepository, UsersRepository, MiRegistrationTicket, MiMeta } from '@/models/_.js';
@@ -12,12 +11,15 @@ import type { Config } from '@/config.js';
 import { CaptchaService } from '@/core/CaptchaService.js';
 import { IdService } from '@/core/IdService.js';
 import { SignupService } from '@/core/SignupService.js';
+import { hashPassword } from '@/misc/password.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { EmailService } from '@/core/EmailService.js';
 import { MiLocalUser } from '@/models/User.js';
 import { FastifyReplyError } from '@/misc/fastify-reply-error.js';
 import { bindThis } from '@/decorators.js';
 import { L_CHARS, secureRndstr } from '@/misc/secure-rndstr.js';
+import { escapeHtml } from '@/misc/escape-html.js';
+import { RoleService } from '@/core/RoleService.js';
 import { SigninService } from './SigninService.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
@@ -51,6 +53,7 @@ export class SignupApiService {
 		private signupService: SignupService,
 		private signinService: SigninService,
 		private emailService: EmailService,
+		private roleService: RoleService,
 	) {
 	}
 
@@ -63,6 +66,7 @@ export class SignupApiService {
 				host?: string;
 				invitationCode?: string;
 				emailAddress?: string;
+				reason?: string;
 				'hcaptcha-response'?: string;
 				'g-recaptcha-response'?: string;
 				'turnstile-response'?: string;
@@ -113,6 +117,7 @@ export class SignupApiService {
 		const host: string | null = process.env.NODE_ENV === 'test' ? (body['host'] ?? null) : null;
 		const invitationCode = body['invitationCode'];
 		const emailAddress = body['emailAddress'];
+		const reason = typeof body['reason'] === 'string' ? body['reason'].trim() : undefined;
 
 		if (this.meta.emailRequiredForSignup) {
 			if (emailAddress == null || typeof emailAddress !== 'string') {
@@ -122,6 +127,13 @@ export class SignupApiService {
 
 			const res = await this.emailService.validateEmailForAccount(emailAddress);
 			if (!res.available) {
+				reply.code(400);
+				return;
+			}
+		}
+
+		if (this.meta.approvalRequiredForSignup) {
+			if (reason == null || reason.length === 0 || reason.length > 1000) {
 				reply.code(400);
 				return;
 			}
@@ -186,9 +198,7 @@ export class SignupApiService {
 
 			const code = secureRndstr(16, { chars: L_CHARS });
 
-			// Generate hash of password
-			const salt = await bcrypt.genSalt(8);
-			const hash = await bcrypt.hash(password, salt);
+			const hash = await hashPassword(password);
 
 			const pendingUser = await this.userPendingsRepository.insertOne({
 				id: this.idService.gen(),
@@ -196,6 +206,8 @@ export class SignupApiService {
 				email: emailAddress!,
 				username: username,
 				password: hash,
+				reason: reason,
+				approvalRequired: this.meta.approvalRequiredForSignup,
 			});
 
 			const link = `${this.config.url}/signup-complete/${code}`;
@@ -213,6 +225,35 @@ export class SignupApiService {
 
 			reply.code(204);
 			return;
+		} else if (this.meta.approvalRequiredForSignup) {
+			const { account } = await this.signupService.signup({
+				username, password, host, reason, approved: false,
+			}).catch(err => {
+				throw new FastifyReplyError(400, typeof err === 'string' ? err : (err as Error).toString());
+			});
+
+			if (ticket) {
+				await this.registrationTicketsRepository.update(ticket.id, {
+					usedAt: new Date(),
+					usedBy: account,
+					usedById: account.id,
+				});
+			}
+
+			const moderators = await this.roleService.getModerators();
+
+			for (const moderator of moderators) {
+				const profile = await this.userProfilesRepository.findOneBy({ userId: moderator.id });
+
+				if (profile?.email) {
+					const plainText = `A registration request from @${account.username} is awaiting approval.\n\nReason:\n${reason}`;
+					this.emailService.sendEmail(profile.email, 'New user awaiting approval',
+						`A registration request from @${escapeHtml(account.username)} is awaiting approval.<br><br><strong>Reason:</strong><br>${escapeHtml(reason ?? '')}`,
+						plainText);
+				}
+			}
+
+			return { pendingApproval: true };
 		} else {
 			try {
 				const { account, secret } = await this.signupService.signup({
@@ -258,6 +299,8 @@ export class SignupApiService {
 			const { account } = await this.signupService.signup({
 				username: pendingUser.username,
 				passwordHash: pendingUser.password,
+				reason: pendingUser.reason,
+				approved: !pendingUser.approvalRequired,
 			});
 
 			this.userPendingsRepository.delete({
@@ -279,6 +322,29 @@ export class SignupApiService {
 					usedById: account.id,
 					pendingUserId: null,
 				});
+			}
+
+			if (pendingUser.approvalRequired) {
+				if (pendingUser.email) {
+					this.emailService.sendEmail(pendingUser.email, 'Approval pending',
+						'Your registration request is awaiting approval. You will receive another email after it is reviewed.',
+						'Your registration request is awaiting approval. You will receive another email after it is reviewed.');
+				}
+
+				const moderators = await this.roleService.getModerators();
+
+				for (const moderator of moderators) {
+					const profile = await this.userProfilesRepository.findOneBy({ userId: moderator.id });
+
+					if (profile?.email) {
+						const plainText = `A registration request from @${pendingUser.username} is awaiting approval.\n\nReason:\n${pendingUser.reason}`;
+						this.emailService.sendEmail(profile.email, 'New user awaiting approval',
+							`A registration request from @${escapeHtml(pendingUser.username)} is awaiting approval.<br><br><strong>Reason:</strong><br>${escapeHtml(pendingUser.reason ?? '')}`,
+							plainText);
+					}
+				}
+
+				return { pendingApproval: true };
 			}
 
 			return this.signinService.signin(request, reply, account as MiLocalUser);

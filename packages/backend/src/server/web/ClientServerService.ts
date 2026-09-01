@@ -74,6 +74,7 @@ export class ClientServerService {
 	private readonly fluentEmojiDir: string;
 	private readonly twemojiDir: string;
 	private readonly frontendViteOut: string;
+	private readonly frontendV11Out: string;
 	private readonly frontendEmbedViteOut: string;
 	private readonly tarball: string;
 
@@ -138,6 +139,7 @@ export class ClientServerService {
 		this.fluentEmojiDir = resolve(backendRootdir, 'node_modules/@misskey-dev/emoji-assets/built/fluent-emoji');
 		this.twemojiDir = resolve(backendRootdir, 'node_modules/@misskey-dev/emoji-assets/built/twemoji');
 		this.frontendViteOut = resolve(this.config.rootDir, 'built/_frontend_vite_');
+		this.frontendV11Out = resolve(this.config.rootDir, 'built/_frontend_v11_');
 		this.frontendEmbedViteOut = resolve(this.config.rootDir, 'built/_frontend_embed_vite_');
 		this.tarball = resolve(this.config.rootDir, 'built/tarball');
 	}
@@ -230,6 +232,25 @@ export class ClientServerService {
 					immutable: true,
 					decorateReply: false,
 				});
+				// Assets only. v11 has no page of its own: it shares the current UI's URL space and
+				// the current UI loads `v11-boot.js` into the document when the reader prefers v11.
+				fastify.register(fastifyStatic, {
+					root: this.frontendV11Out,
+					prefix: '/v11/',
+					cacheControl: false,
+					decorateReply: false,
+					setHeaders: (reply, path) => {
+						// The boot entry names the content-hashed chunks, so caching it would pin
+						// clients to a stale build across deploys. Hashed chunks never change content.
+						if (/\.[0-9a-f]{8}\.(?:js|css)$/.test(path)) {
+							reply.header('Cache-Control', `public, max-age=${Math.floor(ms('30 days') / 1000)}, immutable`);
+						} else if (path.endsWith('v11-boot.js')) {
+							reply.header('Cache-Control', 'no-cache');
+						} else {
+							reply.header('Cache-Control', `public, max-age=${Math.floor(ms('1 hour') / 1000)}`);
+						}
+					},
+				});
 				fastify.addHook('onRequest', handleRequestRedirectToOmitSearch);
 				done();
 			});
@@ -249,6 +270,13 @@ export class ClientServerService {
 				upstream: urlOriginWithoutPort + ':' + embedPort,
 				prefix: '/embed_vite',
 				rewritePrefix: '/embed_vite',
+			});
+
+			const frontendV11Port = (process.env.FRONTEND_V11_VITE_PORT ?? '5175');
+			fastify.register(fastifyProxy, {
+				upstream: urlOriginWithoutPort + ':' + frontendV11Port,
+				prefix: '/v11',
+				rewritePrefix: '/v11',
 			});
 		}
 		//#endregion

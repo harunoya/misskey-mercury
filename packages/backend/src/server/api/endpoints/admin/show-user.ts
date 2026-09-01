@@ -11,6 +11,7 @@ import { RoleService } from '@/core/RoleService.js';
 import { RoleEntityService } from '@/core/entities/RoleEntityService.js';
 import { IdService } from '@/core/IdService.js';
 import { notificationRecieveConfig } from '@/models/json-schema/user.js';
+import { getAccountOrigin } from '@/misc/password.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -23,6 +24,11 @@ export const meta = {
 		type: 'object',
 		nullable: false, optional: false,
 		properties: {
+			accountOrigin: {
+				type: 'string',
+				enum: ['misskey', 'cherrypick', 'unknown', 'none'],
+				optional: false, nullable: false,
+			},
 			email: {
 				type: 'string',
 				optional: false, nullable: true,
@@ -125,6 +131,14 @@ export const meta = {
 			isSuspended: {
 				type: 'boolean',
 				optional: false, nullable: false,
+			},
+			approved: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
+			signupReason: {
+				type: 'string',
+				optional: false, nullable: true,
 			},
 			isHibernated: {
 				type: 'boolean',
@@ -231,6 +245,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const roles = await this.roleService.getUserRoles(user.id);
 
 			return {
+				accountOrigin: getAccountOrigin(profile.password),
 				email: profile.email,
 				emailVerified: profile.emailVerified,
 				followedMessage: profile.followedMessage,
@@ -248,6 +263,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				isModerator: isModerator,
 				isSilenced: isSilenced,
 				isSuspended: user.isSuspended,
+				approved: user.approved,
+				signupReason: user.signupReason,
 				isHibernated: user.isHibernated,
 				lastActiveDate: user.lastActiveDate ? user.lastActiveDate.toISOString() : null,
 				moderationNote: profile.moderationNote ?? '',

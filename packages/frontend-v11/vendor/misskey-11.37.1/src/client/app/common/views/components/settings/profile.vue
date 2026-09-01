@@ -1,0 +1,429 @@
+<template>
+<ui-card>
+	<template #title><fa icon="user"/> {{ $t('title') }}</template>
+
+	<section class="esokaraujimuwfttfzgocmutcihewscl">
+		<div class="header" :style="bannerStyle">
+			<mk-avatar class="avatar" :user="$store.state.i" :disable-preview="true" :disable-link="true"/>
+		</div>
+
+		<ui-form :disabled="saving">
+			<ui-input :value="name" @input="name = $event" :max="30">
+				<span>{{ $t('name') }}</span>
+			</ui-input>
+
+			<ui-input :value="username" @input="username = $event" readonly>
+				<span>{{ $t('account') }}</span>
+				<template #prefix>@</template>
+				<template #suffix>@{{ host }}</template>
+			</ui-input>
+
+			<ui-input :value="location" @input="location = $event">
+				<span>{{ $t('location') }}</span>
+				<template #prefix><fa icon="map-marker-alt"/></template>
+			</ui-input>
+
+			<ui-input :value="birthday" @input="birthday = $event" type="date">
+				<template #title>{{ $t('birthday') }}</template>
+				<template #prefix><fa icon="birthday-cake"/></template>
+			</ui-input>
+
+			<ui-textarea :value="description" @input="description = $event" :max="500">
+				<span>{{ $t('description') }}</span>
+				<template #desc>{{ $t('you-can-include-hashtags') }}</template>
+			</ui-textarea>
+
+			<ui-select :value="lang" @input="lang = $event">
+				<template #label>{{ $t('language') }}</template>
+				<template #icon><fa icon="language"/></template>
+				<option v-for="lang in unique(Object.values(langmap).map(x => x.nativeName)).map(name => Object.keys(langmap).find(k => langmap[k].nativeName == name))" :value="lang" :key="lang">{{ langmap[lang].nativeName }}</option>
+			</ui-select>
+
+			<ui-input type="file" @change="onAvatarChange">
+				<span>{{ $t('avatar') }}</span>
+				<template #icon><fa icon="image"/></template>
+				<template #desc v-if="avatarUploading">{{ $t('uploading') }}<mk-ellipsis/></template>
+			</ui-input>
+
+			<ui-input type="file" @change="onBannerChange">
+				<span>{{ $t('banner') }}</span>
+				<template #icon><fa icon="image"/></template>
+				<template #desc v-if="bannerUploading">{{ $t('uploading') }}<mk-ellipsis/></template>
+			</ui-input>
+
+			<div class="fields">
+				<header>{{ $t('profile-metadata') }}</header>
+				<ui-horizon-group>
+					<ui-input :value="fieldName0" @input="fieldName0 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue0" @input="fieldValue0 = $event">{{ $t('metadata-content') }}</ui-input>
+				</ui-horizon-group>
+				<ui-horizon-group>
+					<ui-input :value="fieldName1" @input="fieldName1 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue1" @input="fieldValue1 = $event">{{ $t('metadata-content') }}</ui-input>
+				</ui-horizon-group>
+				<ui-horizon-group>
+					<ui-input :value="fieldName2" @input="fieldName2 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue2" @input="fieldValue2 = $event">{{ $t('metadata-content') }}</ui-input>
+				</ui-horizon-group>
+				<ui-horizon-group>
+					<ui-input :value="fieldName3" @input="fieldName3 = $event">{{ $t('metadata-label') }}</ui-input>
+					<ui-input :value="fieldValue3" @input="fieldValue3 = $event">{{ $t('metadata-content') }}</ui-input>
+				</ui-horizon-group>
+			</div>
+
+			<ui-button @click="save(true)"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
+		</ui-form>
+	</section>
+
+	<section>
+		<header><fa :icon="faCogs"/> {{ $t('advanced') }}</header>
+
+		<div>
+			<ui-switch :value="isCat" @change="isCat = $event; save(false)">{{ $t('is-cat') }}</ui-switch>
+			<ui-switch :value="isBot" @change="isBot = $event; save(false)">{{ $t('is-bot') }}</ui-switch>
+			<ui-switch :value="alwaysMarkNsfw" @change="alwaysMarkNsfw = $event">{{ $t('@._settings.always-mark-nsfw') }}</ui-switch>
+		</div>
+	</section>
+
+	<section>
+		<header><fa :icon="faUnlockAlt"/> {{ $t('privacy') }}</header>
+
+		<div>
+			<ui-switch :value="isLocked" @change="isLocked = $event; save(false)">{{ $t('is-locked') }}</ui-switch>
+			<ui-switch :value="carefulBot" :disabled="isLocked" @change="carefulBot = $event; save(false)">{{ $t('careful-bot') }}</ui-switch>
+			<ui-switch :value="autoAcceptFollowed" :disabled="!isLocked && !carefulBot" @change="autoAcceptFollowed = $event; save(false)">{{ $t('auto-accept-followed') }}</ui-switch>
+		</div>
+	</section>
+
+	<section v-if="enableEmail">
+		<header><fa :icon="faEnvelope"/> {{ $t('email') }}</header>
+
+		<div>
+			<template v-if="$store.state.i.email != null">
+				<ui-info v-if="$store.state.i.emailVerified">{{ $t('email-verified') }}</ui-info>
+				<ui-info v-else warn>{{ $t('email-not-verified') }}</ui-info>
+			</template>
+			<ui-input :value="email" @input="email = $event" type="email"><span>{{ $t('email-address') }}</span></ui-input>
+			<ui-button @click="updateEmail()" :disabled="email === $store.state.i.email"><fa :icon="faSave"/> {{ $t('save') }}</ui-button>
+		</div>
+	</section>
+
+	<section>
+		<header><fa :icon="faBoxes"/> {{ $t('export-and-import') }}</header>
+
+		<div>
+			<ui-select :value="exportTarget" @input="exportTarget = $event">
+				<option value="notes">{{ $t('export-targets.all-notes') }}</option>
+				<option value="following">{{ $t('export-targets.following-list') }}</option>
+				<option value="mute">{{ $t('export-targets.mute-list') }}</option>
+				<option value="blocking">{{ $t('export-targets.blocking-list') }}</option>
+				<option value="user-lists">{{ $t('export-targets.user-lists') }}</option>
+			</ui-select>
+			<ui-horizon-group class="fit-bottom">
+				<ui-button @click="doExport()"><fa :icon="faDownload"/> {{ $t('export') }}</ui-button>
+				<ui-button @click="doImport()" :disabled="!['following', 'user-lists'].includes(exportTarget)"><fa :icon="faUpload"/> {{ $t('import') }}</ui-button>
+			</ui-horizon-group>
+		</div>
+	</section>
+
+	<section>
+		<details>
+			<summary>{{ $t('danger-zone') }}</summary>
+			<ui-button @click="deleteAccount()">{{ $t('delete-account') }}</ui-button>
+		</details>
+	</section>
+</ui-card>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import i18n from '../../../../i18n';
+import { host } from '../../../../config';
+import { toUnicode } from 'punycode';
+import langmap from 'langmap';
+import { unique } from '../../../../../../prelude/array';
+import { faDownload, faUpload, faUnlockAlt, faBoxes, faCogs } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faEnvelope } from '@fortawesome/free-regular-svg-icons';
+import { uploadDriveFile } from '@compat/upload';
+
+export default defineComponent({
+	i18n: i18n('common/views/components/profile-editor.vue'),
+
+	data() {
+		return {
+			unique,
+			langmap,
+			host: toUnicode(host),
+			enableEmail: false,
+			email: null,
+			name: null,
+			username: null,
+			location: null,
+			description: null,
+			fieldName0: null,
+			fieldValue0: null,
+			fieldName1: null,
+			fieldValue1: null,
+			fieldName2: null,
+			fieldValue2: null,
+			fieldName3: null,
+			fieldValue3: null,
+			lang: null,
+			birthday: null,
+			avatarId: null,
+			bannerId: null,
+			isCat: false,
+			isBot: false,
+			isLocked: false,
+			carefulBot: false,
+			autoAcceptFollowed: false,
+			saving: false,
+			avatarUploading: false,
+			bannerUploading: false,
+			exportTarget: 'notes',
+			faDownload, faUpload, faSave, faEnvelope, faUnlockAlt, faBoxes, faCogs
+		};
+	},
+
+	computed: {
+		alwaysMarkNsfw: {
+			get() { return this.$store.state.i.alwaysMarkNsfw; },
+			set(value) { this.$root.api('i/update', { alwaysMarkNsfw: value }); }
+		},
+
+		bannerStyle(): any {
+			if (this.$store.state.i.bannerUrl == null) return {};
+			return {
+				backgroundColor: this.$store.state.i.bannerColor,
+				backgroundImage: `url(${ this.$store.state.i.bannerUrl })`
+			};
+		},
+	},
+
+	created() {
+		this.$root.getMeta().then(meta => {
+			this.enableEmail = meta.enableEmail;
+		});
+		this.email = this.$store.state.i.email;
+		this.name = this.$store.state.i.name;
+		this.username = this.$store.state.i.username;
+		this.location = this.$store.state.i.location;
+		this.description = this.$store.state.i.description;
+		this.lang = this.$store.state.i.lang;
+		this.birthday = this.$store.state.i.birthday;
+		this.avatarId = this.$store.state.i.avatarId;
+		this.bannerId = this.$store.state.i.bannerId;
+		this.isCat = this.$store.state.i.isCat;
+		this.isBot = this.$store.state.i.isBot;
+		this.isLocked = this.$store.state.i.isLocked;
+		this.carefulBot = this.$store.state.i.carefulBot;
+		this.autoAcceptFollowed = this.$store.state.i.autoAcceptFollowed;
+
+		this.fieldName0 = this.$store.state.i.fields[0] ? this.$store.state.i.fields[0].name : null;
+		this.fieldValue0 = this.$store.state.i.fields[0] ? this.$store.state.i.fields[0].value : null;
+		this.fieldName1 = this.$store.state.i.fields[1] ? this.$store.state.i.fields[1].name : null;
+		this.fieldValue1 = this.$store.state.i.fields[1] ? this.$store.state.i.fields[1].value : null;
+		this.fieldName2 = this.$store.state.i.fields[2] ? this.$store.state.i.fields[2].name : null;
+		this.fieldValue2 = this.$store.state.i.fields[2] ? this.$store.state.i.fields[2].value : null;
+		this.fieldName3 = this.$store.state.i.fields[3] ? this.$store.state.i.fields[3].name : null;
+		this.fieldValue3 = this.$store.state.i.fields[3] ? this.$store.state.i.fields[3].value : null;
+	},
+
+	methods: {
+		async onAvatarChange([file]) {
+			this.avatarUploading = true;
+
+			try {
+				const uploaded = await uploadDriveFile({ file });
+				this.avatarId = uploaded.id;
+			} catch {
+				alert('%18n:@upload-failed%');
+			} finally {
+				this.avatarUploading = false;
+			}
+		},
+
+		async onBannerChange([file]) {
+			this.bannerUploading = true;
+
+			try {
+				const uploaded = await uploadDriveFile({ file });
+				this.bannerId = uploaded.id;
+			} catch {
+				alert('%18n:@upload-failed%');
+			} finally {
+				this.bannerUploading = false;
+			}
+		},
+
+		save(notify) {
+			const fields = [
+				{ name: this.fieldName0, value: this.fieldValue0 },
+				{ name: this.fieldName1, value: this.fieldValue1 },
+				{ name: this.fieldName2, value: this.fieldValue2 },
+				{ name: this.fieldName3, value: this.fieldValue3 },
+			];
+
+			this.saving = true;
+
+			this.$root.api('i/update', {
+				name: this.name || null,
+				location: this.location || null,
+				description: this.description || null,
+				lang: this.lang,
+				birthday: this.birthday || null,
+				avatarId: this.avatarId || undefined,
+				bannerId: this.bannerId || undefined,
+				fields,
+				isCat: !!this.isCat,
+				isBot: !!this.isBot,
+				isLocked: !!this.isLocked,
+				carefulBot: !!this.carefulBot,
+				autoAcceptFollowed: !!this.autoAcceptFollowed
+			}).then(i => {
+				this.saving = false;
+				this.$store.state.i.avatarId = i.avatarId;
+				this.$store.state.i.avatarUrl = i.avatarUrl;
+				this.$store.state.i.bannerId = i.bannerId;
+				this.$store.state.i.bannerUrl = i.bannerUrl;
+
+				if (notify) {
+					this.$root.dialog({
+						type: 'success',
+						text: this.$t('saved')
+					});
+				}
+			}).catch(err => {
+				this.saving = false;
+				switch(err.id) {
+					case 'f419f9f8-2f4d-46b1-9fb4-49d3a2fd7191':
+						this.$root.dialog({
+							type: 'error',
+							title: this.$t('unable-to-process'),
+							text: this.$t('avatar-not-an-image')
+						});
+						break;
+					case '75aedb19-2afd-4e6d-87fc-67941256fa60':
+						this.$root.dialog({
+							type: 'error',
+							title: this.$t('unable-to-process'),
+							text: this.$t('banner-not-an-image')
+						});
+						break;
+					default:
+						this.$root.dialog({
+							type: 'error',
+							text: this.$t('unable-to-process')
+						});
+				}
+			});
+		},
+
+		updateEmail() {
+			this.$root.dialog({
+				title: this.$t('@.enter-password'),
+				input: {
+					type: 'password'
+				}
+			}).then(({ canceled, result: password }) => {
+				if (canceled) return;
+				this.$root.api('i/update-email', {
+					password: password,
+					email: this.email == '' ? null : this.email
+				});
+			});
+		},
+
+		doExport() {
+			let request;
+			switch (this.exportTarget) {
+				case 'notes': request = this.$root.api('i/export-notes'); break;
+				case 'following': request = this.$root.api('i/export-following'); break;
+				case 'mute': request = this.$root.api('i/export-mute'); break;
+				case 'blocking': request = this.$root.api('i/export-blocking'); break;
+				case 'user-lists': request = this.$root.api('i/export-user-lists'); break;
+				default: return;
+			}
+			request.then(() => {
+					this.$root.dialog({
+						type: 'info',
+						text: this.$t('export-requested')
+					});
+				}).catch((e: any) => {
+					this.$root.dialog({
+						type: 'error',
+						text: e.message
+					});
+				});
+		},
+
+		doImport() {
+			this.$chooseDriveFile().then(file => {
+				const request = this.exportTarget == 'following'
+					? this.$root.api('i/import-following', { fileId: file.id })
+					: this.exportTarget == 'user-lists'
+						? this.$root.api('i/import-user-lists', { fileId: file.id })
+						: null;
+				if (request == null) return;
+				request.then(() => {
+					this.$root.dialog({
+						type: 'info',
+						text: this.$t('import-requested')
+					});
+				}).catch((e: any) => {
+					this.$root.dialog({
+						type: 'error',
+						text: e.message
+					});
+				});
+			});
+		},
+
+		async deleteAccount() {
+			const { canceled: canceled, result: password } = await this.$root.dialog({
+				title: this.$t('enter-password'),
+				input: {
+					type: 'password'
+				}
+			});
+			if (canceled) return;
+
+			this.$root.api('i/delete-account', {
+				password
+			}).then(() => {
+				this.$root.dialog({
+					type: 'success',
+					text: this.$t('account-deleted')
+				});
+			});
+		}
+	}
+});
+</script>
+
+<style lang="stylus" scoped>
+.esokaraujimuwfttfzgocmutcihewscl
+	> .header
+		height 150px
+		overflow hidden
+		background-size cover
+		background-position center
+		border-radius 4px
+
+		> .avatar
+			position absolute
+			top 0
+			bottom 0
+			left 0
+			right 0
+			display block
+			width 72px
+			height 72px
+			margin auto
+
+.fields
+	> header
+		padding 8px 0px
+		font-weight bold
+
+</style>

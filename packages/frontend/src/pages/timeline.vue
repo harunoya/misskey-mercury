@@ -10,7 +10,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 			{{ i18n.ts._timelineDescription[src] }}
 		</MkTip>
 		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);"/>
+		<template v-if="src === 'linkedTl'">
+			<div v-if="linkedState === 'noAccount'" :class="$style.linkedInfo">
+				<p>{{ i18n.ts._linkedTl.noAccount }}</p>
+				<MkButton primary style="margin: 0 auto;" @click="openLinkedAccountPicker">{{ i18n.ts._linkedTl.selectAccount }}</MkButton>
+			</div>
+			<div v-else-if="linkedState === 'unavailable'" :class="$style.linkedInfo">
+				<p>{{ i18n.ts._linkedTl.tokenRevoked }}</p>
+			</div>
+			<div v-else>
+				<MkInfo style="margin-bottom: var(--MI-margin);">{{ i18n.ts._linkedTl.readOnlyNotice }}</MkInfo>
+				<MkStreamingNotesTimeline
+					:key="'linked:' + linkedToken"
+					:class="$style.tl"
+					src="linked"
+					:token="linkedToken"
+					:readonly="true"
+				/>
+			</div>
+		</template>
 		<MkStreamingNotesTimeline
+			v-else
 			ref="tlComponent"
 			:key="src + withRenotes + withReplies + onlyFiles + withSensitive"
 			:class="$style.tl"
@@ -34,6 +54,8 @@ import type { BasicTimelineType } from '@/timelines.js';
 import type { PageHeaderItem } from '@/types/page-header.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
+import MkButton from '@/components/MkButton.vue';
+import MkInfo from '@/components/MkInfo.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -45,10 +67,21 @@ import { deepMerge } from '@/utility/merge.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { availableBasicTimelines, hasWithReplies, isAvailableBasicTimeline, isBasicTimeline, basicTimelineIconClass } from '@/timelines.js';
 import { prefer } from '@/preferences.js';
+import { useLinkedTimeline } from '@/composables/use-linked-timeline.js';
 
 const tlComponent = useTemplateRef('tlComponent');
 
-type TimelinePageSrc = BasicTimelineType | `list:${string}`;
+type TimelinePageSrc = BasicTimelineType | `list:${string}` | 'linkedTl';
+
+const {
+	state: linkedState,
+	token: linkedToken,
+	refresh: refreshLinkedTl,
+	openAccountPicker: openLinkedAccountPicker,
+} = useLinkedTimeline(
+	() => miLocalStorage.getItemAsJson('linkedTl') ?? { host: null, userId: null },
+	(host, userId) => miLocalStorage.setItemAsJson('linkedTl', { host, userId }),
+);
 
 const srcWhenNotSignin = ref<'local' | 'global'>(isAvailableBasicTimeline('local') ? 'local' : 'global');
 const src = computed<TimelinePageSrc>({
@@ -199,12 +232,27 @@ function switchTlIfNeeded() {
 
 onMounted(() => {
 	switchTlIfNeeded();
+	if (src.value === 'linkedTl') refreshLinkedTl();
 });
 onActivated(() => {
 	switchTlIfNeeded();
 });
 
+watch(src, (newSrc) => {
+	if (newSrc === 'linkedTl') refreshLinkedTl();
+});
+
 const headerActions = computed<PageHeaderItem[]>(() => {
+	if (src.value === 'linkedTl') {
+		return [{
+			icon: 'ti ti-refresh',
+			text: i18n.ts.reload,
+			handler: () => {
+				refreshLinkedTl();
+			},
+		}];
+	}
+
 	const items: PageHeaderItem[] = [{
 		icon: 'ti ti-dots',
 		text: i18n.ts.options,
@@ -275,6 +323,11 @@ const headerTabs = computed(() => [...(prefer.r.pinnedUserLists.value.map(l => (
 	icon: basicTimelineIconClass(tl),
 	iconOnly: true,
 })), {
+	key: 'linkedTl',
+	title: i18n.ts._deck._columns.linkedTl,
+	icon: 'ti ti-user-scan',
+	iconOnly: true,
+}, {
 	icon: 'ti ti-list',
 	title: i18n.ts.lists,
 	iconOnly: true,
@@ -300,7 +353,7 @@ const headerTabsWhenNotLogin = computed(() => [...availableBasicTimelines().map(
 
 definePage(() => ({
 	title: i18n.ts.timeline,
-	icon: isBasicTimeline(src.value) ? basicTimelineIconClass(src.value) : 'ti ti-home',
+	icon: isBasicTimeline(src.value) ? basicTimelineIconClass(src.value) : src.value === 'linkedTl' ? 'ti ti-user-scan' : 'ti ti-home',
 }));
 </script>
 
@@ -332,5 +385,15 @@ definePage(() => ({
 	background: var(--MI_THEME-bg);
 	border-radius: var(--MI-radius);
 	overflow: clip;
+}
+
+.linkedInfo {
+	padding: 32px 16px;
+	text-align: center;
+
+	> p {
+		margin: 0 0 12px 0;
+		opacity: 0.7;
+	}
 }
 </style>

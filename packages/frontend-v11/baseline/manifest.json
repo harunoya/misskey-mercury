@@ -1,0 +1,24 @@
+{
+	"origin": "http://127.0.0.1:3100",
+	"capturedAt": "2026-08-25T17:44:12.769Z",
+	"shots": [
+		"desktop/home",
+		"desktop/notifications",
+		"desktop/favorites",
+		"desktop/drive",
+		"desktop/settings",
+		"desktop/explore",
+		"desktop/featured",
+		"desktop/user",
+		"desktop/not-found",
+		"mobile/home",
+		"mobile/notifications",
+		"mobile/favorites",
+		"mobile/drive",
+		"mobile/settings",
+		"mobile/explore",
+		"mobile/featured",
+		"mobile/user",
+		"mobile/not-found"
+	]
+}

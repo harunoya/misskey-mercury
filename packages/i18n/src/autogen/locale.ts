@@ -8,6 +8,54 @@ export interface Locale extends ILocale {
      */
     "_lang_": string;
     /**
+     * この登録申請を承認しますか？
+     */
+    "approveConfirm": string;
+    /**
+     * 新規登録を承認制にする
+     */
+    "approvalRequiredForSignup": string;
+    /**
+     * 承認する
+     */
+    "approveAccount": string;
+    /**
+     * 却下して削除
+     */
+    "denyAccount": string;
+    /**
+     * 承認済み
+     */
+    "approved": string;
+    /**
+     * 承認待ち
+     */
+    "notApproved": string;
+    /**
+     * 承認状況
+     */
+    "approvalStatus": string;
+    /**
+     * このサーバーでは、登録理由を添えて申請し、管理者またはモデレーターの承認を受ける必要があります。
+     */
+    "approvalRequiredToRegister": string;
+    /**
+     * 承認待ちの登録申請があります。
+     */
+    "pendingUserApprovals": string;
+    /**
+     * 登録申請
+     */
+    "approvals": string;
+    /**
+     * この登録申請を却下し、アカウントを削除しますか？
+     */
+    "deleteThisAccountConfirm": string;
+    /**
+     * 登録理由
+     */
+    "signupReason": string;
+    /**
      * ノートでつながるネットワーク
      */
     "headlineMisskey": string;
@@ -1837,11 +1885,11 @@ export interface Locale extends ILocale {
      */
     "token": string;
     /**
-     * 二要素認証
+     * 二要素認証(2FA)
      */
     "2fa": string;
     /**
-     * 二要素認証のセットアップ
+     * 二要素認証(2FA)のセットアップ
      */
     "setupOf2fa": string;
     /**
@@ -1912,6 +1960,28 @@ export interface Locale extends ILocale {
      * パスワードをリセット
      */
     "resetPassword": string;
+    /**
+     * アカウント方式
+     */
+    "accountOrigin": string;
+    "_accountOrigin": {
+        /**
+         * Misskey
+         */
+        "misskey": string;
+        /**
+         * CherryPick
+         */
+        "cherrypick": string;
+        /**
+         * 不明
+         */
+        "unknown": string;
+        /**
+         * 未設定
+         */
+        "none": string;
+    };
     /**
      * 新しいパスワードは「{password}」です
      */
@@ -2061,7 +2131,7 @@ export interface Locale extends ILocale {
      */
     "normalPassword": string;
     /**
-     * 強いパスワード
+     * 強めのパスワード
      */
     "strongPassword": string;
     /**
@@ -2581,7 +2651,7 @@ export interface Locale extends ILocale {
      */
     "relays": string;
     /**
-     * リレーの追加
+     * リレーを追加
      */
     "addRelay": string;
     /**
@@ -3725,7 +3795,7 @@ export interface Locale extends ILocale {
      */
     "off": string;
     /**
-     * アカウント登録にメールアドレスを必須にする
+     * 登録にメールアドレスを必須にする
      */
     "emailRequiredForSignup": string;
     /**
@@ -3804,6 +3874,42 @@ export interface Locale extends ILocale {
      * おかえりなさい、{name}さん
      */
     "welcomeBackWithName": ParameterizedString<"name">;
+    /**
+     * また会えましたね、{name}さん
+     */
+    "welcomeBackWithName2": ParameterizedString<"name">;
+    /**
+     * {name}さん、お待ちしていました
+     */
+    "welcomeBackWithName3": ParameterizedString<"name">;
+    /**
+     * 今日もよろしくお願いします、{name}さん
+     */
+    "welcomeBackWithName4": ParameterizedString<"name">;
+    /**
+     * {name}さん、戻ってきてくれてうれしいです
+     */
+    "welcomeBackWithName5": ParameterizedString<"name">;
+    /**
+     * ようこそ、{name}さん。続きを始めましょう
+     */
+    "welcomeBackWithName6": ParameterizedString<"name">;
+    /**
+     * {name}さん、今日もお疲れさまです
+     */
+    "welcomeBackWithName7": ParameterizedString<"name">;
+    /**
+     * おかえりなさいませ、{name}さん
+     */
+    "welcomeBackWithName8": ParameterizedString<"name">;
+    /**
+     * {name}さん、お会いできてうれしいです
+     */
+    "welcomeBackWithName9": ParameterizedString<"name">;
+    /**
+     * またここから始めましょう、{name}さん
+     */
+    "welcomeBackWithName10": ParameterizedString<"name">;
     /**
      * [{ok}]を押して、メールアドレスの確認を完了してください。
      */
@@ -4172,6 +4278,10 @@ export interface Locale extends ILocale {
      * 読み込めません
      */
     "cannotLoad": string;
+    /**
+     * プレビューできません
+     */
+    "cannotPreview": string;
     /**
      * プロフィール表示回数
      */
@@ -5699,6 +5809,10 @@ export interface Locale extends ILocale {
      * スペースで区切るとAND指定になり、改行で区切るとOR指定になります。スラッシュで囲むと正規表現になります。一致した場合、サムネイルが表示されなくなります。
      */
     "urlPreviewSensitiveListDescription": string;
+    /**
+     * ピクセルアート拡大モード
+     */
+    "pixelatedZoom": string;
     "_imageEditing": {
         "_vars": {
             /**
@@ -6085,6 +6199,328 @@ export interface Locale extends ILocale {
              */
             "none": string;
         };
+    };
+    "_matrix": {
+        /**
+         * Matrix
+         */
+        "title": string;
+        /**
+         * ホームサーバーURL
+         */
+        "homeserver": string;
+        /**
+         * MatrixのID またはユーザー名
+         */
+        "matrixId": string;
+        /**
+         * パスワード
+         */
+        "password": string;
+        /**
+         * Matrixに接続
+         */
+        "connect": string;
+        /**
+         * 接続中
+         */
+        "connecting": string;
+        /**
+         * ログアウト
+         */
+        "disconnect": string;
+        /**
+         * このMatrixアカウントからログアウトしますか？
+         */
+        "logoutConfirm": string;
+        /**
+         * サーバーを経由せず、このブラウザからMatrixホームサーバーへ直接接続します。ホームサーバー側でCORSが許可されている必要があります。
+         */
+        "directBrowserNotice": string;
+        /**
+         * アクセストークンはローカルストレージに保存されます。共有端末ではログアウトを推奨します。
+         */
+        "tokenStorageNotice": string;
+        /**
+         * {user} からの招待
+         */
+        "invitedBy": ParameterizedString<"user">;
+        /**
+         * 参加
+         */
+        "acceptInvite": string;
+        /**
+         * 拒否
+         */
+        "declineInvite": string;
+        /**
+         * Matrixのセッションが失効しました。再度ログインしてください。
+         */
+        "sessionExpired": string;
+        /**
+         * Matrixに接続していません。「Matrix」タブから接続してください。
+         */
+        "notConnected": string;
+        /**
+         * 新しいDM
+         */
+        "newDirectMessage": string;
+        /**
+         * MatrixのIDを指定して1対1の会話を始めます。
+         */
+        "newDirectMessageDescription": string;
+        /**
+         * 相手のID
+         */
+        "directMessageUserId": string;
+        /**
+         * Matrixアカウントに接続して、Matrixの会話をこの一覧に表示します。
+         */
+        "connectDescription": string;
+        /**
+         * ルームに参加
+         */
+        "joinRoom": string;
+        /**
+         * ルームIDまたはエイリアスを指定して参加します。
+         */
+        "joinRoomDescription": string;
+        /**
+         * ルームID または エイリアス
+         */
+        "joinRoomPrompt": string;
+        /**
+         * ルームに参加できませんでした。
+         */
+        "joinRoomError": string;
+        /**
+         * 表示できるメッセージはありません
+         */
+        "noMessages": string;
+        /**
+         * このルームは暗号化されています。このブラウザではIndexedDBが使えないため、暗号化ルームの読み書きができません。
+         */
+        "encryptedRoomUnsupported": string;
+        /**
+         * このルームは暗号化されています。メッセージはこの端末で復号されます。
+         */
+        "encryptedRoom": string;
+        /**
+         * このメッセージは復号できません。鍵が届いていないか、この端末に鍵がありません。
+         */
+        "undecryptableMessage": string;
+        /**
+         * 未検証の端末が{count}台あります。なりすましを防ぐため検証してください。
+         */
+        "unverifiedDevices": ParameterizedString<"count">;
+        /**
+         * 端末を検証
+         */
+        "verifyDevices": string;
+        /**
+         * 絵文字が相手の端末と同じなら一致を選んでください。
+         */
+        "verifyDevicesDescription": string;
+        /**
+         * 絵文字が一致した
+         */
+        "sasMatch": string;
+        /**
+         * 一致しない
+         */
+        "sasMismatch": string;
+        /**
+         * 端末の検証が完了しました。
+         */
+        "verificationSuccess": string;
+        /**
+         * 端末の検証に失敗しました。
+         */
+        "verificationFailed": string;
+        /**
+         * 鍵のバックアップ
+         */
+        "keyBackup": string;
+        /**
+         * ブラウザのデータを消すと暗号化された履歴が読めなくなります。リカバリキーを保存してください。
+         */
+        "keyBackupDescription": string;
+        /**
+         * リカバリキーを作成
+         */
+        "keyBackupCreate": string;
+        /**
+         * リカバリキーで復元
+         */
+        "keyBackupRestore": string;
+        /**
+         * アカウントのパスワード
+         */
+        "accountPassword": string;
+        /**
+         * ホームサーバーが本人確認を求める場合にのみ使用します。
+         */
+        "accountPasswordCaption": string;
+        /**
+         * リカバリキー
+         */
+        "recoveryKey": string;
+        /**
+         * このキーは再表示できません。パスワードマネージャーなどに保存してください。
+         */
+        "recoveryKeySaveWarning": string;
+        /**
+         * リカバリキーを入力
+         */
+        "restoreKeyBackupPrompt": string;
+        /**
+         * 検索はMisskeyのダイレクトメッセージのみが対象です。暗号化されたMatrixルームはサーバー側検索に載りません。
+         */
+        "searchSkipsEncrypted": string;
+        /**
+         * メッセージを送信
+         */
+        "messagePlaceholder": string;
+        /**
+         * 送信
+         */
+        "send": string;
+        /**
+         * サーバーへの接続に失敗しました。ホームサーバーURL、認証情報、CORS設定を確認してください。
+         */
+        "connectionError": string;
+        /**
+         * DMを作成できませんでした。
+         */
+        "createRoomError": string;
+        /**
+         * メッセージを送信できませんでした。
+         */
+        "sendError": string;
+        /**
+         * 添付ファイル
+         */
+        "attachment": string;
+        /**
+         * ファイルを添付
+         */
+        "attachFile": string;
+        /**
+         * ファイルをアップロードできませんでした。
+         */
+        "uploadError": string;
+        /**
+         * このメッセージは削除されました
+         */
+        "messageDeleted": string;
+        /**
+         * 編集済み
+         */
+        "edited": string;
+        /**
+         * メッセージを編集
+         */
+        "editMessage": string;
+        /**
+         * メッセージを編集できませんでした。
+         */
+        "editError": string;
+        /**
+         * メッセージを削除
+         */
+        "deleteMessage": string;
+        /**
+         * このメッセージを削除しますか？
+         */
+        "deleteMessageConfirm": string;
+        /**
+         * メッセージを削除できませんでした。
+         */
+        "deleteError": string;
+        /**
+         * リアクション
+         */
+        "addReaction": string;
+        /**
+         * リアクションを送信できませんでした。
+         */
+        "reactionError": string;
+        /**
+         * 過去のメッセージを読み込む
+         */
+        "loadOlder": string;
+        /**
+         * 過去のメッセージを読み込めませんでした。
+         */
+        "historyError": string;
+        /**
+         * これ以上前のメッセージはありません
+         */
+        "noMoreHistory": string;
+        /**
+         * 送信に失敗しました
+         */
+        "sendFailed": string;
+        /**
+         * {user} が入力中
+         */
+        "typingOne": ParameterizedString<"user">;
+        /**
+         * {count}人が入力中
+         */
+        "typingMany": ParameterizedString<"count">;
+        /**
+         * 返信
+         */
+        "reply": string;
+        /**
+         * {user} に返信
+         */
+        "replyingTo": ParameterizedString<"user">;
+        /**
+         * 返信元のメッセージを表示できません
+         */
+        "replyUnavailable": string;
+        /**
+         * 返信をやめる
+         */
+        "cancelReply": string;
+        /**
+         * 再送する
+         */
+        "retrySend": string;
+        /**
+         * 破棄する
+         */
+        "discardMessage": string;
+        /**
+         * 端末
+         */
+        "devices": string;
+        /**
+         * このアカウントの端末
+         */
+        "deviceList": string;
+        /**
+         * 認証済み
+         */
+        "deviceVerified": string;
+        /**
+         * 未認証
+         */
+        "deviceUnverified": string;
+        /**
+         * この端末
+         */
+        "thisDevice": string;
+        /**
+         * フィンガープリント
+         */
+        "deviceFingerprint": string;
+        /**
+         * 端末一覧を取得できませんでした。
+         */
+        "deviceLoadError": string;
     };
     "_emojiPalette": {
         /**
@@ -6790,7 +7226,7 @@ export interface Locale extends ILocale {
                      */
                     "cw": string;
                     /**
-                     * チョコのかかったドーナツを食べました🍩😋
+                     * よるにカップ麺、背徳😋
                      */
                     "note": string;
                 };
@@ -8484,6 +8920,14 @@ export interface Locale extends ILocale {
          * 入力されたメールアドレス({email})宛に確認のメールが送信されました。メールに記載されたリンクにアクセスすると、アカウントの作成が完了します。メールに記載されているリンクの有効期限は30分です。
          */
         "emailSent": ParameterizedString<"email">;
+        /**
+         * 登録申請を受け付けました。承認されるまでログインできません。
+         */
+        "approvalPending": string;
+        /**
+         * このサーバーへの登録を希望する理由を入力してください。管理者とモデレーターだけが確認できます。
+         */
+        "reasonInfo": string;
     };
     "_accountDelete": {
         /**
@@ -9766,6 +10210,14 @@ export interface Locale extends ILocale {
          * ダイレクトメッセージを閲覧する
          */
         "read:chat": string;
+        /**
+         * 登録申請を承認する
+         */
+        "write:admin:approve-user": string;
+        /**
+         * 登録申請を却下する
+         */
+        "write:admin:decline-user": string;
     };
     "_auth": {
         /**
@@ -9996,6 +10448,10 @@ export interface Locale extends ILocale {
          * ダイレクトメッセージ
          */
         "chat": string;
+        /**
+         * リンクタイムライン
+         */
+        "linkedTl": string;
     };
     "_widgetOptions": {
         /**
@@ -11269,7 +11725,41 @@ export interface Locale extends ILocale {
              * ダイレクトメッセージ
              */
             "chat": string;
+            /**
+             * リンクタイムライン
+             */
+            "linkedTl": string;
         };
+    };
+    "_linkedTl": {
+        /**
+         * 表示するアカウントが選択されていません。
+         */
+        "noAccount": string;
+        /**
+         * アカウントを選択
+         */
+        "selectAccount": string;
+        /**
+         * 他に追加されているアカウントがありません。
+         */
+        "noOtherAccounts": string;
+        /**
+         * 既存のアカウントを追加
+         */
+        "addAccount": string;
+        /**
+         * このカラムは閲覧専用です。リアクションや投稿を行うには、アカウントを切り替えてください。
+         */
+        "readOnlyNotice": string;
+        /**
+         * このアカウントに切り替え
+         */
+        "switchToThisAccount": string;
+        /**
+         * このアカウントのログイン状態が無効になっています。設定からログインし直してください。
+         */
+        "tokenRevoked": string;
     };
     "_dialog": {
         /**
@@ -11652,6 +12142,14 @@ export interface Locale extends ILocale {
          * プロキシアカウントの説明を更新
          */
         "updateProxyAccountDescription": string;
+        /**
+         * 登録申請を承認
+         */
+        "approve": string;
+        /**
+         * 登録申請を却下
+         */
+        "decline": string;
     };
     "_fileViewer": {
         /**

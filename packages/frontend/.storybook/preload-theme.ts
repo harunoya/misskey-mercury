@@ -16,6 +16,7 @@ const keys = [
 	'l-botanical',
 	'l-vivid',
 	'l-cherry',
+	'l-red',
 	'l-sushi',
 	'l-u0',
 	'd-dark',
@@ -26,9 +27,10 @@ const keys = [
 	'd-green-lime',
 	'd-green-orange',
 	'd-cherry',
+	'd-red',
 	'd-ice',
 	'd-u0',
-]
+];
 
 await Promise.all(keys.map((key) => readFile(new URL(`../../frontend-shared/themes/${key}.json5`, import.meta.url), 'utf8'))).then((sources) => {
 	writeFile(

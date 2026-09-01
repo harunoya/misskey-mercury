@@ -62,9 +62,13 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.orderBy('user.followersCount', 'DESC');
 
 			this.queryService.generateMutedUserQueryForUsers(query, me);
+			// `generateBlockQueryForUsers` is the whole block filter for a query over users: it
+			// excludes both the accounts this user blocked and the ones that blocked them. The
+			// `...ForNotes` pair that used to follow it belongs to a timeline query — it constrains
+			// `note.userId`, `note.replyUserId` and `note.renoteUserId`, none of which this query
+			// selects from, so Postgres rejected it with "missing FROM-clause entry for table note"
+			// and the endpoint answered 500 to every caller.
 			this.queryService.generateBlockQueryForUsers(query, me);
-			this.queryService.generateBlockedUserQueryForNotes(query, me);
-			this.queryService.generateBlockedUserQueryForNotes(query, me, { noteColumn: 'renote' });
 
 			const followingQuery = this.followingsRepository.createQueryBuilder('following')
 				.select('following.followeeId')

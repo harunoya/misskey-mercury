@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 import locales from 'i18n';
 import meta from '../../package.json' with { type: 'json' };
+import { resolveVersion } from '../../scripts/version.mjs';
 
 const watch = process.argv[2]?.includes('watch');
 
@@ -25,7 +26,7 @@ const buildOptions = {
 		_ENV_: JSON.stringify(process.env.NODE_ENV ?? ''), // `NODE_ENV`が`undefined`なとき`JSON.stringify`が`undefined`を返してエラーになってしまうので`??`を使っている
 		_LANGS_: JSON.stringify(Object.entries(locales).map(([k, v]) => [k, v._lang_])),
 		_PERF_PREFIX_: JSON.stringify('Misskey:'),
-		_VERSION_: JSON.stringify(meta.version),
+		_VERSION_: JSON.stringify(resolveVersion(meta.version, meta.mercuryVersion)),
 	},
 	entryPoints: [`${__dirname}/src/sw.ts`],
 	format: 'esm',

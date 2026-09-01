@@ -10,6 +10,7 @@ import { promises as fsp } from 'fs';
 
 import locales from 'i18n';
 import meta from '../../package.json';
+import { resolveVersion } from '../../scripts/version.mjs';
 import packageInfo from './package.json' with { type: 'json' };
 import pluginUnwindCssModuleClassName from './lib/rollup-plugin-unwind-css-module-class-name.js';
 import pluginJson5 from './lib/vite-plugin-json5.js';
@@ -172,6 +173,18 @@ export function getConfig(): UserConfig {
 			},
 		},
 
+		optimizeDeps: {
+			// Pre-bundling matrix-js-sdk loads a second entrypoint (`index.js` then
+			// `browser-index.js`) and throws "Multiple matrix-js-sdk entrypoints detected!".
+			// The WASM module also cannot be instantiated during dep optimization.
+			exclude: [
+				'matrix-js-sdk',
+				'@matrix-org/matrix-sdk-crypto-wasm',
+			],
+		},
+
+		assetsInclude: ['**/*.wasm'],
+
 		css: {
 			lightningcss: {
 				exclude: Features.LightDark,
@@ -189,7 +202,7 @@ export function getConfig(): UserConfig {
 		},
 
 		define: {
-			_VERSION_: JSON.stringify(meta.version),
+			_VERSION_: JSON.stringify(resolveVersion(meta.version, meta.mercuryVersion)),
 			_LANGS_: JSON.stringify(Object.entries(locales).map(([k, v]) => [k, v._lang_])),
 			_ENV_: JSON.stringify(process.env.NODE_ENV),
 			_DEV_: process.env.NODE_ENV !== 'production',

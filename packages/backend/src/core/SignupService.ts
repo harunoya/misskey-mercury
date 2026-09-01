@@ -5,7 +5,6 @@
 
 import { generateKeyPair } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
 import { DataSource, IsNull } from 'typeorm';
 import { DI } from '@/di-symbols.js';
 import type { MiMeta, UsedUsernamesRepository, UsersRepository } from '@/models/_.js';
@@ -22,6 +21,7 @@ import { UtilityService } from '@/core/UtilityService.js';
 import { UserService } from '@/core/UserService.js';
 import { SystemAccountService } from '@/core/SystemAccountService.js';
 import { MetaService } from '@/core/MetaService.js';
+import { hashPassword } from '@/misc/password.js';
 
 @Injectable()
 export class SignupService {
@@ -55,8 +55,10 @@ export class SignupService {
 		passwordHash?: MiUserProfile['password'] | null;
 		host?: string | null;
 		ignorePreservedUsernames?: boolean;
+		reason?: string | null;
+		approved?: boolean;
 	}) {
-		const { username, password, passwordHash, host } = opts;
+		const { username, password, passwordHash, host, reason } = opts;
 		let hash = passwordHash;
 
 		// Validate username
@@ -70,9 +72,7 @@ export class SignupService {
 				throw new Error('INVALID_PASSWORD');
 			}
 
-			// Generate hash of password
-			const salt = await bcrypt.genSalt(8);
-			hash = await bcrypt.hash(password, salt);
+			hash = await hashPassword(password);
 		}
 
 		// Generate secret
@@ -118,6 +118,7 @@ export class SignupService {
 			));
 
 		let account!: MiUser;
+		const approved = opts.approved ?? true;
 
 		// Start transaction
 		await this.db.transaction(async transactionalEntityManager => {
@@ -134,6 +135,8 @@ export class SignupService {
 				usernameLower: username.toLowerCase(),
 				host: this.utilityService.toPunyNullable(host),
 				token: secret,
+				approved,
+				signupReason: reason,
 			}));
 
 			await transactionalEntityManager.save(new MiUserKeypair({

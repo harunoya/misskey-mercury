@@ -26,6 +26,9 @@ packages/sw/.yarn/cache
 # Playwright
 packages/frontend/test/e2e/artifacts
 
+# Local Synapse used for Matrix E2EE verification
+packages/frontend/test/synapse/data
+
 # Coverage
 coverage
 
@@ -83,3 +86,18 @@ vite.config.local-dev.ts.timestamp-*
 
 # Affinity
 *.af~lock~
+
+# Mercury internal notes
+# Working documents for the fork itself (design notes, porting logs, upstream
+# provenance). They are written for whoever is maintaining this fork, not for
+# anyone consuming it, so they stay out of the repository.
+/DIFF_MERCURY.md
+/FRONTEND_V11.md
+/packages/frontend-v11/UPSTREAM.md
+
+# Mercury working artefacts
+# Throwaway output from driving the client in a browser, and the launch entry that points at one
+# developer's own checkout.
+/.playwright-cli
+/output
+/.claude/launch.json

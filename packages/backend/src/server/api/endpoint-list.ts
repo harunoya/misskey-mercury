@@ -27,12 +27,14 @@ export * as 'admin/announcements/create' from './endpoints/admin/announcements/c
 export * as 'admin/announcements/delete' from './endpoints/admin/announcements/delete.js';
 export * as 'admin/announcements/list' from './endpoints/admin/announcements/list.js';
 export * as 'admin/announcements/update' from './endpoints/admin/announcements/update.js';
+export * as 'admin/approve-user' from './endpoints/admin/approve-user.js';
 export * as 'admin/avatar-decorations/create' from './endpoints/admin/avatar-decorations/create.js';
 export * as 'admin/avatar-decorations/delete' from './endpoints/admin/avatar-decorations/delete.js';
 export * as 'admin/avatar-decorations/list' from './endpoints/admin/avatar-decorations/list.js';
 export * as 'admin/avatar-decorations/update' from './endpoints/admin/avatar-decorations/update.js';
 export * as 'admin/captcha/current' from './endpoints/admin/captcha/current.js';
 export * as 'admin/captcha/save' from './endpoints/admin/captcha/save.js';
+export * as 'admin/decline-user' from './endpoints/admin/decline-user.js';
 export * as 'admin/delete-account' from './endpoints/admin/delete-account.js';
 export * as 'admin/delete-all-files-of-a-user' from './endpoints/admin/delete-all-files-of-a-user.js';
 export * as 'admin/drive/clean-remote-files' from './endpoints/admin/drive/clean-remote-files.js';
@@ -114,6 +116,9 @@ export * as 'admin/update-proxy-account' from './endpoints/admin/update-proxy-ac
 export * as 'admin/update-user-note' from './endpoints/admin/update-user-note.js';
 export * as 'announcements' from './endpoints/announcements.js';
 export * as 'announcements/show' from './endpoints/announcements/show.js';
+export * as 'announcements/reactions' from './endpoints/announcements/reactions.js';
+export * as 'announcements/reactions/create' from './endpoints/announcements/reactions/create.js';
+export * as 'announcements/reactions/delete' from './endpoints/announcements/reactions/delete.js';
 export * as 'antennas/create' from './endpoints/antennas/create.js';
 export * as 'antennas/delete' from './endpoints/antennas/delete.js';
 export * as 'antennas/list' from './endpoints/antennas/list.js';

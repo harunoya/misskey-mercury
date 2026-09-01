@@ -51,8 +51,10 @@ services:
         target: /misskey/packages/backend/package.json
         read_only: true
       - type: bind
-        source: ../scripts/compile_config.js
-        target: /misskey/packages/backend/scripts/compile_config.js
+        # `migrate` が実行するスクリプトを個別に列挙すると、増えたときにここだけ取り残される。
+        # 実際 cherrypick_bootstrap.js の追加で federation が起動しなくなった。
+        source: ../scripts
+        target: /misskey/packages/backend/scripts
         read_only: true
       - type: bind
         source: ../../misskey-js/built

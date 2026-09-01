@@ -48,15 +48,20 @@ export type SearchPagination = {
 	limit: number;
 };
 
-function compileValue(value: V): string {
+/** Meilisearch filter strings use single quotes; `'` and `\` must be escaped. */
+export function compileMeilisearchValue(value: V): string {
 	if (typeof value === 'string') {
-		return `'${value}'`; // TODO: escape
+		return `'${value.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'`;
 	} else if (typeof value === 'number') {
 		return value.toString();
 	} else if (typeof value === 'boolean') {
 		return value.toString();
 	}
 	throw new Error('unrecognized value');
+}
+
+function compileValue(value: V): string {
+	return compileMeilisearchValue(value);
 }
 
 function compileQuery(q: Q): string {
@@ -169,7 +174,6 @@ export class SearchService {
 	@bindThis
 	public async unindexNote(note: MiNote): Promise<void> {
 		if (!this.meilisearch) return;
-		if (!['home', 'public'].includes(note.visibility)) return;
 
 		await this.meilisearchNoteIndex?.deleteDocument(note.id);
 	}
@@ -325,8 +329,8 @@ export class SearchService {
 
 		query.where('note.id IN (:...noteIds)', { noteIds: res.hits.map(x => x.id) });
 
-		this.queryService.generateBlockedHostQueryForNote(query);
-		this.queryService.generateSuspendedUserQueryForNote(query);
+		this.queryService.generateVisibilityQuery(query, me);
+		this.queryService.generateBaseNoteFilteringQuery(query, me);
 
 		const notes = (await query.getMany()).filter(note => {
 			if (me && isUserRelated(note, userIdsWhoBlockingMe)) return false;

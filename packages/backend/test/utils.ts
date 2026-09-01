@@ -137,7 +137,7 @@ function timeoutPromise<T>(p: Promise<T>, timeout: number): Promise<T> {
 	]);
 }
 
-export const signup = async (params?: Partial<misskey.Endpoints['signup']['req']>): Promise<NonNullable<misskey.Endpoints['signup']['res']>> => {
+export const signup = async (params?: Partial<misskey.Endpoints['signup']['req']>): Promise<misskey.entities.SignupResponse> => {
 	const q = Object.assign({
 		username: randomString(),
 		password: 'test',
@@ -145,6 +145,7 @@ export const signup = async (params?: Partial<misskey.Endpoints['signup']['req']
 
 	const res = await api('signup', q);
 
+	assert.ok(res.body != null && 'token' in res.body, inspect(res.body));
 	return res.body;
 };
 

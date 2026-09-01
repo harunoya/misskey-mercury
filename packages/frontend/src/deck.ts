@@ -47,6 +47,7 @@ export const columnTypes = [
 	'direct',
 	'roleTimeline',
 	'chat',
+	'linkedTl',
 ] as const;
 
 export type ColumnType = typeof columnTypes[number];
@@ -70,6 +71,9 @@ export type Column = {
 	withSensitive?: boolean;
 	onlyFiles?: boolean;
 	soundSetting?: SoundStore;
+	// linkedTl: which locally added account's home timeline to display (read-only, no session switch)
+	linkedHost?: string;
+	linkedUserId?: string;
 	// The cache for the name of the antenna, channel, list, or role
 	timelineNameCache?: string;
 };

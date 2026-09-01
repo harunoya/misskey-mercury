@@ -7,6 +7,7 @@ import Parser from 'rss-parser';
 import { Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
+import { isSafeWebhookUrl } from '@/misc/check-webhook-url.js';
 import { ApiError } from '../error.js';
 
 const MAX_URL_LENGTH = 8192;
@@ -299,6 +300,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		}
 
 		url.hash = '';
+		if (!isSafeWebhookUrl(url.href)) {
+			throw new ApiError(meta.errors.invalidUrl);
+		}
 		return url.href;
 	}
 

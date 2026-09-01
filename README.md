@@ -26,11 +26,22 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/misskey-dev/misskey)
 
-<a href="https://flatt.tech/oss/gmo/trampoline" target="_blank"><img src="https://flatt.tech/assets/images/badges/gmo-oss.svg" height="24px"/></a>
-
 </div>
 
+## このリポジトリについて
+MisskeyをもとにしたフォークからMIsskeyに戻すことを念頭に置いたフォークです。
+CherryPickなどから一部機能をマージしているほか、マイグレーションスクリプトを整備しています。
+注意:完全に"自分用"として維持しています。想定していないサーバーへのインストール後に起きたあらゆる事象には一切責任を負いません。
+
 ## Thanks
+
+<a href="https://github.com/kokonect-link/cherrypick"><img src="./assets/title_float_cherrypick.svg" height="32" alt="CherryPick" /></a>
+
+Thanks to [CherryPick](https://github.com/kokonect-link/cherrypick)
+
+<a href="https://github.com/Misskey-art/misskey"><img src="./assets/misskey-art-logo.jpg" height="36" alt="Misskey-art" /></a>
+
+Thanks to [Misskey-art](https://github.com/Misskey-art/misskey)
 
 <a href="https://sentry.io/"><img src="https://github.com/misskey-dev/misskey/assets/4439005/98576556-222f-467a-94be-e98dbda1d852" height="30" alt="Sentry" /></a>
 
@@ -53,11 +64,3 @@ Thanks to [Crowdin](https://crowdin.com/) for providing the localization platfor
 Thanks to [Docker](https://hub.docker.com/) for providing the container platform that helps us run Misskey in production.
 
 ---
-
-<div align="center">
-	
-Support us with a ⭐ !
-
-[![Star History Chart](https://api.star-history.com/svg?repos=misskey-dev/misskey&type=Date)](https://star-history.com/#misskey-dev/misskey&Date)
-
-</div>

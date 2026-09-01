@@ -32,6 +32,8 @@ COPY --link ["packages/misskey-reversi/package.json", "./packages/misskey-revers
 COPY --link ["packages/misskey-bubble-game/package.json", "./packages/misskey-bubble-game/"]
 
 ARG NODE_ENV=production
+ARG MISSKEY_VERSION_SUFFIX
+ENV MISSKEY_VERSION_SUFFIX=${MISSKEY_VERSION_SUFFIX}
 
 RUN node -e "console.log(JSON.parse(require('node:fs').readFileSync('./package.json')).packageManager)" | xargs npm install -g
 
@@ -40,7 +42,6 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
 
 COPY --link . ./
 
-RUN git submodule update --init
 RUN pnpm build
 RUN rm -rf .git/
 

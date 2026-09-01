@@ -309,6 +309,10 @@ export const packedMetaLiteSchema = {
 			enum: ['all', 'specified', 'none'],
 			optional: false, nullable: false,
 		},
+		approvalRequiredForSignup: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 	},
 } as const;
 

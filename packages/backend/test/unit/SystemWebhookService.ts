@@ -275,7 +275,7 @@ describe('SystemWebhookService', () => {
 					isActive: false,
 					name: randomString(),
 					on: ['abuseReport'] as SystemWebhookEventType[],
-					url: randomString(),
+					url: 'https://example.com/updated',
 					secret: randomString(),
 				};
 
