@@ -56,12 +56,12 @@
 						<i><fa icon="angle-right"/></i>
 					</router-link>
 				</li>
-				<li>
-					<router-link :to="`/@${ $store.state.i.username }/room`">
-						<i><fa :icon="faDoorOpen" fixed-width/></i>
-						<span>{{ $t('room') }}</span>
+				<li @click="switchUi">
+					<p>
+						<i><fa :icon="faDesktop" fixed-width/></i>
+						<span>{{ $t('@.switch-ui') }}</span>
 						<i><fa icon="angle-right"/></i>
-					</router-link>
+					</p>
 				</li>
 			</ul>
 			<ul>
@@ -113,7 +113,8 @@ import i18n from '../../../i18n';
 // import MkSettingsWindow from './settings-window.vue';
 import MkDriveWindow from './drive-window.vue';
 import contains from '../../../common/scripts/contains';
-import { faHome, faColumns, faUsers, faDoorOpen } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faColumns, faUsers, faDesktop } from '@fortawesome/free-solid-svg-icons';
+import { chooseUi } from '@compat/switch-ui';
 import { faMoon, faSun, faStickyNote } from '@fortawesome/free-regular-svg-icons';
 
 export default defineComponent({
@@ -121,7 +122,7 @@ export default defineComponent({
 	data() {
 		return {
 			isOpen: false,
-			faHome, faColumns, faMoon, faSun, faStickyNote, faUsers, faDoorOpen
+			faHome, faColumns, faMoon, faSun, faStickyNote, faUsers, faDesktop
 		};
 	},
 	computed: {
@@ -135,6 +136,11 @@ export default defineComponent({
 		this.close();
 	},
 	methods: {
+		async switchUi() {
+			this.close();
+			await chooseUi(this.$root);
+		},
+
 		toggle() {
 			this.isOpen ? this.close() : this.open();
 		},

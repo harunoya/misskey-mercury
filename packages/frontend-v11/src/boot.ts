@@ -42,8 +42,6 @@ if (token == null) {
 
 	applyPersistedTheme(storage);
 
-	installRecoveryControl();
-
 	const mobile = /mobile|iphone|ipad|android/i.test(navigator.userAgent) || window.innerWidth < 576;
 	const admin = window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/');
 

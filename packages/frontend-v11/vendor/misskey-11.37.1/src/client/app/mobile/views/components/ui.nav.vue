@@ -41,6 +41,7 @@
 					<ul>
 						<li @click="toggleDeckMode"><p><i><fa :icon="$store.state.device.inDeckMode ? faHome : faColumns" fixed-width/></i><span>{{ $store.state.device.inDeckMode ? $t('@.home') : $t('@.deck') }}</span></p></li>
 						<li @click="dark"><p><i><fa :icon="$store.state.device.darkmode ? faSun : faMoon" fixed-width/></i><span>{{ $store.state.device.darkmode ? $t('@.turn-off-darkmode') : $t('@.turn-on-darkmode') }}</span></p></li>
+						<li @click="switchUi"><p><i><fa :icon="faDesktop" fixed-width/></i><span>{{ $t('@.switch-ui') }}</span></p></li>
 					</ul>
 				</div>
 				<div class="announcements" v-if="announcements && announcements.length > 0">
@@ -68,7 +69,8 @@
 import { defineComponent } from 'vue';
 import i18n from '../../../i18n';
 import { lang } from '../../../config';
-import { faNewspaper, faHashtag, faHome, faColumns, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faNewspaper, faHashtag, faHome, faColumns, faUsers, faDesktop } from '@fortawesome/free-solid-svg-icons';
+import { chooseUi } from '@compat/switch-ui';
 import { faMoon, faSun, faStickyNote, faBell } from '@fortawesome/free-regular-svg-icons';
 import { search } from '../../../common/scripts/search';
 
@@ -89,7 +91,7 @@ export default defineComponent({
 			announcements: [],
 			searching: false,
 			showNotifications: false,
-			faNewspaper, faHashtag, faMoon, faSun, faHome, faColumns, faStickyNote, faUsers, faBell,
+			faNewspaper, faHashtag, faMoon, faSun, faHome, faColumns, faStickyNote, faUsers, faBell, faDesktop,
 		};
 	},
 
@@ -129,6 +131,12 @@ export default defineComponent({
 	},
 
 	methods: {
+		async switchUi() {
+			// The drawer is the parent's state and it has no close event; picking a UI reloads the
+			// page, and cancelling leaves the drawer up, which is what the other actions here do too.
+			await chooseUi(this.$root);
+		},
+
 		search() {
 			if (this.searching) return;
 

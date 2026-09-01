@@ -24,14 +24,32 @@ export function readMercuryToken(): string | null {
 	}
 }
 
+/** The UI styles a reader can move between. `v11` is the one this build serves. */
+export type UiStyle = 'default' | 'deck' | 'v11';
+
+/** Which style the reader came from, so leaving v11 returns them there rather than to a guess. */
+export function previousUi(): UiStyle {
+	const saved = getUnscopedItem('mercury:v11:previousUi');
+	return saved === 'deck' ? 'deck' : 'default';
+}
+
 /**
- * Hands the reader back to the current client, on the page they are already on.
+ * Moves the reader to another UI style, on the page they are already on.
  *
- * The switch is made the way the UI menu makes it — write `ui`, reload — so the URL never carries
- * a marker for which client is showing. The value comes from what they were using before v11, not
- * a hardcoded `default`, or picking v11 from a deck would quietly demote them to the default UI.
+ * The switch is made the way the current client's menu makes it — write `ui`, reload — so the URL
+ * never carries a marker for which client is showing.
+ */
+export function switchUi(style: UiStyle): void {
+	setUnscopedItem('ui', style);
+	window.location.reload();
+}
+
+/**
+ * Hands the reader back to the client they came from.
+ *
+ * The value comes from what they were using before v11, not a hardcoded `default`, or picking v11
+ * from a deck would quietly demote them to the default UI.
  */
 export function leaveToCurrentUi(): void {
-	setUnscopedItem('ui', getUnscopedItem('mercury:v11:previousUi') ?? 'default');
-	window.location.reload();
+	switchUi(previousUi());
 }
