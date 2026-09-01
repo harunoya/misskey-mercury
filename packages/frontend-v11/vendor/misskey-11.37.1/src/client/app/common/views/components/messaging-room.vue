@@ -3,7 +3,7 @@
 	@dragover.prevent.stop="onDragover"
 	@drop.prevent.stop="onDrop"
 >
-	<div class="body">
+	<div class="body" ref="body">
 		<p class="init" v-if="init"><fa icon="spinner" pulse fixed-width/>{{ $t('@.loading') }}</p>
 		<p class="empty" v-if="!init && messages.length == 0"><fa icon="info-circle"/>{{ user ? $t('not-talked-user') : $t('not-talked-group') }}</p>
 		<p class="no-history" v-if="!init && messages.length > 0 && !existMoreMessages"><fa :icon="faFlag"/>{{ $t('no-history') }}</p>
@@ -69,6 +69,13 @@ export default defineComponent({
 			connection: null,
 			showIndicator: false,
 			timer: null,
+			// Whether the reader was sitting at the newest message the last time we looked. Read
+			// when something changes the content height on its own — an image finishing loading,
+			// a message arriving — to decide between following along and leaving them where they
+			// are. It has to be remembered rather than measured at that moment, because by then
+			// the height has already changed and the answer would always be "no".
+			pinnedToBottom: true,
+			bodyResizeObserver: null,
 			faArrowCircleDown, faFlag
 		};
 	},
@@ -106,9 +113,22 @@ export default defineComponent({
 
 		document.addEventListener('visibilitychange', this.onVisibilitychange);
 
+		// Attachments settle their height after the message is already in the DOM, so the position
+		// computed when the messages arrived is short-lived. Watching the list itself covers every
+		// such case (images, video, embeds) without having to hook each one.
+		if (typeof ResizeObserver !== 'undefined') {
+			this.bodyResizeObserver = new ResizeObserver(() => {
+				if (this.pinnedToBottom) this.scrollToBottom();
+			});
+			this.bodyResizeObserver.observe(this.$refs.body as Element);
+		}
+
 		this.fetchMessages().then(() => {
 			this.init = false;
-			this.scrollToBottom();
+			// The messages were only just handed to Vue; the DOM still holds the loading line, so
+			// `scrollHeight` here would be the height of an empty room. Waiting for the render is
+			// what makes the room actually open at the newest message.
+			this.$nextTick(() => this.scrollToBottom());
 		});
 	},
 
@@ -122,6 +142,11 @@ export default defineComponent({
 		}
 
 		document.removeEventListener('visibilitychange', this.onVisibilitychange);
+
+		this.bodyResizeObserver?.disconnect();
+		this.bodyResizeObserver = null;
+
+		if (this.timer) clearTimeout(this.timer);
 	},
 
 	methods: {
@@ -161,6 +186,9 @@ export default defineComponent({
 		fetchMessages() {
 			return new Promise((resolve, reject) => {
 				const max = this.existMoreMessages ? 20 : 10;
+				// Read before the response can reassign it: this call is a page of older history
+				// only if there was already history on screen to page back from.
+				const isPrepend = this.existMoreMessages;
 
 				const pagination = {
 					limit: max + 1,
@@ -178,8 +206,25 @@ export default defineComponent({
 						this.existMoreMessages = false;
 					}
 
+					// Older messages go in above whatever the reader is looking at. The browser keeps
+					// `scrollTop` across that insertion, so the message under their eyes would slide
+					// down by the height of everything just added. Measuring the distance to the
+					// bottom instead — which the insertion does not change — and restoring it after
+					// the render keeps that message exactly where it was.
+					const anchor = isPrepend ? this.distanceFromBottom() : null;
+
 					this.messages.unshift.apply(this.messages, messages.reverse());
-					resolve();
+
+					if (anchor == null) {
+						resolve();
+						return;
+					}
+
+					this.$nextTick(() => {
+						const el = this.scrollEl();
+						if (el != null) el.scrollTop = el.scrollHeight - anchor;
+						resolve();
+					});
 				});
 			});
 		},
@@ -200,20 +245,26 @@ export default defineComponent({
 				sound.play();
 			}
 
+			// Measured before the message is added, while the answer still describes where the
+			// reader chose to be rather than what the new message did to the height.
 			const isBottom = this.isBottom();
+			// A message the reader just sent follows them down even if they had scrolled up: they
+			// are the one who caused it, and a chat that does not show your own message looks broken.
+			const isMine = message.userId === this.$store.state.i.id;
 
 			this.messages.push(message);
 			if (message.userId != this.$store.state.i.id && !document.hidden) {
 				this.connection.send('read', {});
 			}
 
-			if (isBottom) {
+			if (isBottom || isMine) {
 				// Scroll to bottom
 				this.$nextTick(() => {
 					this.scrollToBottom();
 				});
-			} else if (message.userId != this.$store.state.i.id) {
+			} else {
 				// Notify
+				this.pinnedToBottom = false;
 				this.notifyNewMessage();
 			}
 		},
@@ -244,23 +295,37 @@ export default defineComponent({
 			}
 		},
 
+		/**
+		 * The element that actually scrolls.
+		 *
+		 * Embedded in a page the room scrolls itself; opened as its own page ("naked") the document
+		 * does. Every measurement and every write goes through this one accessor, because the two
+		 * used to be described with different quantities — `window.scrollY + innerHeight` against
+		 * `document.body.offsetHeight` — which are not the same axis as the container's own
+		 * `scrollTop`/`scrollHeight`, and the mismatch made "am I at the bottom?" answer wrongly
+		 * whenever the body carried a margin.
+		 */
+		scrollEl() {
+			return this.isNaked ? (document.scrollingElement ?? document.documentElement) : this.$el;
+		},
+
+		distanceFromBottom() {
+			const el = this.scrollEl();
+			return el == null ? 0 : el.scrollHeight - el.scrollTop;
+		},
+
 		isBottom() {
 			const asobi = 64;
-			const current = this.isNaked
-				? window.scrollY + window.innerHeight
-				: this.$el.scrollTop + this.$el.offsetHeight;
-			const max = this.isNaked
-				? document.body.offsetHeight
-				: this.$el.scrollHeight;
-			return current > (max - asobi);
+			const el = this.scrollEl();
+			if (el == null) return true;
+			return el.scrollTop + el.clientHeight > el.scrollHeight - asobi;
 		},
 
 		scrollToBottom() {
-			if (this.isNaked) {
-				window.scroll(0, document.body.offsetHeight);
-			} else {
-				this.$el.scrollTop = this.$el.scrollHeight;
-			}
+			const el = this.scrollEl();
+			if (el == null) return;
+			el.scrollTop = el.scrollHeight;
+			this.pinnedToBottom = true;
 		},
 
 		onIndicatorClick() {
@@ -279,9 +344,8 @@ export default defineComponent({
 		},
 
 		onScroll() {
-			const el = this.isNaked ? window.document.documentElement : this.$el;
-			const current = el.scrollTop + el.clientHeight;
-			if (current > el.scrollHeight - 1) {
+			this.pinnedToBottom = this.isBottom();
+			if (this.pinnedToBottom) {
 				this.showIndicator = false;
 			}
 		},
