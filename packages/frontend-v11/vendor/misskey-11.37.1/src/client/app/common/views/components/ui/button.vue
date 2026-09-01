@@ -63,7 +63,9 @@ export default defineComponent({
 	mounted() {
 		if (this.autofocus) {
 			this.$nextTick(() => {
-				this.$el.focus();
+				// See ui/input.vue: focusing a detached host before it has been positioned scrolls
+				// the page to wherever the unpositioned element happens to sit.
+				this.$el.focus({ preventScroll: true });
 			});
 		}
 	},

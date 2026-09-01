@@ -198,7 +198,14 @@ export default defineComponent({
 	mounted() {
 		// Typing straight into the picker is the fastest way to reach an emoji, and it is what the
 		// current client does when the picker opens.
-		this.$nextTick(() => (this.$refs.search as HTMLInputElement | undefined)?.focus());
+		//
+		// `preventScroll` matters here. The picker's host is created detached, appended to the end
+		// of `document.body`, and only positioned in the host's own `$nextTick` — which Vue runs
+		// after this one, because a child mounts before its parent. Focusing without it therefore
+		// scrolls the page to an absolutely-positioned popover that still sits at the bottom of the
+		// document, and the reader lands far below where they were. The popover is placed at the
+		// element it belongs to, so it never needs the page to move.
+		this.$nextTick(() => (this.$refs.search as HTMLInputElement | undefined)?.focus({ preventScroll: true }));
 	},
 
 	methods: {

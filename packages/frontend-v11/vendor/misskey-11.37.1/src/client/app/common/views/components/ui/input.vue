@@ -216,7 +216,11 @@ export default defineComponent({
 	mounted() {
 		if (this.autofocus) {
 			this.$nextTick(() => {
-				this.$refs.input.focus();
+				// Autofocus decides where typing goes, not where the page is looking. Detached hosts
+				// (dialogs, popovers) are appended to the end of `document.body` and positioned a
+				// tick later, so a plain `focus()` scrolls the page down to a field that is about to
+				// be moved into view anyway.
+				this.$refs.input.focus({ preventScroll: true });
 			});
 		}
 
